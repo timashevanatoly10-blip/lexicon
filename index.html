@@ -1,1 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef5f0" />
+  <title>Lexicon</title>
 
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button class="brand" type="button">LEXICON</button>
+      <div class="subtitle">PDF Translator</div>
+    </header>
+
+    <section class="card">
+      <h1>Перевод файла</h1>
+      <p class="hint">Загрузи PDF / DOCX / TXT и получи перевод через DeepL.</p>
+
+      <label class="field">
+        <span>Файл</span>
+        <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.pptx,.xlsx,.txt,.html" />
+      </label>
+
+      <label class="field">
+        <span>Перевести на</span>
+        <select id="targetLang">
+          <option value="RU" selected>Русский</option>
+          <option value="EN-US">English US</option>
+          <option value="EN-GB">English UK</option>
+          <option value="DE">Deutsch</option>
+          <option value="ES">Español</option>
+          <option value="FR">Français</option>
+        </select>
+      </label>
+
+      <button id="uploadBtn" class="primary" type="button">Отправить в DeepL</button>
+    </section>
+
+    <section id="statusCard" class="card hidden">
+      <h2>Статус</h2>
+      <div id="statusText" class="status">Ожидание...</div>
+
+      <div class="actions">
+        <button id="checkBtn" type="button">Проверить статус</button>
+        <button id="downloadBtn" type="button" class="hidden">Скачать перевод</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Ручная проверка</h2>
+      <p class="hint">Если файл уже отправлен, вставь document_id и document_key.</p>
+
+      <label class="field">
+        <span>document_id</span>
+        <textarea id="manualId" rows="2"></textarea>
+      </label>
+
+      <label class="field">
+        <span>document_key</span>
+        <textarea id="manualKey" rows="3"></textarea>
+      </label>
+
+      <button id="manualCheckBtn" type="button">Проверить</button>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
