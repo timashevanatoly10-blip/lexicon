@@ -6,251 +6,98 @@
   --border: #d7e1da;
   --accent: #4f8f68;
   --accent-dark: #2f6f4b;
-  --danger: #b00020;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   min-height: 100%;
   background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-body {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-
-button, input, select, textarea {
-  font: inherit;
+  font-family: system-ui;
 }
 
 .app {
   width: min(760px, 100%);
   margin: 0 auto;
-  padding: 18px;
+  padding: 16px;
 }
 
 .topbar {
   text-align: center;
-  padding: 12px 0 18px;
-}
-
-.brand {
-  border: 0;
-  background: transparent;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--accent-dark);
-  cursor: pointer;
-}
-
-.subtitle {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 18px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(20, 40, 30, 0.06);
-}
-
-.hero-card {
-  padding-top: 12px;
-}
-
-.muted-card {
-  background: #f7fbf8;
-}
-
-.page-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   margin-bottom: 12px;
 }
 
-.back-btn {
-  border: 0;
-  background: transparent;
-  font-size: 16px;
+.brand {
+  font-size: 26px;
+  font-weight: 800;
+  background: none;
+  border: none;
   color: var(--accent-dark);
-  cursor: pointer;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.top-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .mode-switch {
   display: flex;
-  background: #f1f6f3;
-  border-radius: 14px;
+  background: #eef3ef;
+  border-radius: 12px;
   padding: 4px;
-  margin-bottom: 12px;
+  flex: 1;
 }
 
 .mode-btn {
   flex: 1;
-  border: 0;
+  border: none;
   background: transparent;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .mode-btn.active {
   background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-.input-box {
-  margin-top: 8px;
-}
-
-.main-field textarea {
-  font-size: 16px;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.quick-card {
-  flex: 1;
-  text-align: left;
-  border-radius: 18px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  background: #f8fbf9;
-}
-
-.quick-icon {
-  font-size: 22px;
-}
-
-.quick-title {
-  display: block;
-  font-weight: 700;
-  margin-top: 6px;
-}
-
-.quick-text {
-  display: block;
+.mini-btn {
+  border: none;
+  background: #f3f7f4;
+  padding: 8px 10px;
+  border-radius: 10px;
   font-size: 13px;
-  color: var(--muted);
 }
 
-h1, h2 {
-  margin: 0 0 10px;
-}
-
-h1 {
-  font-size: 24px;
-}
-
-h2 {
-  font-size: 19px;
-}
-
-.hint {
-  margin: 0 0 16px;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.field {
-  display: block;
-  margin: 14px 0;
-}
-
-.field span {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 650;
-}
-
-input[type="file"],
-select,
 textarea {
   width: 100%;
+  border-radius: 12px;
+  padding: 10px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: #fbfdfb;
-  padding: 12px;
-  color: var(--text);
-}
-
-textarea {
-  resize: vertical;
-}
-
-button {
-  border: 1px solid var(--border);
-  background: #f8fbf9;
-  color: var(--text);
-  border-radius: 14px;
-  padding: 12px 16px;
-  cursor: pointer;
 }
 
 .primary {
   width: 100%;
-  border: 0;
   background: var(--accent);
   color: white;
-  font-weight: 750;
-  margin-top: 8px;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  border: none;
+  padding: 12px;
+  border-radius: 14px;
+  margin-top: 10px;
 }
 
 .status {
-  white-space: pre-wrap;
-  background: #f5faf6;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  margin: 10px 0 14px;
-  color: var(--text);
+  padding: 12px;
+  background: #f3f7f4;
+  border-radius: 12px;
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.actions button {
-  flex: 1;
-  min-width: 160px;
-}
-
-.hidden {
-  display: none !important;
-}
-
-@media (max-width: 520px) {
-  .app {
-    padding: 12px;
-  }
-
-  .brand {
-    font-size: 24px;
-  }
-
-  .card {
-    border-radius: 18px;
-    padding: 15px;
-  }
-}
+.hidden { display:none; }
