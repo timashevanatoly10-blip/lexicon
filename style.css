@@ -65,6 +65,89 @@ button, input, select, textarea {
   box-shadow: 0 8px 24px rgba(20, 40, 30, 0.06);
 }
 
+.hero-card {
+  padding-top: 12px;
+}
+
+.muted-card {
+  background: #f7fbf8;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  color: var(--accent-dark);
+  cursor: pointer;
+}
+
+.mode-switch {
+  display: flex;
+  background: #f1f6f3;
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 12px;
+}
+
+.mode-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.mode-btn.active {
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.input-box {
+  margin-top: 8px;
+}
+
+.main-field textarea {
+  font-size: 16px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.quick-card {
+  flex: 1;
+  text-align: left;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: #f8fbf9;
+}
+
+.quick-icon {
+  font-size: 22px;
+}
+
+.quick-title {
+  display: block;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.quick-text {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 h1, h2 {
   margin: 0 0 10px;
 }
