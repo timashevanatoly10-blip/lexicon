@@ -4,30 +4,22 @@ const TOKEN_STORAGE_KEY = "lexicon_access_token";
 let currentDocumentId = "";
 let currentDocumentKey = "";
 
-const fileInput = document.getElementById("fileInput");
-const targetLang = document.getElementById("targetLang");
-const uploadBtn = document.getElementById("uploadBtn");
-const statusCard = document.getElementById("statusCard");
-const statusText = document.getElementById("statusText");
-const checkBtn = document.getElementById("checkBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const manualId = document.getElementById("manualId");
-const manualKey = document.getElementById("manualKey");
-const manualCheckBtn = document.getElementById("manualCheckBtn");
-
+// ===== PAGES =====
 const homePage = document.getElementById("homePage");
 const filesPage = document.getElementById("filesPage");
 const aiPage = document.getElementById("aiPage");
 const lexiconPage = document.getElementById("lexiconPage");
 
-const brandBtn = document.getElementById("brandBtn");
+// ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
 const openAiBtn = document.getElementById("openAiBtn");
+const brandBtn = document.getElementById("brandBtn");
 
-const backHomeFromFilesBtn = document.getElementById("backHomeFromFilesBtn");
-const backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
-const backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
+let backHomeFromFilesBtn = document.getElementById("backHomeFromFilesBtn");
+let backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
+let backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
 
+// ===== HOME UI =====
 const wordModeBtn = document.getElementById("wordModeBtn");
 const textModeBtn = document.getElementById("textModeBtn");
 const wordInputBox = document.getElementById("wordInputBox");
@@ -36,26 +28,30 @@ const wordTranslateBtn = document.getElementById("wordTranslateBtn");
 const textTranslateBtn = document.getElementById("textTranslateBtn");
 const homeResult = document.getElementById("homeResult");
 
-safeOn(uploadBtn, "click", uploadFile);
-safeOn(checkBtn, "click", checkStatus);
-safeOn(downloadBtn, "click", downloadResult);
-safeOn(manualCheckBtn, "click", checkManual);
+// ===== FILES UI =====
+let fileInput = document.getElementById("fileInput");
+let targetLang = document.getElementById("targetLang");
+let uploadBtn = document.getElementById("uploadBtn");
+let statusCard = document.getElementById("statusCard");
+let statusText = document.getElementById("statusText");
+let checkBtn = document.getElementById("checkBtn");
+let downloadBtn = document.getElementById("downloadBtn");
+let manualId = document.getElementById("manualId");
+let manualKey = document.getElementById("manualKey");
+let manualCheckBtn = document.getElementById("manualCheckBtn");
 
-safeOn(brandBtn, "click", () => showPage("lexicon"));
-safeOn(openFilesBtn, "click", () => showPage("files"));
-safeOn(openAiBtn, "click", () => showPage("ai"));
+// Если в текущем HTML раздел файлов пустой, восстанавливаем его здесь,
+// чтобы старый рабочий DeepL-функционал не пропал.
+ensureFilesPageMarkup();
 
-safeOn(backHomeFromFilesBtn, "click", () => showPage("home"));
-safeOn(backHomeFromAiBtn, "click", () => showPage("home"));
-safeOn(backHomeFromLexiconBtn, "click", () => showPage("home"));
+// После возможной вставки разметки заново подтягиваем элементы.
+refreshFileElements();
 
-safeOn(wordModeBtn, "click", () => setMode("word"));
-safeOn(textModeBtn, "click", () => setMode("text"));
-
-safeOn(wordTranslateBtn, "click", () => showHomeStub("word"));
-safeOn(textTranslateBtn, "click", () => showHomeStub("text"));
+// ===== EVENTS =====
+bindEvents();
 
 initAccessToken();
+showPage("home");
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -63,65 +59,193 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function safeOn(element, eventName, handler) {
-  if (element) {
-    element.addEventListener(eventName, handler);
+function bindEvents() {
+  on(uploadBtn, "click", uploadFile);
+  on(checkBtn, "click", checkStatus);
+  on(downloadBtn, "click", downloadResult);
+  on(manualCheckBtn, "click", checkManual);
+
+  on(openFilesBtn, "click", () => showPage("files"));
+  on(openAiBtn, "click", () => showPage("ai"));
+  on(brandBtn, "click", () => showPage("lexicon"));
+
+  on(backHomeFromFilesBtn, "click", () => showPage("home"));
+  on(backHomeFromAiBtn, "click", () => showPage("home"));
+  on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+
+  on(wordModeBtn, "click", () => setMode("word"));
+  on(textModeBtn, "click", () => setMode("text"));
+
+  on(wordTranslateBtn, "click", () => {
+    showHomeResult("Пока это UI-заглушка для перевода слова/слов. Следующим шагом подключим GPT.");
+  });
+
+  on(textTranslateBtn, "click", () => {
+    showHomeResult("Пока это UI-заглушка для перевода текста. Следующим шагом подключим GPT.");
+  });
+}
+
+function on(el, eventName, handler) {
+  if (el) {
+    el.addEventListener(eventName, handler);
   }
 }
 
-function showPage(pageName) {
-  const pages = [homePage, filesPage, aiPage, lexiconPage].filter(Boolean);
+// ===== FILES MARKUP RESTORE =====
+function ensureFilesPageMarkup() {
+  if (!filesPage) return;
 
-  pages.forEach((page) => {
-    page.classList.add("hidden");
-    page.classList.remove("active");
-  });
+  const hasFileUi = filesPage.querySelector("#fileInput");
+  if (hasFileUi) return;
 
-  if (pageName === "home") {
-    showExistingPage(homePage);
-    return;
-  }
+  filesPage.innerHTML = `
+    <section class="page-head">
+      <button id="backHomeFromFilesBtn" class="back-btn" type="button">← Назад</button>
+      <h1>Файлы</h1>
+    </section>
 
-  if (pageName === "files") {
-    if (filesPage && filesPage.children.length > 0) {
-      showExistingPage(filesPage);
-    } else {
-      showHomeMessage("Раздел «Файлы» не найден в текущем HTML. Нужно вернуть файловую страницу в index.html.");
-      showExistingPage(homePage);
-    }
-    return;
-  }
+    <section class="card">
+      <h1>Перевод файла</h1>
+      <p class="hint">Загрузи PDF / DOCX / TXT и получи перевод через DeepL.</p>
 
-  if (pageName === "ai") {
-    if (aiPage && aiPage.children.length > 0) {
-      showExistingPage(aiPage);
-    } else {
-      showHomeMessage("ИИ-режим пока заглушка. Позже здесь будет отдельный экран для работы с ИИ.");
-      showExistingPage(homePage);
-    }
-    return;
-  }
+      <label class="field">
+        <span>Файл</span>
+        <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.pptx,.xlsx,.txt,.html" />
+      </label>
 
-  if (pageName === "lexicon") {
-    if (lexiconPage && lexiconPage.children.length > 0) {
-      showExistingPage(lexiconPage);
-    } else {
-      showHomeMessage("Лексикон / словари пока заглушка. Позже здесь будут личные словари.");
-      showExistingPage(homePage);
-    }
-    return;
-  }
+      <label class="field">
+        <span>Перевести на</span>
+        <select id="targetLang">
+          <option value="RU" selected>Русский</option>
+          <option value="EN-US">English US</option>
+          <option value="EN-GB">English UK</option>
+          <option value="DE">Deutsch</option>
+          <option value="ES">Español</option>
+          <option value="FR">Français</option>
+        </select>
+      </label>
 
-  showExistingPage(homePage);
+      <button id="uploadBtn" class="primary" type="button">Отправить в DeepL</button>
+    </section>
+
+    <section id="statusCard" class="card hidden">
+      <h2>Статус</h2>
+      <div id="statusText" class="status">Ожидание...</div>
+
+      <div class="actions">
+        <button id="checkBtn" type="button">Проверить статус</button>
+        <button id="downloadBtn" type="button" class="hidden">Скачать перевод</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Ручная проверка</h2>
+      <p class="hint">Если файл уже отправлен, вставь document_id и document_key.</p>
+
+      <label class="field">
+        <span>document_id</span>
+        <textarea id="manualId" rows="2"></textarea>
+      </label>
+
+      <label class="field">
+        <span>document_key</span>
+        <textarea id="manualKey" rows="3"></textarea>
+      </label>
+
+      <button id="manualCheckBtn" type="button">Проверить</button>
+    </section>
+  `;
+}
+
+function refreshFileElements() {
+  backHomeFromFilesBtn = document.getElementById("backHomeFromFilesBtn");
+  backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
+  backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
+
+  fileInput = document.getElementById("fileInput");
+  targetLang = document.getElementById("targetLang");
+  uploadBtn = document.getElementById("uploadBtn");
+  statusCard = document.getElementById("statusCard");
+  statusText = document.getElementById("statusText");
+  checkBtn = document.getElementById("checkBtn");
+  downloadBtn = document.getElementById("downloadBtn");
+  manualId = document.getElementById("manualId");
+  manualKey = document.getElementById("manualKey");
+  manualCheckBtn = document.getElementById("manualCheckBtn");
+}
+
+// ===== NAVIGATION =====
+function showPage(page) {
+  hidePage(homePage);
+  hidePage(filesPage);
+  hidePage(aiPage);
+  hidePage(lexiconPage);
+
+  if (page === "home") showExistingPage(homePage);
+  if (page === "files") showExistingPage(filesPage);
+  if (page === "ai") showAiPage();
+  if (page === "lexicon") showLexiconPage();
+}
+
+function hidePage(page) {
+  if (!page) return;
+  page.classList.add("hidden");
+  page.classList.remove("active");
 }
 
 function showExistingPage(page) {
   if (!page) return;
-
   page.classList.remove("hidden");
   page.classList.add("active");
 }
 
+function showAiPage() {
+  if (!aiPage) return;
+
+  if (!aiPage.children.length) {
+    aiPage.innerHTML = `
+      <section class="page-head">
+        <button id="backHomeFromAiBtn" class="back-btn" type="button">← Назад</button>
+        <h1>ИИ</h1>
+      </section>
+
+      <section class="card muted-card">
+        <h2>Умный режим</h2>
+        <div class="status">Пока заглушка. Здесь позже будет ИИ-редактор текста и версии результата.</div>
+      </section>
+    `;
+
+    backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
+    on(backHomeFromAiBtn, "click", () => showPage("home"));
+  }
+
+  showExistingPage(aiPage);
+}
+
+function showLexiconPage() {
+  if (!lexiconPage) return;
+
+  if (!lexiconPage.children.length) {
+    lexiconPage.innerHTML = `
+      <section class="page-head">
+        <button id="backHomeFromLexiconBtn" class="back-btn" type="button">← Назад</button>
+        <h1>Лексикон</h1>
+      </section>
+
+      <section class="card muted-card">
+        <h2>Словари</h2>
+        <div class="status">Пока заглушка. Здесь позже будут личные словари, слова и счётчики.</div>
+      </section>
+    `;
+
+    backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
+    on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+  }
+
+  showExistingPage(lexiconPage);
+}
+
+// ===== MODE SWITCH =====
 function setMode(mode) {
   if (mode === "word") {
     wordModeBtn?.classList.add("active");
@@ -137,26 +261,78 @@ function setMode(mode) {
   textInputBox?.classList.remove("hidden");
 }
 
-function showHomeStub(mode) {
-  const text = mode === "word"
-    ? "Пока это UI-заглушка для словарного перевода. Следующим шагом подключим GPT-разбор слова/слов."
-    : "Пока это UI-заглушка для перевода текста. Следующим шагом подключим GPT-перевод текста.";
-
-  showHomeMessage(text);
-}
-
-function showHomeMessage(text) {
+function showHomeResult(text) {
   if (homeResult) {
     homeResult.textContent = text;
   }
 }
 
+// ===== TOKEN =====
+function initAccessToken() {
+  const savedToken = getAccessToken();
+  if (savedToken) return;
+  requestAccessToken();
+}
+
+function requestAccessToken() {
+  const token = window.prompt("Введи API token для доступа:");
+
+  if (!token || !token.trim()) {
+    lockApp();
+    return;
+  }
+
+  localStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
+}
+
+function lockApp() {
+  document.body.innerHTML = `
+    <main class="app">
+      <section class="card">
+        <h1>Доступ закрыт</h1>
+        <button id="retryTokenBtn" class="primary">Ввести токен</button>
+      </section>
+    </main>
+  `;
+
+  const retryTokenBtn = document.getElementById("retryTokenBtn");
+  if (retryTokenBtn) {
+    retryTokenBtn.onclick = () => {
+      requestAccessToken();
+      if (getAccessToken()) location.reload();
+    };
+  }
+}
+
+function getAccessToken() {
+  return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+}
+
+function ensureAccessToken() {
+  const token = getAccessToken();
+
+  if (!token) {
+    requestAccessToken();
+    if (!getAccessToken()) {
+      lockApp();
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function authHeaders() {
+  return {
+    "Authorization": `Bearer ${getAccessToken()}`
+  };
+}
+
+// ===== FILE LOGIC =====
 async function uploadFile() {
   const file = fileInput?.files?.[0];
 
-  if (!ensureAccessToken()) {
-    return;
-  }
+  if (!ensureAccessToken()) return;
 
   if (!file) {
     showStatus("Выбери файл.");
@@ -164,8 +340,7 @@ async function uploadFile() {
   }
 
   setBusy(true);
-  showStatus("Отправляю файл в DeepL...");
-  downloadBtn?.classList.add("hidden");
+  showStatus("Отправляю файл...");
 
   try {
     const formData = new FormData();
@@ -189,21 +364,16 @@ async function uploadFile() {
     showStatus(
       "Файл отправлен.\n\n" +
       "document_id:\n" + currentDocumentId + "\n\n" +
-      "document_key:\n" + currentDocumentKey + "\n\n" +
-      "Теперь проверь статус."
+      "document_key:\n" + currentDocumentKey
     );
   } catch (err) {
-    showStatus("Ошибка загрузки:\n" + err.message);
+    showStatus(err.message);
   } finally {
     setBusy(false);
   }
 }
 
 async function checkManual() {
-  if (!ensureAccessToken()) {
-    return;
-  }
-
   currentDocumentId = manualId?.value?.trim() || "";
   currentDocumentKey = manualKey?.value?.trim() || "";
 
@@ -216,9 +386,7 @@ async function checkManual() {
 }
 
 async function checkStatus() {
-  if (!ensureAccessToken()) {
-    return;
-  }
+  if (!ensureAccessToken()) return;
 
   if (!currentDocumentId || !currentDocumentKey) {
     showStatus("Нет document_id/document_key.");
@@ -226,7 +394,7 @@ async function checkStatus() {
   }
 
   setBusy(true);
-  showStatus("Проверяю статус...");
+  showStatus("Проверяю...");
 
   try {
     const res = await fetch(`${API_BASE}/api/status`, {
@@ -251,16 +419,14 @@ async function checkStatus() {
       downloadBtn?.classList.add("hidden");
     }
   } catch (err) {
-    showStatus("Ошибка статуса:\n" + err.message);
+    showStatus(err.message);
   } finally {
     setBusy(false);
   }
 }
 
 async function downloadResult() {
-  if (!ensureAccessToken()) {
-    return;
-  }
+  if (!ensureAccessToken()) return;
 
   if (!currentDocumentId || !currentDocumentKey) {
     showStatus("Нет document_id/document_key.");
@@ -268,7 +434,7 @@ async function downloadResult() {
   }
 
   setBusy(true);
-  showStatus("Скачиваю переведённый файл...");
+  showStatus("Скачиваю файл...");
 
   try {
     const res = await fetch(`${API_BASE}/api/download`, {
@@ -292,7 +458,7 @@ async function downloadResult() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "translated-document.pdf";
+    a.download = "translated.pdf";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -300,99 +466,24 @@ async function downloadResult() {
     URL.revokeObjectURL(url);
     showStatus("Файл скачан.");
   } catch (err) {
-    showStatus("Ошибка скачивания:\n" + err.message);
+    showStatus(err.message);
   } finally {
     setBusy(false);
   }
 }
 
-function initAccessToken() {
-  const savedToken = getAccessToken();
-
-  if (savedToken) {
-    return;
-  }
-
-  requestAccessToken();
-}
-
-function requestAccessToken() {
-  const token = window.prompt("Введи API token для доступа:");
-
-  if (!token || !token.trim()) {
-    lockApp();
-    return;
-  }
-
-  localStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
-}
-
-function lockApp() {
-  document.body.innerHTML = `
-    <main class="app">
-      <header class="topbar">
-        <button class="brand" type="button">LEXICON</button>
-      </header>
-
-      <section class="card">
-        <h1>Доступ закрыт</h1>
-        <p class="hint">Для работы приложения нужен токен доступа.</p>
-        <button id="retryTokenBtn" class="primary" type="button">Ввести токен</button>
-      </section>
-    </main>
-  `;
-
-  const retryTokenBtn = document.getElementById("retryTokenBtn");
-  if (retryTokenBtn) {
-    retryTokenBtn.addEventListener("click", () => {
-      requestAccessToken();
-      if (getAccessToken()) {
-        window.location.reload();
-      }
-    });
-  }
-}
-
-function getAccessToken() {
-  return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
-}
-
-function ensureAccessToken() {
-  const token = getAccessToken();
-
-  if (!token) {
-    requestAccessToken();
-
-    if (!getAccessToken()) {
-      lockApp();
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function authHeaders() {
-  return {
-    "Authorization": `Bearer ${getAccessToken()}`
-  };
-}
-
+// ===== HELPERS =====
 function showStatus(text) {
-  if (!statusCard || !statusText) {
-    showHomeMessage(text);
-    return;
-  }
-
+  if (!statusCard || !statusText) return;
   statusCard.classList.remove("hidden");
   statusText.textContent = text;
 }
 
-function setBusy(isBusy) {
-  if (uploadBtn) uploadBtn.disabled = isBusy;
-  if (checkBtn) checkBtn.disabled = isBusy;
-  if (manualCheckBtn) manualCheckBtn.disabled = isBusy;
-  if (downloadBtn) downloadBtn.disabled = isBusy;
+function setBusy(v) {
+  if (uploadBtn) uploadBtn.disabled = v;
+  if (checkBtn) checkBtn.disabled = v;
+  if (manualCheckBtn) manualCheckBtn.disabled = v;
+  if (downloadBtn) downloadBtn.disabled = v;
 }
 
 async function readJsonOrThrow(res) {
@@ -402,20 +493,10 @@ async function readJsonOrThrow(res) {
     if (res.status === 401) {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
       lockApp();
-      throw new Error("Неверный токен или доступ запрещён.");
+      throw new Error("Unauthorized");
     }
-
-    try {
-      const data = JSON.parse(text);
-      throw new Error(data.error || text || `HTTP ${res.status}`);
-    } catch {
-      throw new Error(text || `HTTP ${res.status}`);
-    }
+    throw new Error(text);
   }
 
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error("Ответ не JSON:\n" + text);
-  }
+  return JSON.parse(text);
 }
