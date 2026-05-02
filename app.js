@@ -15,18 +15,10 @@ const manualId = document.getElementById("manualId");
 const manualKey = document.getElementById("manualKey");
 const manualCheckBtn = document.getElementById("manualCheckBtn");
 
-const tokenPanel = createTokenPanel();
-const tokenInput = tokenPanel.querySelector("#accessTokenInput");
-const saveTokenBtn = tokenPanel.querySelector("#saveTokenBtn");
-const clearTokenBtn = tokenPanel.querySelector("#clearTokenBtn");
-const tokenStatus = tokenPanel.querySelector("#tokenStatus");
-
 uploadBtn.addEventListener("click", uploadFile);
 checkBtn.addEventListener("click", checkStatus);
 downloadBtn.addEventListener("click", downloadResult);
 manualCheckBtn.addEventListener("click", checkManual);
-saveTokenBtn.addEventListener("click", saveAccessToken);
-clearTokenBtn.addEventListener("click", clearAccessToken);
 
 initAccessToken();
 
@@ -191,63 +183,52 @@ async function downloadResult() {
   }
 }
 
-function createTokenPanel() {
-  const panel = document.createElement("section");
-  panel.className = "card";
-  panel.innerHTML = `
-    <h2>Доступ</h2>
-    <p class="hint">Введите токен доступа. Он сохранится только в этом браузере.</p>
-
-    <label class="field">
-      <span>Токен</span>
-      <input id="accessTokenInput" type="password" autocomplete="off" placeholder="Введите токен">
-    </label>
-
-    <div class="actions">
-      <button id="saveTokenBtn" type="button">Сохранить токен</button>
-      <button id="clearTokenBtn" type="button">Сбросить</button>
-    </div>
-
-    <div id="tokenStatus" class="hint" style="margin-top: 12px;"></div>
-  `;
-
-  const firstCard = document.querySelector(".card");
-  if (firstCard && firstCard.parentNode) {
-    firstCard.parentNode.insertBefore(panel, firstCard);
-  } else {
-    document.body.prepend(panel);
-  }
-
-  return panel;
-}
-
 function initAccessToken() {
-  const token = getAccessToken();
+  const savedToken = getAccessToken();
 
-  if (token) {
-    tokenInput.value = token;
-    tokenStatus.textContent = "Токен сохранён.";
-  } else {
-    tokenStatus.textContent = "Токен не введён.";
-  }
-}
-
-function saveAccessToken() {
-  const token = tokenInput.value.trim();
-
-  if (!token) {
-    tokenStatus.textContent = "Введите токен.";
+  if (savedToken) {
     return;
   }
 
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
-  tokenStatus.textContent = "Токен сохранён.";
+  requestAccessToken();
 }
 
-function clearAccessToken() {
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
-  tokenInput.value = "";
-  tokenStatus.textContent = "Токен сброшен.";
+function requestAccessToken() {
+  const token = window.prompt("Введи API token для доступа к приложению:");
+
+  if (!token || !token.trim()) {
+    lockApp();
+    return;
+  }
+
+  localStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
+}
+
+function lockApp() {
+  document.body.innerHTML = `
+    <main class="app">
+      <header class="topbar">
+        <button class="brand" type="button">LEXICON</button>
+        <div class="subtitle">PDF Translator</div>
+      </header>
+
+      <section class="card">
+        <h1>Доступ закрыт</h1>
+        <p class="hint">Для работы приложения нужен токен доступа.</p>
+        <button id="retryTokenBtn" class="primary" type="button">Ввести токен</button>
+      </section>
+    </main>
+  `;
+
+  const retryTokenBtn = document.getElementById("retryTokenBtn");
+  if (retryTokenBtn) {
+    retryTokenBtn.addEventListener("click", () => {
+      requestAccessToken();
+      if (getAccessToken()) {
+        window.location.reload();
+      }
+    });
+  }
 }
 
 function getAccessToken() {
@@ -255,19 +236,15 @@ function getAccessToken() {
 }
 
 function ensureAccessToken() {
-  const tokenFromInput = tokenInput.value.trim();
-  const savedToken = getAccessToken();
-  const token = tokenFromInput || savedToken;
+  const token = getAccessToken();
 
   if (!token) {
-    showStatus("Введите токен доступа и нажмите «Сохранить токен».");
-    tokenInput.focus();
-    return false;
-  }
+    requestAccessToken();
 
-  if (tokenFromInput && tokenFromInput !== savedToken) {
-    localStorage.setItem(TOKEN_STORAGE_KEY, tokenFromInput);
-    tokenStatus.textContent = "Токен сохранён.";
+    if (!getAccessToken()) {
+      lockApp();
+      return false;
+    }
   }
 
   return true;
@@ -289,14 +266,18 @@ function setBusy(isBusy) {
   checkBtn.disabled = isBusy;
   manualCheckBtn.disabled = isBusy;
   downloadBtn.disabled = isBusy;
-  saveTokenBtn.disabled = isBusy;
-  clearTokenBtn.disabled = isBusy;
 }
 
 async function readJsonOrThrow(res) {
   const text = await res.text();
 
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      lockApp();
+      throw new Error("Неверный токен или доступ запрещён.");
+    }
+
     try {
       const data = JSON.parse(text);
       throw new Error(data.error || text || `HTTP ${res.status}`);
