@@ -14,22 +14,28 @@
   <main class="app">
     <header class="topbar">
       <button id="brandBtn" class="brand" type="button">LEXICON</button>
-      <div class="subtitle">перевод • слова • тексты • файлы</div>
     </header>
 
     <section id="homePage" class="page active">
+
       <section class="card hero-card">
-        <div class="mode-switch" role="tablist" aria-label="Режим перевода">
-          <button id="wordModeBtn" class="mode-btn active" type="button">Слово</button>
-          <button id="textModeBtn" class="mode-btn" type="button">Текст</button>
+
+        <div class="top-controls">
+          <div class="mode-switch">
+            <button id="wordModeBtn" class="mode-btn active" type="button">Слово</button>
+            <button id="textModeBtn" class="mode-btn" type="button">Текст</button>
+          </div>
+
+          <button id="openFilesBtn" class="mini-btn">Файлы</button>
+          <button id="openAiBtn" class="mini-btn">ИИ</button>
         </div>
 
         <div id="wordInputBox" class="input-box active">
           <label class="field main-field">
-            <span>Словарный разбор</span>
+            <span>Перевод</span>
             <textarea id="wordInput" rows="3" placeholder="Введите слово, список слов или фразу"></textarea>
           </label>
-          <button id="wordTranslateBtn" class="primary" type="button">Разобрать слово</button>
+          <button id="wordTranslateBtn" class="primary" type="button">Перевести</button>
         </div>
 
         <div id="textInputBox" class="input-box hidden">
@@ -37,111 +43,24 @@
             <span>Перевод текста</span>
             <textarea id="textInput" rows="6" placeholder="Вставьте текст для перевода"></textarea>
           </label>
-          <button id="textTranslateBtn" class="primary" type="button">Перевести текст</button>
+          <button id="textTranslateBtn" class="primary" type="button">Перевести</button>
         </div>
+
       </section>
 
       <section id="homeResultCard" class="card muted-card">
         <h2>Результат</h2>
-        <div id="homeResult" class="status">Пока это UI-заглушка. Следующим шагом подключим обработку слова/текста.</div>
+        <div id="homeResult" class="status">Пока это UI-заглушка.</div>
       </section>
 
-      <section class="quick-actions">
-        <button id="openFilesBtn" class="quick-card" type="button">
-          <span class="quick-icon">📎</span>
-          <span class="quick-title">Файлы</span>
-          <span class="quick-text">PDF / DOCX через DeepL</span>
-        </button>
-
-        <button id="openAiBtn" class="quick-card" type="button">
-          <span class="quick-icon">🤖</span>
-          <span class="quick-title">ИИ</span>
-          <span class="quick-text">умный режим позже</span>
-        </button>
-      </section>
     </section>
 
-    <section id="filesPage" class="page hidden">
-      <section class="page-head">
-        <button id="backHomeFromFilesBtn" class="back-btn" type="button">← Назад</button>
-        <h1>Файлы</h1>
-      </section>
+    <!-- FILES PAGE ОСТАВЛЕНА -->
+    <section id="filesPage" class="page hidden"></section>
 
-      <section class="card">
-        <h1>Перевод файла</h1>
-        <p class="hint">Загрузи PDF / DOCX / TXT и получи перевод через DeepL.</p>
+    <section id="aiPage" class="page hidden"></section>
+    <section id="lexiconPage" class="page hidden"></section>
 
-        <label class="field">
-          <span>Файл</span>
-          <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.pptx,.xlsx,.txt,.html" />
-        </label>
-
-        <label class="field">
-          <span>Перевести на</span>
-          <select id="targetLang">
-            <option value="RU" selected>Русский</option>
-            <option value="EN-US">English US</option>
-            <option value="EN-GB">English UK</option>
-            <option value="DE">Deutsch</option>
-            <option value="ES">Español</option>
-            <option value="FR">Français</option>
-          </select>
-        </label>
-
-        <button id="uploadBtn" class="primary" type="button">Отправить в DeepL</button>
-      </section>
-
-      <section id="statusCard" class="card hidden">
-        <h2>Статус</h2>
-        <div id="statusText" class="status">Ожидание...</div>
-
-        <div class="actions">
-          <button id="checkBtn" type="button">Проверить статус</button>
-          <button id="downloadBtn" type="button" class="hidden">Скачать перевод</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Ручная проверка</h2>
-        <p class="hint">Если файл уже отправлен, вставь document_id и document_key.</p>
-
-        <label class="field">
-          <span>document_id</span>
-          <textarea id="manualId" rows="2"></textarea>
-        </label>
-
-        <label class="field">
-          <span>document_key</span>
-          <textarea id="manualKey" rows="3"></textarea>
-        </label>
-
-        <button id="manualCheckBtn" type="button">Проверить</button>
-      </section>
-    </section>
-
-    <section id="aiPage" class="page hidden">
-      <section class="page-head">
-        <button id="backHomeFromAiBtn" class="back-btn" type="button">← Назад</button>
-        <h1>ИИ</h1>
-      </section>
-
-      <section class="card muted-card">
-        <h2>Умный режим</h2>
-        <div class="status">Пока заглушка. Здесь позже будет ИИ-редактор текста и версии результата.</div>
-      </section>
-    </section>
-
-    <section id="lexiconPage" class="page hidden">
-      <section class="page-head">
-        <button id="backHomeFromLexiconBtn" class="back-btn" type="button">← Назад</button>
-        <h1>Лексикон</h1>
-      </section>
-
-      <section class="card muted-card">
-        <h2>Словари</h2>
-        <div class="status">Пока заглушка. Здесь позже будут личные словари, слова и счётчики.</div>
-      </section>
-    </section>
   </main>
 
   <script src="./app.js"></script>
