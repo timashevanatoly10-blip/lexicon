@@ -83,9 +83,7 @@ function bindEvents() {
   on(wordModeBtn, "click", () => setMode("word"));
   on(textModeBtn, "click", () => setMode("text"));
 
-  on(wordTranslateBtn, "click", () => {
-    showHomeResult("Пока это UI-заглушка для перевода слова/слов. Следующим шагом подключим GPT.");
-  });
+  on(wordTranslateBtn, "click", handleWordTranslate);
 
   bindTextModeEvents();
 }
@@ -96,6 +94,65 @@ function on(el, eventName, handler) {
 
 function uid(prefix = "id") {
   return `${prefix}_${Date.now().toString(16)}_${Math.random().toString(16).slice(2)}`;
+}
+
+// ===== AI API =====
+async function callAi(mode, text, options = {}) {
+  if (!ensureAccessToken()) {
+    throw new Error("Нет токена доступа.");
+  }
+
+  const res = await fetch(`${API_BASE}/api/ai`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      mode,
+      text,
+      source_lang: options.sourceLang || "EN",
+      target_lang: options.targetLang || "RU"
+    })
+  });
+
+  return await readJsonOrThrow(res);
+}
+
+async function handleWordTranslate() {
+  const wordInput = document.getElementById("wordInput");
+  const source = wordInput ? wordInput.value.trim() : "";
+
+  if (!source) {
+    if (wordInput) wordInput.focus();
+    return;
+  }
+
+  if (homeResultCard) homeResultCard.classList.remove("hidden");
+  showHomeResult("Перевожу через GPT...");
+
+  if (wordTranslateBtn) wordTranslateBtn.disabled = true;
+
+  try {
+    const data = await callAi("word_translate", source);
+    showHomeResult(data.result || data.raw || "Пустой ответ.");
+  } catch (err) {
+    showHomeResult("Ошибка перевода:\n" + err.message);
+  } finally {
+    if (wordTranslateBtn) wordTranslateBtn.disabled = false;
+  }
+}
+
+async function buildShortWordCard(word) {
+  const data = await callAi("word_card_short", word);
+  const card = data.result || {};
+
+  return {
+    word: String(card.word || word || "").trim(),
+    transcription: String(card.transcription || "—").trim(),
+    translation: String(card.translation || "перевод позже").trim(),
+    partOfSpeech: String(card.partOfSpeech || card.part_of_speech || "").trim()
+  };
 }
 
 
@@ -195,8 +252,9 @@ function bindTextSwipe() {
   }, { passive: true });
 }
 
-function handleTextTranslate() {
+async function handleTextTranslate() {
   const textInput = document.getElementById("textInput");
+  const translateBtn = document.getElementById("textTranslateBtn");
   const source = textInput ? textInput.value.trim() : "";
 
   if (!source) {
@@ -205,22 +263,36 @@ function handleTextTranslate() {
   }
 
   textSourceValue = source;
-  textTranslatedValue = buildTextTranslationStub(source);
   textTranslationReady = true;
   textActivePanel = "translation";
 
   const output = document.getElementById("textTranslationOutput");
-  if (output) output.textContent = textTranslatedValue;
+  if (output) output.textContent = "Перевожу через GPT...";
 
   const tabs = document.getElementById("textPanelTabs");
   if (tabs) tabs.classList.remove("hidden");
 
   const hint = document.getElementById("textModeHint");
-  if (hint) {
-    hint.textContent = "Это пока UI-заглушка. Позже сюда придёт настоящий перевод из воркера.";
-  }
+  if (hint) hint.textContent = "Идёт перевод текста.";
+
+  if (translateBtn) translateBtn.disabled = true;
 
   switchTextPanel("translation");
+
+  try {
+    const data = await callAi("text_translate", source);
+    textTranslatedValue = data.result || data.raw || "Пустой ответ.";
+
+    if (output) output.textContent = textTranslatedValue;
+    if (hint) hint.textContent = "Перевод готов. Можно переключаться между оригиналом и переводом.";
+  } catch (err) {
+    textTranslatedValue = "Ошибка перевода:\n" + err.message;
+
+    if (output) output.textContent = textTranslatedValue;
+    if (hint) hint.textContent = "Ошибка при переводе текста.";
+  } finally {
+    if (translateBtn) translateBtn.disabled = false;
+  }
 }
 
 function buildTextTranslationStub(source) {
@@ -739,7 +811,7 @@ function deleteDictionary(dictionaryId) {
   renderLexiconPage();
 }
 
-function addWordToDictionary(dictionaryId) {
+async function addWordToDictionary(dictionaryId) {
   const dict = dictionaries.find((item) => item.id === dictionaryId);
   if (!dict) return;
 
@@ -753,10 +825,14 @@ function addWordToDictionary(dictionaryId) {
 
   const exists = (dict.words || []).some((item) => item.word.toLowerCase() === rawWord.toLowerCase());
 
+  if (input) {
+    input.disabled = true;
+  }
+
   const wordItem = makeWordItem(
     rawWord,
     "…",
-    exists ? "уже есть / дубль" : "перевод позже",
+    exists ? "уже есть / создаю карточку…" : "создаю карточку…",
     ""
   );
 
@@ -765,19 +841,55 @@ function addWordToDictionary(dictionaryId) {
   dict.updatedAt = new Date().toISOString();
 
   saveDictionaries();
+  renderDictionaryList(getDictionarySearchValue());
 
-  if (input) {
-    input.value = "";
-    input.focus();
+  try {
+    const card = await buildShortWordCard(rawWord);
+    const targetDict = dictionaries.find((item) => item.id === dictionaryId);
+    const targetWord = targetDict?.words?.find((item) => item.id === wordItem.id);
+
+    if (targetWord) {
+      targetWord.word = card.word || rawWord;
+      targetWord.transcription = card.transcription || "—";
+      targetWord.translation = exists
+        ? `уже есть / ${card.translation || "перевод позже"}`
+        : (card.translation || "перевод позже");
+      targetWord.partOfSpeech = card.partOfSpeech || "";
+      targetWord.updatedAt = new Date().toISOString();
+
+      if (targetDict) targetDict.updatedAt = new Date().toISOString();
+      saveDictionaries();
+    }
+  } catch {
+    const targetDict = dictionaries.find((item) => item.id === dictionaryId);
+    const targetWord = targetDict?.words?.find((item) => item.id === wordItem.id);
+
+    if (targetWord) {
+      targetWord.transcription = "—";
+      targetWord.translation = exists ? "уже есть / перевод позже" : "перевод позже";
+      targetWord.partOfSpeech = "";
+      targetWord.updatedAt = new Date().toISOString();
+
+      if (targetDict) targetDict.updatedAt = new Date().toISOString();
+      saveDictionaries();
+    }
   }
 
-  const searchInput = document.getElementById("dictionarySearchInput");
-  renderDictionaryList(searchInput ? searchInput.value : "");
+  renderDictionaryList(getDictionarySearchValue());
 
   requestAnimationFrame(() => {
     const nextInput = document.querySelector(`[data-word-input="${cssEscape(dictionaryId)}"]`);
-    if (nextInput) nextInput.focus();
+    if (nextInput) {
+      nextInput.disabled = false;
+      nextInput.value = "";
+      nextInput.focus();
+    }
   });
+}
+
+function getDictionarySearchValue() {
+  const searchInput = document.getElementById("dictionarySearchInput");
+  return searchInput ? searchInput.value : "";
 }
 
 function deleteWord(wordId, dictionaryId) {
@@ -1053,10 +1165,21 @@ async function readJsonOrThrow(res) {
       lockApp();
       throw new Error("Unauthorized");
     }
-    throw new Error(text);
+
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data.error || text || `HTTP ${res.status}`);
+    } catch {
+      throw new Error(text || `HTTP ${res.status}`);
+    }
   }
 
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Ответ не JSON:
+" + text);
+  }
 }
 
 function escapeHTML(value) {
