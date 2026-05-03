@@ -304,6 +304,122 @@ textarea { resize: vertical; }
 
 .empty-word-list, .lexicon-empty { padding: 14px; border-radius: 14px; background: var(--soft); color: var(--muted); text-align: center; font-size: 14px; }
 
+
+/* ===== TEXT TRANSLATION MODE ===== */
+
+.text-mode-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.text-mode-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.text-action-primary,
+.text-action-secondary {
+  border: none;
+  border-radius: 13px;
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.text-action-primary {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+}
+
+.text-action-secondary {
+  flex: 0 0 auto;
+  background: var(--soft);
+  color: var(--text);
+}
+
+.text-panel-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--soft);
+  padding: 4px;
+  border-radius: 13px;
+}
+
+.text-panel-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-weight: 750;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.text-panel-tab.active {
+  background: #fff;
+  color: var(--accent-dark);
+  box-shadow: 0 2px 8px rgba(20, 40, 30, 0.08);
+}
+
+.text-swipe-frame {
+  width: 100%;
+  height: min(58vh, 560px);
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.text-swipe-track {
+  width: 200%;
+  height: 100%;
+  display: flex;
+  transition: transform 0.24s ease;
+}
+
+.text-panel {
+  width: 50%;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+}
+
+.text-big-input {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 16px;
+  background: #fff;
+  resize: none;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.text-translation-output {
+  min-height: 100%;
+  padding: 16px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  font-size: 16px;
+}
+
+.text-mode-hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 0 2px;
+}
+
+
 @media (max-width: 520px) {
   .app { padding: 12px; }
   .brand { font-size: 24px; }
@@ -315,4 +431,18 @@ textarea { resize: vertical; }
   .word-row { grid-template-columns: minmax(88px, 1fr) minmax(80px, 1fr) 28px; }
   .dictionary-panel-actions { gap: 5px; }
   .small-action-btn { padding: 7px 8px; }
+
+  .text-swipe-frame {
+    height: 62vh;
+    min-height: 390px;
+  }
+
+  .text-mode-actions {
+    gap: 6px;
+  }
+
+  .text-action-primary,
+  .text-action-secondary {
+    padding: 10px 10px;
+  }
 }
