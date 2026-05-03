@@ -1177,8 +1177,7 @@ async function readJsonOrThrow(res) {
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error("Ответ не JSON:
-" + text);
+    throw new Error("Ответ не JSON:\n" + text);
   }
 }
 
