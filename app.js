@@ -1,8 +1,11 @@
 const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
 const TOKEN_STORAGE_KEY = "lexicon_access_token";
+const LEXICON_STORAGE_KEY = "lexicon_dictionaries_v1";
 
 let currentDocumentId = "";
 let currentDocumentKey = "";
+let dictionaries = loadDictionaries();
+let expandedDictionaryId = null;
 
 // ===== PAGES =====
 const homePage = document.getElementById("homePage");
@@ -40,16 +43,9 @@ let manualId = document.getElementById("manualId");
 let manualKey = document.getElementById("manualKey");
 let manualCheckBtn = document.getElementById("manualCheckBtn");
 
-// Если в текущем HTML раздел файлов пустой, восстанавливаем его здесь,
-// чтобы старый рабочий DeepL-функционал не пропал.
 ensureFilesPageMarkup();
-
-// После возможной вставки разметки заново подтягиваем элементы.
 refreshFileElements();
-
-// ===== EVENTS =====
 bindEvents();
-
 initAccessToken();
 showPage("home");
 
@@ -86,9 +82,11 @@ function bindEvents() {
 }
 
 function on(el, eventName, handler) {
-  if (el) {
-    el.addEventListener(eventName, handler);
-  }
+  if (el) el.addEventListener(eventName, handler);
+}
+
+function uid(prefix = "id") {
+  return `${prefix}_${Date.now().toString(16)}_${Math.random().toString(16).slice(2)}`;
 }
 
 // ===== FILES MARKUP RESTORE =====
@@ -224,25 +222,367 @@ function showAiPage() {
 
 function showLexiconPage() {
   if (!lexiconPage) return;
+  renderLexiconPage();
+  showExistingPage(lexiconPage);
+}
 
-  if (!lexiconPage.children.length) {
-    lexiconPage.innerHTML = `
-      <section class="page-head">
+// ===== LEXICON =====
+function loadDictionaries() {
+  try {
+    const raw = localStorage.getItem(LEXICON_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+
+  return [
+    {
+      id: uid("dict"),
+      title: "Мой словарь",
+      note: "личные слова",
+      words: [
+        makeWordItem("cat", "[kæt]", "кот / кошка", "noun"),
+        makeWordItem("vessel", "[ˈvesəl]", "судно / сосуд", "noun"),
+        makeWordItem("maintain", "[meɪnˈteɪn]", "обслуживать / поддерживать", "verb")
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: uid("dict"),
+      title: "Marine English",
+      note: "работа / рейс / судно",
+      words: [
+        makeWordItem("anchor", "[ˈæŋkər]", "якорь", "noun"),
+        makeWordItem("cargo", "[ˈkɑːrɡoʊ]", "груз", "noun")
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+}
+
+function saveDictionaries() {
+  try {
+    localStorage.setItem(LEXICON_STORAGE_KEY, JSON.stringify(dictionaries));
+  } catch {}
+}
+
+function makeWordItem(word, transcription = "—", translation = "перевод позже", partOfSpeech = "") {
+  return {
+    id: uid("word"),
+    word: (word || "").toString().trim(),
+    transcription,
+    translation,
+    partOfSpeech,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function renderLexiconPage() {
+  if (!lexiconPage) return;
+
+  const totalWords = dictionaries.reduce((sum, dict) => sum + (dict.words || []).length, 0);
+
+  lexiconPage.innerHTML = `
+    <section class="lexicon-shell">
+      <div class="lexicon-topline">
         <button id="backHomeFromLexiconBtn" class="back-btn" type="button">← Назад</button>
-        <h1>Лексикон</h1>
-      </section>
 
-      <section class="card muted-card">
-        <h2>Словари</h2>
-        <div class="status">Пока заглушка. Здесь позже будут личные словари, слова и счётчики.</div>
-      </section>
-    `;
+        <div class="lexicon-title-block">
+          <h1>Лексикон</h1>
+          <div class="lexicon-subtitle">${dictionaries.length} словарей • ${totalWords} слов</div>
+        </div>
 
-    backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
-    on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+        <div class="lexicon-actions">
+          <button id="lexiconMenuBtn" class="lexicon-icon-btn" type="button" title="Меню">☰</button>
+          <button id="addDictionaryBtn" class="lexicon-add-btn" type="button" title="Добавить словарь">+</button>
+        </div>
+      </div>
+
+      <div class="lexicon-search-card">
+        <input id="dictionarySearchInput" class="lexicon-search" type="search" placeholder="Поиск словаря или слова" />
+      </div>
+
+      <div id="dictionaryList" class="dictionary-list"></div>
+    </section>
+  `;
+
+  backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
+  on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+
+  const addDictionaryBtn = document.getElementById("addDictionaryBtn");
+  const lexiconMenuBtn = document.getElementById("lexiconMenuBtn");
+  const dictionarySearchInput = document.getElementById("dictionarySearchInput");
+
+  on(addDictionaryBtn, "click", addDictionary);
+  on(lexiconMenuBtn, "click", () => alert("Меню пока заглушка. Потом здесь будут импорт, экспорт, настройки и режимы."));
+  on(dictionarySearchInput, "input", () => renderDictionaryList(dictionarySearchInput.value));
+
+  renderDictionaryList("");
+}
+
+function renderDictionaryList(filterText = "") {
+  const list = document.getElementById("dictionaryList");
+  if (!list) return;
+
+  const query = (filterText || "").toString().trim().toLowerCase();
+
+  const filtered = dictionaries.filter((dict) => {
+    if (!query) return true;
+    const titleMatch = (dict.title || "").toLowerCase().includes(query);
+    const noteMatch = (dict.note || "").toLowerCase().includes(query);
+    const wordMatch = (dict.words || []).some((item) =>
+      [item.word, item.translation, item.transcription, item.partOfSpeech]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
+    return titleMatch || noteMatch || wordMatch;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="lexicon-empty">Ничего не найдено.</div>`;
+    return;
   }
 
-  showExistingPage(lexiconPage);
+  list.innerHTML = "";
+
+  filtered.forEach((dict) => {
+    const isOpen = expandedDictionaryId === dict.id;
+    const wordCount = (dict.words || []).length;
+
+    const block = document.createElement("section");
+    block.className = `dictionary-block ${isOpen ? "open" : ""}`;
+    block.dataset.dictionaryId = dict.id;
+
+    block.innerHTML = `
+      <button class="dictionary-line" type="button" data-dict-toggle="${dict.id}">
+        <div class="dictionary-chevron">${isOpen ? "⌄" : "›"}</div>
+        <div class="dictionary-line-main">
+          <div class="dictionary-name">${escapeHTML(dict.title || "Без названия")}</div>
+          <div class="dictionary-note">${escapeHTML(dict.note || "словарь")}</div>
+        </div>
+        <div class="dictionary-count">${wordCount}</div>
+      </button>
+
+      <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
+        <div class="dictionary-panel-head">
+          <div>
+            <div class="dictionary-panel-title">${escapeHTML(dict.title || "Без названия")}</div>
+            <div class="dictionary-panel-subtitle">${wordCount} слов</div>
+          </div>
+          <div class="dictionary-panel-actions">
+            <button class="small-action-btn" type="button" data-dict-rename="${dict.id}">Rename</button>
+            <button class="small-action-btn danger" type="button" data-dict-delete="${dict.id}">Delete</button>
+          </div>
+        </div>
+
+        <div class="dictionary-add-row">
+          <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
+          <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}">Ввод</button>
+        </div>
+
+        <div class="word-list" data-word-list="${dict.id}">
+          ${renderWordsHtml(dict)}
+        </div>
+      </div>
+    `;
+
+    list.appendChild(block);
+  });
+
+  list.querySelectorAll("[data-dict-toggle]").forEach((btn) => {
+    on(btn, "click", () => toggleDictionary(btn.dataset.dictToggle));
+  });
+
+  list.querySelectorAll("[data-dict-rename]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.stopPropagation();
+      renameDictionary(btn.dataset.dictRename);
+    });
+  });
+
+  list.querySelectorAll("[data-dict-delete]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.stopPropagation();
+      deleteDictionary(btn.dataset.dictDelete);
+    });
+  });
+
+  list.querySelectorAll("[data-word-add]").forEach((btn) => {
+    on(btn, "click", () => addWordToDictionary(btn.dataset.wordAdd));
+  });
+
+  list.querySelectorAll("[data-word-input]").forEach((input) => {
+    on(input, "keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addWordToDictionary(input.dataset.wordInput);
+      }
+    });
+  });
+
+  list.querySelectorAll("[data-word-open]").forEach((row) => {
+    on(row, "click", () => openWordFromDictionary(row.dataset.wordOpen));
+  });
+
+  list.querySelectorAll("[data-word-delete]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.stopPropagation();
+      deleteWord(btn.dataset.wordDelete, btn.dataset.dictionaryId);
+    });
+  });
+}
+
+function renderWordsHtml(dict) {
+  const words = dict.words || [];
+
+  if (!words.length) {
+    return `<div class="empty-word-list">Слов пока нет. Введите первое слово сверху.</div>`;
+  }
+
+  return words.map((item) => `
+    <div class="word-row" data-word-open="${escapeHTML(item.word)}">
+      <div class="word-main">
+        <div class="word-line">
+          <span class="word-text">${escapeHTML(item.word)}</span>
+          ${item.partOfSpeech ? `<span class="word-pos">${escapeHTML(item.partOfSpeech)}</span>` : ""}
+        </div>
+        <div class="word-transcription">${escapeHTML(item.transcription || "—")}</div>
+      </div>
+      <div class="word-translation">${escapeHTML(item.translation || "перевод позже")}</div>
+      <button class="word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>
+    </div>
+  `).join("");
+}
+
+function addDictionary() {
+  const name = prompt("Название словаря:", "Новый словарь");
+  if (name === null) return;
+
+  const title = (name || "").toString().trim() || "Новый словарь";
+  const now = new Date().toISOString();
+
+  const dict = {
+    id: uid("dict"),
+    title,
+    note: "личный словарь",
+    words: [],
+    createdAt: now,
+    updatedAt: now
+  };
+
+  dictionaries.unshift(dict);
+  expandedDictionaryId = dict.id;
+  saveDictionaries();
+  renderLexiconPage();
+}
+
+function toggleDictionary(dictionaryId) {
+  if (!dictionaryId) return;
+  expandedDictionaryId = expandedDictionaryId === dictionaryId ? null : dictionaryId;
+
+  const searchInput = document.getElementById("dictionarySearchInput");
+  renderDictionaryList(searchInput ? searchInput.value : "");
+}
+
+function renameDictionary(dictionaryId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict) return;
+
+  const nextTitle = prompt("Новое название словаря:", dict.title || "");
+  if (nextTitle === null) return;
+
+  dict.title = (nextTitle || "").toString().trim() || "Без названия";
+  dict.updatedAt = new Date().toISOString();
+
+  saveDictionaries();
+  renderLexiconPage();
+}
+
+function deleteDictionary(dictionaryId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict) return;
+
+  if (!confirm(`Удалить словарь «${dict.title || "Без названия"}»?`)) return;
+
+  dictionaries = dictionaries.filter((item) => item.id !== dictionaryId);
+
+  if (expandedDictionaryId === dictionaryId) expandedDictionaryId = null;
+
+  saveDictionaries();
+  renderLexiconPage();
+}
+
+function addWordToDictionary(dictionaryId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict) return;
+
+  const input = document.querySelector(`[data-word-input="${cssEscape(dictionaryId)}"]`);
+  const rawWord = input ? input.value.trim() : "";
+
+  if (!rawWord) {
+    if (input) input.focus();
+    return;
+  }
+
+  const exists = (dict.words || []).some((item) => item.word.toLowerCase() === rawWord.toLowerCase());
+
+  const wordItem = makeWordItem(
+    rawWord,
+    "…",
+    exists ? "уже есть / дубль" : "перевод позже",
+    ""
+  );
+
+  dict.words = dict.words || [];
+  dict.words.unshift(wordItem);
+  dict.updatedAt = new Date().toISOString();
+
+  saveDictionaries();
+
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+
+  const searchInput = document.getElementById("dictionarySearchInput");
+  renderDictionaryList(searchInput ? searchInput.value : "");
+
+  requestAnimationFrame(() => {
+    const nextInput = document.querySelector(`[data-word-input="${cssEscape(dictionaryId)}"]`);
+    if (nextInput) nextInput.focus();
+  });
+}
+
+function deleteWord(wordId, dictionaryId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict) return;
+
+  dict.words = (dict.words || []).filter((item) => item.id !== wordId);
+  dict.updatedAt = new Date().toISOString();
+
+  saveDictionaries();
+
+  const searchInput = document.getElementById("dictionarySearchInput");
+  renderDictionaryList(searchInput ? searchInput.value : "");
+}
+
+function openWordFromDictionary(word) {
+  if (!word) return;
+
+  showPage("home");
+  setMode("word");
+
+  const wordInput = document.getElementById("wordInput");
+  if (wordInput) {
+    wordInput.value = word;
+    wordInput.focus();
+  }
+
+  showHomeResult(`Слово «${word}» перенесено в поле перевода. Полный разбор подключим через GPT.`);
 }
 
 // ===== MODE SWITCH =====
@@ -262,9 +602,7 @@ function setMode(mode) {
 }
 
 function showHomeResult(text) {
-  if (homeResult) {
-    homeResult.textContent = text;
-  }
+  if (homeResult) homeResult.textContent = text;
 }
 
 // ===== TOKEN =====
@@ -413,11 +751,8 @@ async function checkStatus() {
 
     showStatus(JSON.stringify(data, null, 2));
 
-    if (data.status === "done") {
-      downloadBtn?.classList.remove("hidden");
-    } else {
-      downloadBtn?.classList.add("hidden");
-    }
+    if (data.status === "done") downloadBtn?.classList.remove("hidden");
+    else downloadBtn?.classList.add("hidden");
   } catch (err) {
     showStatus(err.message);
   } finally {
@@ -449,9 +784,7 @@ async function downloadResult() {
       })
     });
 
-    if (!res.ok) {
-      throw new Error(await res.text());
-    }
+    if (!res.ok) throw new Error(await res.text());
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -499,4 +832,20 @@ async function readJsonOrThrow(res) {
   }
 
   return JSON.parse(text);
+}
+
+function escapeHTML(value) {
+  return (value || "").toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function cssEscape(value) {
+  if (window.CSS && typeof window.CSS.escape === "function") {
+    return window.CSS.escape(value);
+  }
+  return (value || "").toString().replace(/[^a-zA-Z0-9_-]/g, "\\$&");
 }
