@@ -7,6 +7,15 @@ let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
 let expandedDictionaryId = null;
 
+let textTranslationReady = false;
+let textActivePanel = "source";
+let textSourceValue = "";
+let textTranslatedValue = "";
+const textPanelScroll = {
+  source: 0,
+  translation: 0
+};
+
 // ===== PAGES =====
 const homePage = document.getElementById("homePage");
 const filesPage = document.getElementById("filesPage");
@@ -29,6 +38,7 @@ const wordInputBox = document.getElementById("wordInputBox");
 const textInputBox = document.getElementById("textInputBox");
 const wordTranslateBtn = document.getElementById("wordTranslateBtn");
 const textTranslateBtn = document.getElementById("textTranslateBtn");
+const homeResultCard = document.getElementById("homeResultCard");
 const homeResult = document.getElementById("homeResult");
 
 // ===== FILES UI =====
@@ -43,6 +53,7 @@ let manualId = document.getElementById("manualId");
 let manualKey = document.getElementById("manualKey");
 let manualCheckBtn = document.getElementById("manualCheckBtn");
 
+ensureTextModeMarkup();
 ensureFilesPageMarkup();
 refreshFileElements();
 bindEvents();
@@ -76,9 +87,7 @@ function bindEvents() {
     showHomeResult("Пока это UI-заглушка для перевода слова/слов. Следующим шагом подключим GPT.");
   });
 
-  on(textTranslateBtn, "click", () => {
-    showHomeResult("Пока это UI-заглушка для перевода текста. Следующим шагом подключим GPT.");
-  });
+  bindTextModeEvents();
 }
 
 function on(el, eventName, handler) {
@@ -88,6 +97,220 @@ function on(el, eventName, handler) {
 function uid(prefix = "id") {
   return `${prefix}_${Date.now().toString(16)}_${Math.random().toString(16).slice(2)}`;
 }
+
+
+// ===== TEXT MODE UI =====
+function ensureTextModeMarkup() {
+  if (!textInputBox) return;
+
+  textInputBox.innerHTML = `
+    <div class="text-mode-shell">
+      <div class="text-mode-actions">
+        <button id="textTranslateBtn" class="text-action-primary" type="button">Перевести →</button>
+        <button id="textClearBtn" class="text-action-secondary" type="button">Очистить</button>
+      </div>
+
+      <div id="textPanelTabs" class="text-panel-tabs hidden">
+        <button id="textSourceTab" class="text-panel-tab active" type="button">Оригинал</button>
+        <button id="textTranslationTab" class="text-panel-tab" type="button">Перевод</button>
+      </div>
+
+      <div id="textSwipeFrame" class="text-swipe-frame">
+        <div id="textSwipeTrack" class="text-swipe-track">
+          <section class="text-panel" data-text-panel="source">
+            <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
+          </section>
+
+          <section class="text-panel" data-text-panel="translation">
+            <div id="textTranslationOutput" class="text-translation-output">
+              Перевод появится здесь.
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div id="textModeHint" class="text-mode-hint">
+        После перевода появятся две панели: оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.
+      </div>
+    </div>
+  `;
+}
+
+function bindTextModeEvents() {
+  const translateBtn = document.getElementById("textTranslateBtn");
+  const clearBtn = document.getElementById("textClearBtn");
+  const sourceTab = document.getElementById("textSourceTab");
+  const translationTab = document.getElementById("textTranslationTab");
+  const sourcePanel = document.querySelector('[data-text-panel="source"]');
+  const translationPanel = document.querySelector('[data-text-panel="translation"]');
+  const textInput = document.getElementById("textInput");
+
+  on(translateBtn, "click", handleTextTranslate);
+  on(clearBtn, "click", clearTextMode);
+  on(sourceTab, "click", () => switchTextPanel("source"));
+  on(translationTab, "click", () => switchTextPanel("translation"));
+
+  on(sourcePanel, "scroll", () => {
+    textPanelScroll.source = sourcePanel.scrollTop;
+  });
+
+  on(translationPanel, "scroll", () => {
+    textPanelScroll.translation = translationPanel.scrollTop;
+  });
+
+  on(textInput, "input", () => {
+    if (!textTranslationReady) return;
+    textSourceValue = textInput.value;
+  });
+
+  bindTextSwipe();
+}
+
+function bindTextSwipe() {
+  const frame = document.getElementById("textSwipeFrame");
+  if (!frame) return;
+
+  let startX = 0;
+  let startY = 0;
+  let started = false;
+
+  frame.addEventListener("touchstart", (event) => {
+    if (!textTranslationReady || !event.touches || !event.touches.length) return;
+    started = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  frame.addEventListener("touchend", (event) => {
+    if (!started || !textTranslationReady || !event.changedTouches || !event.changedTouches.length) return;
+    started = false;
+
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0) switchTextPanel("translation");
+    else switchTextPanel("source");
+  }, { passive: true });
+}
+
+function handleTextTranslate() {
+  const textInput = document.getElementById("textInput");
+  const source = textInput ? textInput.value.trim() : "";
+
+  if (!source) {
+    if (textInput) textInput.focus();
+    return;
+  }
+
+  textSourceValue = source;
+  textTranslatedValue = buildTextTranslationStub(source);
+  textTranslationReady = true;
+  textActivePanel = "translation";
+
+  const output = document.getElementById("textTranslationOutput");
+  if (output) output.textContent = textTranslatedValue;
+
+  const tabs = document.getElementById("textPanelTabs");
+  if (tabs) tabs.classList.remove("hidden");
+
+  const hint = document.getElementById("textModeHint");
+  if (hint) {
+    hint.textContent = "Это пока UI-заглушка. Позже сюда придёт настоящий перевод из воркера.";
+  }
+
+  switchTextPanel("translation");
+}
+
+function buildTextTranslationStub(source) {
+  return [
+    "ПЕРЕВОД — ЗАГЛУШКА",
+    "",
+    "Здесь будет результат перевода текста.",
+    "",
+    "Оригинал сохранён в соседней панели. Можно свайпать влево/вправо или нажимать «Оригинал / Перевод».",
+    "",
+    "Текст, который был отправлен:",
+    "",
+    source
+  ].join("\\n");
+}
+
+function switchTextPanel(panelName) {
+  if (panelName !== "source" && panelName !== "translation") return;
+
+  const sourcePanel = document.querySelector('[data-text-panel="source"]');
+  const translationPanel = document.querySelector('[data-text-panel="translation"]');
+
+  if (sourcePanel) textPanelScroll.source = sourcePanel.scrollTop;
+  if (translationPanel) textPanelScroll.translation = translationPanel.scrollTop;
+
+  textActivePanel = panelName;
+  updateTextPanelUI();
+
+  requestAnimationFrame(() => {
+    if (sourcePanel) sourcePanel.scrollTop = textPanelScroll.source;
+    if (translationPanel) translationPanel.scrollTop = textPanelScroll.translation;
+  });
+}
+
+function updateTextPanelUI() {
+  const track = document.getElementById("textSwipeTrack");
+  const sourceTab = document.getElementById("textSourceTab");
+  const translationTab = document.getElementById("textTranslationTab");
+
+  if (track) {
+    track.style.transform = textActivePanel === "translation"
+      ? "translateX(-50%)"
+      : "translateX(0)";
+  }
+
+  if (sourceTab) sourceTab.classList.toggle("active", textActivePanel === "source");
+  if (translationTab) translationTab.classList.toggle("active", textActivePanel === "translation");
+}
+
+function clearTextMode() {
+  const textInput = document.getElementById("textInput");
+  const output = document.getElementById("textTranslationOutput");
+  const tabs = document.getElementById("textPanelTabs");
+  const hint = document.getElementById("textModeHint");
+
+  textTranslationReady = false;
+  textActivePanel = "source";
+  textSourceValue = "";
+  textTranslatedValue = "";
+  textPanelScroll.source = 0;
+  textPanelScroll.translation = 0;
+
+  if (textInput) textInput.value = "";
+  if (output) output.textContent = "Перевод появится здесь.";
+  if (tabs) tabs.classList.add("hidden");
+  if (hint) {
+    hint.textContent = "После перевода появятся две панели: оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.";
+  }
+
+  updateTextPanelUI();
+
+  requestAnimationFrame(() => {
+    const sourcePanel = document.querySelector('[data-text-panel="source"]');
+    const translationPanel = document.querySelector('[data-text-panel="translation"]');
+    if (sourcePanel) sourcePanel.scrollTop = 0;
+    if (translationPanel) translationPanel.scrollTop = 0;
+    if (textInput) textInput.focus();
+  });
+}
+
+function syncTextModeVisibility(mode) {
+  if (homeResultCard) {
+    homeResultCard.classList.toggle("hidden", mode === "text");
+  }
+
+  if (mode === "text") {
+    updateTextPanelUI();
+  }
+}
+
 
 // ===== FILES MARKUP RESTORE =====
 function ensureFilesPageMarkup() {
@@ -592,6 +815,7 @@ function setMode(mode) {
     textModeBtn?.classList.remove("active");
     wordInputBox?.classList.remove("hidden");
     textInputBox?.classList.add("hidden");
+    syncTextModeVisibility("word");
     return;
   }
 
@@ -599,6 +823,7 @@ function setMode(mode) {
   textModeBtn?.classList.add("active");
   wordInputBox?.classList.add("hidden");
   textInputBox?.classList.remove("hidden");
+  syncTextModeVisibility("text");
 }
 
 function showHomeResult(text) {
