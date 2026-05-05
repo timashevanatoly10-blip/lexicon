@@ -6,6 +6,7 @@ let currentDocumentId = "";
 let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
 let expandedDictionaryId = null;
+let lastWordTranslateSource = "";
 
 let textTranslationReady = false;
 let textActivePanel = "source";
@@ -40,6 +41,7 @@ const wordTranslateBtn = document.getElementById("wordTranslateBtn");
 const textTranslateBtn = document.getElementById("textTranslateBtn");
 const homeResultCard = document.getElementById("homeResultCard");
 const homeResult = document.getElementById("homeResult");
+let addCurrentWordToDictionaryBtn = null;
 
 // ===== FILES UI =====
 let fileInput = document.getElementById("fileInput");
@@ -128,7 +130,10 @@ async function handleWordTranslate() {
     return;
   }
 
+  lastWordTranslateSource = source;
+
   if (homeResultCard) homeResultCard.classList.remove("hidden");
+  hideAddCurrentWordButton();
   showHomeResult("Перевожу через GPT...");
 
   if (wordTranslateBtn) wordTranslateBtn.disabled = true;
@@ -136,6 +141,7 @@ async function handleWordTranslate() {
   try {
     const data = await callAi("word_translate", source);
     showHomeResult(data.result || data.raw || "Пустой ответ.");
+    showAddCurrentWordButton(source);
   } catch (err) {
     showHomeResult("Ошибка перевода:\n" + err.message);
   } finally {
@@ -153,6 +159,169 @@ async function buildShortWordCard(word) {
     translation: String(card.translation || "перевод позже").trim(),
     partOfSpeech: String(card.partOfSpeech || card.part_of_speech || "").trim()
   };
+}
+
+
+function showAddCurrentWordButton(word) {
+  if (!homeResultCard || !word) return;
+
+  ensureAddCurrentWordButton();
+
+  if (!addCurrentWordToDictionaryBtn) return;
+
+  addCurrentWordToDictionaryBtn.textContent = "+ В словарь";
+  addCurrentWordToDictionaryBtn.disabled = false;
+  addCurrentWordToDictionaryBtn.classList.remove("hidden");
+}
+
+function hideAddCurrentWordButton() {
+  if (addCurrentWordToDictionaryBtn) {
+    addCurrentWordToDictionaryBtn.classList.add("hidden");
+    addCurrentWordToDictionaryBtn.disabled = false;
+  }
+}
+
+function ensureAddCurrentWordButton() {
+  if (addCurrentWordToDictionaryBtn && document.body.contains(addCurrentWordToDictionaryBtn)) {
+    return;
+  }
+
+  if (!homeResultCard) return;
+
+  addCurrentWordToDictionaryBtn = document.createElement("button");
+  addCurrentWordToDictionaryBtn.id = "addCurrentWordToDictionaryBtn";
+  addCurrentWordToDictionaryBtn.type = "button";
+  addCurrentWordToDictionaryBtn.className = "primary hidden";
+  addCurrentWordToDictionaryBtn.style.marginTop = "14px";
+  addCurrentWordToDictionaryBtn.textContent = "+ В словарь";
+
+  addCurrentWordToDictionaryBtn.addEventListener("click", addCurrentWordTranslationToDictionary);
+
+  homeResultCard.appendChild(addCurrentWordToDictionaryBtn);
+}
+
+async function addCurrentWordTranslationToDictionary() {
+  const word = (lastWordTranslateSource || document.getElementById("wordInput")?.value || "").trim();
+
+  if (!word) {
+    alert("Нет слова для добавления.");
+    return;
+  }
+
+  const dictionaryId = chooseDictionaryId();
+
+  if (!dictionaryId) return;
+
+  if (addCurrentWordToDictionaryBtn) {
+    addCurrentWordToDictionaryBtn.disabled = true;
+    addCurrentWordToDictionaryBtn.textContent = "Добавляю...";
+  }
+
+  try {
+    await addWordCardToDictionary(dictionaryId, word);
+
+    if (addCurrentWordToDictionaryBtn) {
+      addCurrentWordToDictionaryBtn.textContent = "Добавлено";
+    }
+  } catch (err) {
+    alert("Не удалось добавить слово:\n" + err.message);
+
+    if (addCurrentWordToDictionaryBtn) {
+      addCurrentWordToDictionaryBtn.textContent = "+ В словарь";
+      addCurrentWordToDictionaryBtn.disabled = false;
+    }
+  }
+}
+
+function chooseDictionaryId() {
+  if (!dictionaries.length) {
+    const title = prompt("Словарей пока нет. Название нового словаря:", "Мой словарь");
+
+    if (title === null) return "";
+
+    const dict = createDictionary((title || "").trim() || "Мой словарь");
+    return dict.id;
+  }
+
+  if (dictionaries.length === 1) {
+    return dictionaries[0].id;
+  }
+
+  const lines = dictionaries.map((dict, index) => {
+    const count = (dict.words || []).length;
+    return `${index + 1}. ${dict.title || "Без названия"} (${count})`;
+  });
+
+  const answer = prompt(
+    "Куда добавить слово?\n\n" + lines.join("\n") + "\n\nВведите номер словаря:",
+    "1"
+  );
+
+  if (answer === null) return "";
+
+  const index = Number.parseInt(answer, 10) - 1;
+
+  if (!Number.isInteger(index) || index < 0 || index >= dictionaries.length) {
+    alert("Неверный номер словаря.");
+    return "";
+  }
+
+  return dictionaries[index].id;
+}
+
+async function addWordCardToDictionary(dictionaryId, rawWord) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+
+  if (!dict) {
+    throw new Error("Словарь не найден.");
+  }
+
+  const word = String(rawWord || "").trim();
+
+  if (!word) {
+    throw new Error("Пустое слово.");
+  }
+
+  const existing = (dict.words || []).find((item) => {
+    return String(item.word || "").trim().toLowerCase() === word.toLowerCase();
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  const wordItem = makeWordItem(word, "…", "создаю карточку…", "");
+
+  dict.words = dict.words || [];
+  dict.words.unshift(wordItem);
+  dict.updatedAt = new Date().toISOString();
+
+  saveDictionaries();
+
+  try {
+    const card = await buildShortWordCard(word);
+
+    wordItem.word = card.word || word;
+    wordItem.transcription = card.transcription || "—";
+    wordItem.translation = card.translation || "перевод позже";
+    wordItem.partOfSpeech = card.partOfSpeech || "";
+    wordItem.updatedAt = new Date().toISOString();
+
+    dict.updatedAt = new Date().toISOString();
+    saveDictionaries();
+  } catch (err) {
+    wordItem.transcription = "—";
+    wordItem.translation = "перевод позже";
+    wordItem.partOfSpeech = "";
+    wordItem.updatedAt = new Date().toISOString();
+
+    dict.updatedAt = new Date().toISOString();
+    saveDictionaries();
+
+    throw err;
+  }
+
+  return wordItem;
 }
 
 
@@ -379,6 +548,7 @@ function syncTextModeVisibility(mode) {
   }
 
   if (mode === "text") {
+    hideAddCurrentWordButton();
     updateTextPanelUI();
   }
 }
@@ -758,6 +928,14 @@ function addDictionary() {
   if (name === null) return;
 
   const title = (name || "").toString().trim() || "Новый словарь";
+  const dict = createDictionary(title);
+
+  expandedDictionaryId = dict.id;
+  saveDictionaries();
+  renderLexiconPage();
+}
+
+function createDictionary(title) {
   const now = new Date().toISOString();
 
   const dict = {
@@ -770,9 +948,9 @@ function addDictionary() {
   };
 
   dictionaries.unshift(dict);
-  expandedDictionaryId = dict.id;
   saveDictionaries();
-  renderLexiconPage();
+
+  return dict;
 }
 
 function toggleDictionary(dictionaryId) {
@@ -823,56 +1001,12 @@ async function addWordToDictionary(dictionaryId) {
     return;
   }
 
-  const exists = (dict.words || []).some((item) => item.word.toLowerCase() === rawWord.toLowerCase());
-
-  if (input) {
-    input.disabled = true;
-  }
-
-  const wordItem = makeWordItem(
-    rawWord,
-    "…",
-    exists ? "уже есть / создаю карточку…" : "создаю карточку…",
-    ""
-  );
-
-  dict.words = dict.words || [];
-  dict.words.unshift(wordItem);
-  dict.updatedAt = new Date().toISOString();
-
-  saveDictionaries();
-  renderDictionaryList(getDictionarySearchValue());
+  if (input) input.disabled = true;
 
   try {
-    const card = await buildShortWordCard(rawWord);
-    const targetDict = dictionaries.find((item) => item.id === dictionaryId);
-    const targetWord = targetDict?.words?.find((item) => item.id === wordItem.id);
-
-    if (targetWord) {
-      targetWord.word = card.word || rawWord;
-      targetWord.transcription = card.transcription || "—";
-      targetWord.translation = exists
-        ? `уже есть / ${card.translation || "перевод позже"}`
-        : (card.translation || "перевод позже");
-      targetWord.partOfSpeech = card.partOfSpeech || "";
-      targetWord.updatedAt = new Date().toISOString();
-
-      if (targetDict) targetDict.updatedAt = new Date().toISOString();
-      saveDictionaries();
-    }
+    await addWordCardToDictionary(dictionaryId, rawWord);
   } catch {
-    const targetDict = dictionaries.find((item) => item.id === dictionaryId);
-    const targetWord = targetDict?.words?.find((item) => item.id === wordItem.id);
-
-    if (targetWord) {
-      targetWord.transcription = "—";
-      targetWord.translation = exists ? "уже есть / перевод позже" : "перевод позже";
-      targetWord.partOfSpeech = "";
-      targetWord.updatedAt = new Date().toISOString();
-
-      if (targetDict) targetDict.updatedAt = new Date().toISOString();
-      saveDictionaries();
-    }
+    // Слово остаётся в словаре как черновик "перевод позже".
   }
 
   renderDictionaryList(getDictionarySearchValue());
@@ -917,7 +1051,7 @@ function openWordFromDictionary(word) {
     wordInput.focus();
   }
 
-  showHomeResult(`Слово «${word}» перенесено в поле перевода. Полный разбор подключим через GPT.`);
+  showHomeResult(`Слово «${word}» перенесено в поле перевода. Нажми «Перевести», чтобы получить полный разбор.`);
 }
 
 // ===== MODE SWITCH =====
