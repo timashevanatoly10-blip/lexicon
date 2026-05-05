@@ -60,6 +60,7 @@ ensureFilesPageMarkup();
 refreshFileElements();
 bindEvents();
 initAccessToken();
+ensureDictionaryPickerStyles();
 showPage("home");
 
 if ("serviceWorker" in navigator) {
@@ -96,6 +97,27 @@ function on(el, eventName, handler) {
 
 function uid(prefix = "id") {
   return `${prefix}_${Date.now().toString(16)}_${Math.random().toString(16).slice(2)}`;
+}
+
+function ensureDictionaryPickerStyles() {
+  if (document.getElementById("dictionaryPickerStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "dictionaryPickerStyles";
+  style.textContent = `
+    @keyframes dictionaryPickerRise {
+      from {
+        transform: translateY(18px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
 // ===== AI API =====
@@ -208,7 +230,7 @@ async function addCurrentWordTranslationToDictionary() {
     return;
   }
 
-  const dictionaryId = chooseDictionaryId();
+  const dictionaryId = await chooseDictionaryIdFromModal();
 
   if (!dictionaryId) return;
 
@@ -233,40 +255,140 @@ async function addCurrentWordTranslationToDictionary() {
   }
 }
 
-function chooseDictionaryId() {
-  if (!dictionaries.length) {
-    const title = prompt("Словарей пока нет. Название нового словаря:", "Мой словарь");
+function chooseDictionaryIdFromModal() {
+  return new Promise((resolve) => {
+    closeDictionaryPickerModal();
 
-    if (title === null) return "";
+    const overlay = document.createElement("div");
+    overlay.id = "dictionaryPickerOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.left = "0";
+    overlay.style.right = "0";
+    overlay.style.top = "0";
+    overlay.style.bottom = "0";
+    overlay.style.zIndex = "9999";
+    overlay.style.background = "rgba(10, 20, 15, 0.32)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "flex-end";
+    overlay.style.justifyContent = "center";
+    overlay.style.padding = "16px";
 
-    const dict = createDictionary((title || "").trim() || "Мой словарь");
-    return dict.id;
-  }
+    const sheet = document.createElement("div");
+    sheet.style.width = "min(520px, 100%)";
+    sheet.style.maxHeight = "82vh";
+    sheet.style.overflow = "auto";
+    sheet.style.background = "#ffffff";
+    sheet.style.border = "1px solid #d7e1da";
+    sheet.style.borderRadius = "24px";
+    sheet.style.boxShadow = "0 18px 50px rgba(20, 40, 30, 0.22)";
+    sheet.style.padding = "16px";
+    sheet.style.animation = "dictionaryPickerRise 0.18s ease-out";
 
-  if (dictionaries.length === 1) {
-    return dictionaries[0].id;
-  }
+    const word = (lastWordTranslateSource || document.getElementById("wordInput")?.value || "").trim();
 
-  const lines = dictionaries.map((dict, index) => {
-    const count = (dict.words || []).length;
-    return `${index + 1}. ${dict.title || "Без названия"} (${count})`;
+    sheet.innerHTML = `
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;">
+        <div>
+          <div style="font-size:20px; font-weight:800; color:#17211b;">Добавить в словарь</div>
+          <div style="font-size:14px; color:#6d7a72; margin-top:2px;">${escapeHTML(word || "слово")}</div>
+        </div>
+        <button id="dictionaryPickerCloseBtn" type="button" style="border:0; background:#f3f7f4; border-radius:999px; width:38px; height:38px; font-size:22px; line-height:1; color:#17211b;">×</button>
+      </div>
+
+      <div id="dictionaryPickerList"></div>
+
+      <button id="dictionaryPickerNewBtn" type="button" style="width:100%; margin-top:12px; border:1px dashed #4f8f68; background:#f5faf6; color:#2f6f4b; border-radius:16px; padding:14px 16px; font-weight:800; text-align:center;">
+        + Новый словарь
+      </button>
+
+      <button id="dictionaryPickerCancelBtn" type="button" style="width:100%; margin-top:10px; border:0; background:#f3f7f4; color:#6d7a72; border-radius:16px; padding:13px 16px; font-weight:700;">
+        Отмена
+      </button>
+    `;
+
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+
+    const finish = (dictionaryId) => {
+      closeDictionaryPickerModal();
+      resolve(dictionaryId || "");
+    };
+
+    const list = sheet.querySelector("#dictionaryPickerList");
+
+    if (list) {
+      if (!dictionaries.length) {
+        list.innerHTML = `
+          <div style="background:#f7fbf8; border:1px solid #d7e1da; border-radius:16px; padding:14px; color:#6d7a72; line-height:1.35;">
+            Словарей пока нет. Создай новый словарь, и слово сразу добавится туда.
+          </div>
+        `;
+      } else {
+        dictionaries.forEach((dict) => {
+          const count = (dict.words || []).length;
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.style.width = "100%";
+          btn.style.display = "flex";
+          btn.style.alignItems = "center";
+          btn.style.justifyContent = "space-between";
+          btn.style.gap = "12px";
+          btn.style.border = "1px solid #d7e1da";
+          btn.style.background = "#fbfdfb";
+          btn.style.borderRadius = "16px";
+          btn.style.padding = "14px 15px";
+          btn.style.marginBottom = "10px";
+          btn.style.textAlign = "left";
+          btn.innerHTML = `
+            <span style="min-width:0;">
+              <span style="display:block; font-weight:800; color:#17211b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(dict.title || "Без названия")}</span>
+              <span style="display:block; margin-top:3px; font-size:13px; color:#6d7a72;">${escapeHTML(dict.note || "словарь")}</span>
+            </span>
+            <span style="flex:0 0 auto; min-width:34px; height:34px; border-radius:999px; background:#eef5f0; color:#2f6f4b; display:inline-flex; align-items:center; justify-content:center; font-weight:800;">${count}</span>
+          `;
+
+          btn.addEventListener("click", () => finish(dict.id));
+
+          list.appendChild(btn);
+        });
+      }
+    }
+
+    const closeBtn = sheet.querySelector("#dictionaryPickerCloseBtn");
+    const cancelBtn = sheet.querySelector("#dictionaryPickerCancelBtn");
+    const newBtn = sheet.querySelector("#dictionaryPickerNewBtn");
+
+    if (closeBtn) closeBtn.addEventListener("click", () => finish(""));
+    if (cancelBtn) cancelBtn.addEventListener("click", () => finish(""));
+
+    if (newBtn) {
+      newBtn.addEventListener("click", () => {
+        const title = prompt("Название нового словаря:", "Новый словарь");
+
+        if (title === null) return;
+
+        const dict = createDictionary((title || "").trim() || "Новый словарь");
+        expandedDictionaryId = dict.id;
+        saveDictionaries();
+
+        finish(dict.id);
+      });
+    }
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) {
+        finish("");
+      }
+    });
   });
+}
 
-  const answer = prompt(
-    "Куда добавить слово?\n\n" + lines.join("\n") + "\n\nВведите номер словаря:",
-    "1"
-  );
-
-  if (answer === null) return "";
-
-  const index = Number.parseInt(answer, 10) - 1;
-
-  if (!Number.isInteger(index) || index < 0 || index >= dictionaries.length) {
-    alert("Неверный номер словаря.");
-    return "";
+function closeDictionaryPickerModal() {
+  const existing = document.getElementById("dictionaryPickerOverlay");
+  if (existing) {
+    existing.remove();
   }
-
-  return dictionaries[index].id;
 }
 
 async function addWordCardToDictionary(dictionaryId, rawWord) {
