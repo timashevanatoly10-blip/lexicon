@@ -140,6 +140,65 @@ function ensureDictionaryPickerStyles() {
       word-break: break-word;
     }
 
+    .text-mode-actions-compact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .text-action-spacer {
+      flex: 1 1 auto;
+      min-width: 18px;
+      background: transparent;
+    }
+
+    .text-add-lex-btn {
+      flex: 0 0 auto;
+      min-width: 112px;
+      text-transform: lowercase;
+    }
+
+    .text-translate-compact-btn {
+      flex: 0 0 auto;
+      min-width: 160px;
+    }
+
+    .text-panel {
+      position: relative;
+    }
+
+    .text-inline-clear-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 6;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 999px;
+      background: #4f8f68;
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      box-shadow: 0 8px 18px rgba(47, 111, 75, 0.22);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .text-inline-clear-btn.hidden {
+      display: none;
+    }
+
+    .text-panel .text-big-input,
+    .text-panel .text-clickable-output,
+    .text-panel .text-translation-output {
+      padding-right: 58px;
+    }
+
     #textAddLexBtn.active {
       background: #4f8f68;
       color: #ffffff;
@@ -484,10 +543,10 @@ function ensureTextModeMarkup() {
 
   textInputBox.innerHTML = `
     <div class="text-mode-shell">
-      <div class="text-mode-actions">
-        <button id="textTranslateBtn" class="text-action-primary" type="button">Перевести →</button>
-        <button id="textAddLexBtn" class="text-action-secondary" type="button" disabled>+ LEX</button>
-        <button id="textClearBtn" class="text-action-secondary" type="button">Очистить</button>
+      <div class="text-mode-actions text-mode-actions-compact">
+        <button id="textAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled>+ lex</button>
+        <div class="text-action-spacer" aria-hidden="true"></div>
+        <button id="textTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button">Перевести →</button>
       </div>
 
       <div id="textPanelTabs" class="text-panel-tabs hidden">
@@ -498,10 +557,12 @@ function ensureTextModeMarkup() {
       <div id="textSwipeFrame" class="text-swipe-frame">
         <div id="textSwipeTrack" class="text-swipe-track">
           <section class="text-panel" data-text-panel="source">
+            <button id="textInlineClearBtn" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
             <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
           </section>
 
           <section class="text-panel" data-text-panel="translation">
+            <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
             <div id="textTranslationOutput" class="text-translation-output">
               Перевод появится здесь.
             </div>
@@ -519,6 +580,8 @@ function ensureTextModeMarkup() {
 function bindTextModeEvents() {
   const translateBtn = document.getElementById("textTranslateBtn");
   const clearBtn = document.getElementById("textClearBtn");
+  const inlineClearBtn = document.getElementById("textInlineClearBtn");
+  const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
   const addLexBtn = document.getElementById("textAddLexBtn");
   const sourceTab = document.getElementById("textSourceTab");
   const translationTab = document.getElementById("textTranslationTab");
@@ -529,6 +592,8 @@ function bindTextModeEvents() {
   on(translateBtn, "click", handleTextTranslate);
   on(addLexBtn, "click", addSelectedTextWordToDictionary);
   on(clearBtn, "click", clearTextMode);
+  on(inlineClearBtn, "click", clearTextMode);
+  on(inlineClearBtnTranslation, "click", clearTextMode);
   on(sourceTab, "click", () => switchTextPanel("source"));
   on(translationTab, "click", () => switchTextPanel("translation"));
 
@@ -541,11 +606,16 @@ function bindTextModeEvents() {
   });
 
   on(textInput, "input", () => {
+    updateTextInlineClearVisibility();
+
     if (!textTranslationReady) return;
     textSourceValue = textInput.value;
   });
 
+  updateTextInlineClearVisibility();
+
   bindTextSwipe();
+  bindTextInlineClearButtons();
 }
 
 function bindTextSwipe() {
@@ -588,6 +658,7 @@ async function handleTextTranslate() {
   }
 
   textSourceValue = source;
+  updateTextInlineClearVisibility();
   clearSelectedTextWord();
   textTranslationReady = true;
   textActivePanel = "translation";
@@ -610,7 +681,7 @@ async function handleTextTranslate() {
     textTranslatedValue = data.result || data.raw || "Пустой ответ.";
 
     renderClickableTextPanels(textSourceValue, textTranslatedValue);
-    if (hint) hint.textContent = "Перевод готов. Тапни слово, затем нажми + LEX.";
+    if (hint) hint.textContent = "Перевод готов. Тапни слово, затем нажми + lex.";
   } catch (err) {
     textTranslatedValue = "Ошибка перевода:\n" + err.message;
 
@@ -635,6 +706,45 @@ function buildTextTranslationStub(source) {
   ].join("\\n");
 }
 
+function bindTextInlineClearButtons() {
+  const inlineClearBtn = document.getElementById("textInlineClearBtn");
+  const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
+
+  if (inlineClearBtn) inlineClearBtn.onclick = clearTextMode;
+  if (inlineClearBtnTranslation) inlineClearBtnTranslation.onclick = clearTextMode;
+}
+
+function bindTextInputAfterReset() {
+  const textInput = document.getElementById("textInput");
+
+  if (!textInput) return;
+
+  textInput.oninput = () => {
+    updateTextInlineClearVisibility();
+
+    if (!textTranslationReady) return;
+    textSourceValue = textInput.value;
+  };
+
+  updateTextInlineClearVisibility();
+}
+
+function updateTextInlineClearVisibility() {
+  const inlineClearBtn = document.getElementById("textInlineClearBtn");
+  const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
+  const textInput = document.getElementById("textInput");
+
+  const hasText = Boolean(
+    textTranslationReady ||
+    textSourceValue ||
+    textTranslatedValue ||
+    (textInput && textInput.value.trim())
+  );
+
+  if (inlineClearBtn) inlineClearBtn.classList.toggle("hidden", !hasText);
+  if (inlineClearBtnTranslation) inlineClearBtnTranslation.classList.toggle("hidden", !hasText);
+}
+
 function renderClickableTextPanels(sourceText, translatedText) {
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
   const translationPanel = document.querySelector('[data-text-panel="translation"]');
@@ -643,6 +753,7 @@ function renderClickableTextPanels(sourceText, translatedText) {
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
+      <button id="textInlineClearBtn" class="text-inline-clear-btn" type="button" title="Очистить">×</button>
       <div id="textSourceClickableOutput" class="text-clickable-output" data-clickable-text="source">
         ${makeClickableTextHtml(sourceText)}
       </div>
@@ -651,6 +762,7 @@ function renderClickableTextPanels(sourceText, translatedText) {
 
   if (translationPanel) {
     translationPanel.innerHTML = `
+      <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn" type="button" title="Очистить">×</button>
       <div id="textTranslationOutput" class="text-translation-output text-clickable-output" data-clickable-text="translation">
         ${makeClickableTextHtml(translatedText)}
       </div>
@@ -658,6 +770,8 @@ function renderClickableTextPanels(sourceText, translatedText) {
   }
 
   bindClickableTextWords();
+  bindTextInlineClearButtons();
+  updateTextInlineClearVisibility();
 }
 
 function bindClickableTextWords() {
@@ -737,7 +851,7 @@ function updateTextLexButton(statusText = "") {
     return;
   }
 
-  btn.textContent = "+ LEX";
+  btn.textContent = "+ lex";
   btn.disabled = !selectedTextWord;
   btn.classList.toggle("active", Boolean(selectedTextWord));
 }
@@ -822,17 +936,21 @@ function clearTextMode() {
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
+      <button id="textInlineClearBtn" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
       <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
     `;
   }
 
   if (translationPanel) {
     translationPanel.innerHTML = `
+      <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
       <div id="textTranslationOutput" class="text-translation-output">
         Перевод появится здесь.
       </div>
     `;
   }
+
+  bindTextInlineClearButtons();
 
   if (tabs) tabs.classList.add("hidden");
 
@@ -849,6 +967,9 @@ function clearTextMode() {
 
     if (nextSourcePanel) nextSourcePanel.scrollTop = 0;
     if (nextTranslationPanel) nextTranslationPanel.scrollTop = 0;
+
+    bindTextInputAfterReset();
+
     if (textInput) textInput.focus();
   });
 }
