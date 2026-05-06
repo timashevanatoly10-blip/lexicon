@@ -189,7 +189,9 @@ function ensureDictionaryPickerStyles() {
       text-align: center;
       white-space: nowrap;
       text-overflow: ellipsis;
-      transition: opacity 0.18s ease, transform 0.18s ease;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
     }
 
     .text-word-mini-display.loading {
@@ -200,6 +202,7 @@ function ensureDictionaryPickerStyles() {
     .text-word-mini-display.ready {
       opacity: 1;
       transform: translateY(0);
+      background: rgba(79, 143, 104, 0.08);
     }
 
     .text-mode-shell .text-swipe-frame {
@@ -650,6 +653,7 @@ function bindTextModeEvents() {
   const inlineClearBtn = document.getElementById("textInlineClearBtn");
   const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
   const addLexBtn = document.getElementById("textAddLexBtn");
+  const miniDisplay = document.getElementById("textWordMiniDisplay");
   const sourceTab = document.getElementById("textSourceTab");
   const translationTab = document.getElementById("textTranslationTab");
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
@@ -658,6 +662,7 @@ function bindTextModeEvents() {
 
   on(translateBtn, "click", handleTextTranslate);
   on(addLexBtn, "click", addSelectedTextWordToDictionary);
+  on(miniDisplay, "click", openSelectedTextWordInWordMode);
   on(clearBtn, "click", clearTextMode);
   on(inlineClearBtn, "click", clearTextMode);
   on(inlineClearBtnTranslation, "click", clearTextMode);
@@ -997,6 +1002,29 @@ async function quickTranslateWord(word, requestId) {
 
     setTextWordMiniDisplay("—", "ready");
   }
+}
+
+function openSelectedTextWordInWordMode() {
+  const word = String(selectedTextWord || "").trim();
+
+  if (!word) return;
+
+  showPage("home");
+  setMode("word");
+
+  const wordInput = document.getElementById("wordInput");
+
+  if (wordInput) {
+    wordInput.value = word;
+    wordInput.focus();
+  }
+
+  if (homeResultCard) {
+    homeResultCard.classList.remove("hidden");
+  }
+
+  hideAddCurrentWordButton();
+  showHomeResult(`Слово «${word}» перенесено из текста. Нажми «Перевести», чтобы получить полный разбор.`);
 }
 
 async function addSelectedTextWordToDictionary() {
