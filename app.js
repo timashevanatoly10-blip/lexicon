@@ -144,33 +144,34 @@ function ensureDictionaryPickerStyles() {
 
     .text-mode-actions-compact {
       display: grid;
-      grid-template-columns: 78px minmax(0, 1fr) 66px;
+      grid-template-columns: 52px minmax(0, 1fr) 52px;
       align-items: center;
       gap: 10px;
       width: 100%;
     }
 
     .text-add-lex-btn {
-      width: 78px;
-      min-width: 78px;
-      height: 54px;
+      width: 52px;
+      min-width: 52px;
+      height: 48px;
       padding-left: 0;
       padding-right: 0;
       text-transform: lowercase;
-      font-size: 20px;
+      font-size: 30px;
       font-weight: 850;
-      border-radius: 18px;
+      line-height: 1;
+      border-radius: 16px;
     }
 
     .text-translate-compact-btn {
-      width: 66px;
-      min-width: 66px;
-      height: 54px;
+      width: 52px;
+      min-width: 52px;
+      height: 48px;
       padding-left: 0;
       padding-right: 0;
       font-size: 30px;
       line-height: 1;
-      border-radius: 18px;
+      border-radius: 16px;
     }
 
     .text-word-mini-display {
@@ -202,7 +203,7 @@ function ensureDictionaryPickerStyles() {
     .text-word-mini-display.ready {
       opacity: 1;
       transform: translateY(0);
-      background: rgba(79, 143, 104, 0.08);
+      background: transparent;
     }
 
     .text-mode-shell .text-swipe-frame {
@@ -614,7 +615,7 @@ function ensureTextModeMarkup() {
   textInputBox.innerHTML = `
     <div class="text-mode-shell">
       <div class="text-mode-actions text-mode-actions-compact">
-        <button id="textAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled>+ lex</button>
+        <button id="textAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled title="Добавить в словарь">+</button>
         <div id="textWordMiniDisplay" class="text-word-mini-display" aria-live="polite"></div>
         <button id="textTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
       </div>
@@ -753,7 +754,7 @@ async function handleTextTranslate() {
     textTranslatedValue = data.result || data.raw || "Пустой ответ.";
 
     renderClickableTextPanels(textSourceValue, textTranslatedValue);
-    if (hint) hint.textContent = "Перевод готов. Тапни слово, затем нажми + lex.";
+    if (hint) hint.textContent = "Перевод готов. Тапни слово, затем нажми +.";
   } catch (err) {
     textTranslatedValue = "Ошибка перевода:\n" + err.message;
 
@@ -927,7 +928,7 @@ function updateTextLexButton(statusText = "") {
     return;
   }
 
-  btn.textContent = "+ lex";
+  btn.textContent = "+";
   btn.disabled = !selectedTextWord;
   btn.classList.toggle("active", Boolean(selectedTextWord));
 }
@@ -1046,7 +1047,7 @@ async function addSelectedTextWordToDictionary() {
   try {
     await addWordCardToDictionary(dictionaryId, word);
 
-    updateTextLexButton("+ ok");
+    updateTextLexButton("✓");
 
     setTimeout(() => {
       clearSelectedTextWord();
