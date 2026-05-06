@@ -12,6 +12,8 @@ let textTranslationReady = false;
 let textActivePanel = "source";
 let textSourceValue = "";
 let textTranslatedValue = "";
+let selectedTextWord = "";
+let selectedTextWordElement = null;
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -114,6 +116,35 @@ function ensureDictionaryPickerStyles() {
         transform: translateY(0);
         opacity: 1;
       }
+    }
+
+    .text-word-token {
+      display: inline;
+      padding: 1px 3px;
+      margin: 0 1px;
+      border-radius: 7px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .text-word-token.selected {
+      background: #dff1e5;
+      color: #1f6b42;
+      box-shadow: 0 0 0 1px rgba(79, 143, 104, 0.28) inset;
+    }
+
+    .text-clickable-output {
+      white-space: pre-wrap;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    #textAddLexBtn.active {
+      background: #4f8f68;
+      color: #ffffff;
+      border-color: #4f8f68;
+      font-weight: 800;
     }
   `;
 
@@ -230,7 +261,7 @@ async function addCurrentWordTranslationToDictionary() {
     return;
   }
 
-  const dictionaryId = await chooseDictionaryIdFromModal();
+  const dictionaryId = await chooseDictionaryIdFromModal(word);
 
   if (!dictionaryId) return;
 
@@ -255,7 +286,7 @@ async function addCurrentWordTranslationToDictionary() {
   }
 }
 
-function chooseDictionaryIdFromModal() {
+function chooseDictionaryIdFromModal(selectedWord = "") {
   return new Promise((resolve) => {
     closeDictionaryPickerModal();
 
@@ -284,7 +315,7 @@ function chooseDictionaryIdFromModal() {
     sheet.style.padding = "16px";
     sheet.style.animation = "dictionaryPickerRise 0.18s ease-out";
 
-    const word = (lastWordTranslateSource || document.getElementById("wordInput")?.value || "").trim();
+    const word = (selectedWord || lastWordTranslateSource || document.getElementById("wordInput")?.value || "").trim();
 
     sheet.innerHTML = `
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;">
@@ -455,6 +486,7 @@ function ensureTextModeMarkup() {
     <div class="text-mode-shell">
       <div class="text-mode-actions">
         <button id="textTranslateBtn" class="text-action-primary" type="button">Перевести →</button>
+        <button id="textAddLexBtn" class="text-action-secondary" type="button" disabled>+ LEX</button>
         <button id="textClearBtn" class="text-action-secondary" type="button">Очистить</button>
       </div>
 
@@ -487,6 +519,7 @@ function ensureTextModeMarkup() {
 function bindTextModeEvents() {
   const translateBtn = document.getElementById("textTranslateBtn");
   const clearBtn = document.getElementById("textClearBtn");
+  const addLexBtn = document.getElementById("textAddLexBtn");
   const sourceTab = document.getElementById("textSourceTab");
   const translationTab = document.getElementById("textTranslationTab");
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
@@ -494,6 +527,7 @@ function bindTextModeEvents() {
   const textInput = document.getElementById("textInput");
 
   on(translateBtn, "click", handleTextTranslate);
+  on(addLexBtn, "click", addSelectedTextWordToDictionary);
   on(clearBtn, "click", clearTextMode);
   on(sourceTab, "click", () => switchTextPanel("source"));
   on(translationTab, "click", () => switchTextPanel("translation"));
@@ -554,6 +588,7 @@ async function handleTextTranslate() {
   }
 
   textSourceValue = source;
+  clearSelectedTextWord();
   textTranslationReady = true;
   textActivePanel = "translation";
 
@@ -574,8 +609,8 @@ async function handleTextTranslate() {
     const data = await callAi("text_translate", source);
     textTranslatedValue = data.result || data.raw || "Пустой ответ.";
 
-    if (output) output.textContent = textTranslatedValue;
-    if (hint) hint.textContent = "Перевод готов. Можно переключаться между оригиналом и переводом.";
+    renderClickableTextPanels(textSourceValue, textTranslatedValue);
+    if (hint) hint.textContent = "Перевод готов. Тапни слово, затем нажми + LEX.";
   } catch (err) {
     textTranslatedValue = "Ошибка перевода:\n" + err.message;
 
@@ -599,6 +634,144 @@ function buildTextTranslationStub(source) {
     source
   ].join("\\n");
 }
+
+function renderClickableTextPanels(sourceText, translatedText) {
+  const sourcePanel = document.querySelector('[data-text-panel="source"]');
+  const translationPanel = document.querySelector('[data-text-panel="translation"]');
+
+  clearSelectedTextWord();
+
+  if (sourcePanel) {
+    sourcePanel.innerHTML = `
+      <div id="textSourceClickableOutput" class="text-clickable-output" data-clickable-text="source">
+        ${makeClickableTextHtml(sourceText)}
+      </div>
+    `;
+  }
+
+  if (translationPanel) {
+    translationPanel.innerHTML = `
+      <div id="textTranslationOutput" class="text-translation-output text-clickable-output" data-clickable-text="translation">
+        ${makeClickableTextHtml(translatedText)}
+      </div>
+    `;
+  }
+
+  bindClickableTextWords();
+}
+
+function bindClickableTextWords() {
+  document.querySelectorAll(".text-word-token").forEach((token) => {
+    token.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const word = token.dataset.word || token.textContent || "";
+      selectTextWord(word, token);
+    });
+  });
+}
+
+function makeClickableTextHtml(text) {
+  const value = String(text || "");
+  const wordPattern = /[A-Za-zА-Яа-яЁё]+(?:[’'\\-][A-Za-zА-Яа-яЁё]+)*/gu;
+
+  let html = "";
+  let lastIndex = 0;
+  let match;
+
+  while ((match = wordPattern.exec(value)) !== null) {
+    const word = match[0];
+
+    html += escapeHTML(value.slice(lastIndex, match.index));
+    html += `<span class="text-word-token" data-word="${escapeHTML(word)}">${escapeHTML(word)}</span>`;
+
+    lastIndex = match.index + word.length;
+  }
+
+  html += escapeHTML(value.slice(lastIndex));
+
+  return html;
+}
+
+function selectTextWord(word, element) {
+  const cleanWord = String(word || "").trim();
+
+  if (!cleanWord) return;
+
+  if (selectedTextWordElement === element && selectedTextWord === cleanWord) {
+    clearSelectedTextWord();
+    return;
+  }
+
+  if (selectedTextWordElement) {
+    selectedTextWordElement.classList.remove("selected");
+  }
+
+  selectedTextWord = cleanWord;
+  selectedTextWordElement = element;
+
+  if (selectedTextWordElement) {
+    selectedTextWordElement.classList.add("selected");
+  }
+
+  updateTextLexButton();
+}
+
+function clearSelectedTextWord() {
+  if (selectedTextWordElement) {
+    selectedTextWordElement.classList.remove("selected");
+  }
+
+  selectedTextWord = "";
+  selectedTextWordElement = null;
+
+  updateTextLexButton();
+}
+
+function updateTextLexButton(statusText = "") {
+  const btn = document.getElementById("textAddLexBtn");
+
+  if (!btn) return;
+
+  if (statusText) {
+    btn.textContent = statusText;
+    return;
+  }
+
+  btn.textContent = "+ LEX";
+  btn.disabled = !selectedTextWord;
+  btn.classList.toggle("active", Boolean(selectedTextWord));
+}
+
+async function addSelectedTextWordToDictionary() {
+  const word = String(selectedTextWord || "").trim();
+
+  if (!word) return;
+
+  const dictionaryId = await chooseDictionaryIdFromModal(word);
+
+  if (!dictionaryId) return;
+
+  const btn = document.getElementById("textAddLexBtn");
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Добавляю...";
+  }
+
+  try {
+    await addWordCardToDictionary(dictionaryId, word);
+
+    updateTextLexButton("Добавлено");
+
+    setTimeout(() => {
+      clearSelectedTextWord();
+    }, 700);
+  } catch (err) {
+    alert("Не удалось добавить слово:\\n" + err.message);
+    updateTextLexButton();
+  }
+}
+
 
 function switchTextPanel(panelName) {
   if (panelName !== "source" && panelName !== "translation") return;
@@ -634,8 +807,8 @@ function updateTextPanelUI() {
 }
 
 function clearTextMode() {
-  const textInput = document.getElementById("textInput");
-  const output = document.getElementById("textTranslationOutput");
+  const sourcePanel = document.querySelector('[data-text-panel="source"]');
+  const translationPanel = document.querySelector('[data-text-panel="translation"]');
   const tabs = document.getElementById("textPanelTabs");
   const hint = document.getElementById("textModeHint");
 
@@ -645,10 +818,24 @@ function clearTextMode() {
   textTranslatedValue = "";
   textPanelScroll.source = 0;
   textPanelScroll.translation = 0;
+  clearSelectedTextWord();
 
-  if (textInput) textInput.value = "";
-  if (output) output.textContent = "Перевод появится здесь.";
+  if (sourcePanel) {
+    sourcePanel.innerHTML = `
+      <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
+    `;
+  }
+
+  if (translationPanel) {
+    translationPanel.innerHTML = `
+      <div id="textTranslationOutput" class="text-translation-output">
+        Перевод появится здесь.
+      </div>
+    `;
+  }
+
   if (tabs) tabs.classList.add("hidden");
+
   if (hint) {
     hint.textContent = "После перевода появятся две панели: оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.";
   }
@@ -656,10 +843,12 @@ function clearTextMode() {
   updateTextPanelUI();
 
   requestAnimationFrame(() => {
-    const sourcePanel = document.querySelector('[data-text-panel="source"]');
-    const translationPanel = document.querySelector('[data-text-panel="translation"]');
-    if (sourcePanel) sourcePanel.scrollTop = 0;
-    if (translationPanel) translationPanel.scrollTop = 0;
+    const nextSourcePanel = document.querySelector('[data-text-panel="source"]');
+    const nextTranslationPanel = document.querySelector('[data-text-panel="translation"]');
+    const textInput = document.getElementById("textInput");
+
+    if (nextSourcePanel) nextSourcePanel.scrollTop = 0;
+    if (nextTranslationPanel) nextTranslationPanel.scrollTop = 0;
     if (textInput) textInput.focus();
   });
 }
@@ -672,6 +861,8 @@ function syncTextModeVisibility(mode) {
   if (mode === "text") {
     hideAddCurrentWordButton();
     updateTextPanelUI();
+  } else {
+    clearSelectedTextWord();
   }
 }
 
