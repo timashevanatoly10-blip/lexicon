@@ -141,33 +141,52 @@ function ensureDictionaryPickerStyles() {
     }
 
     .text-mode-actions-compact {
-      display: flex;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr) 66px;
       align-items: center;
       gap: 10px;
       width: 100%;
     }
 
-    .text-action-spacer {
-      flex: 1 1 auto;
-      min-width: 42px;
-      background: transparent;
-    }
-
     .text-add-lex-btn {
-      flex: 0 0 112px;
-      width: 112px;
-      min-width: 112px;
+      width: 78px;
+      min-width: 78px;
+      height: 54px;
+      padding-left: 0;
+      padding-right: 0;
       text-transform: lowercase;
+      font-size: 20px;
+      font-weight: 850;
+      border-radius: 18px;
     }
 
     .text-translate-compact-btn {
-      flex: 0 0 112px;
-      width: 112px;
-      min-width: 112px;
-      font-size: 32px;
-      line-height: 1;
+      width: 66px;
+      min-width: 66px;
+      height: 54px;
       padding-left: 0;
       padding-right: 0;
+      font-size: 30px;
+      line-height: 1;
+      border-radius: 18px;
+    }
+
+    .text-word-mini-display {
+      min-width: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 18px;
+      background: transparent;
+      color: #2f6f4b;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.15;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .text-mode-shell .text-swipe-frame {
@@ -186,6 +205,7 @@ function ensureDictionaryPickerStyles() {
       background: #ffffff !important;
       border: 0 !important;
       border-radius: 0 !important;
+      padding-top: 42px !important;
     }
 
     .text-mode-shell .text-big-input,
@@ -203,16 +223,16 @@ function ensureDictionaryPickerStyles() {
 
     .text-inline-clear-btn {
       position: absolute;
-      top: 14px;
-      right: 14px;
+      top: 10px;
+      right: 18px;
       z-index: 6;
-      width: 38px;
-      height: 38px;
+      width: 32px;
+      height: 32px;
       border: 0;
       border-radius: 999px;
       background: #4f8f68;
       color: #ffffff;
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 800;
       line-height: 1;
       display: inline-flex;
@@ -579,7 +599,7 @@ function ensureTextModeMarkup() {
     <div class="text-mode-shell">
       <div class="text-mode-actions text-mode-actions-compact">
         <button id="textAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled>+ lex</button>
-        <div class="text-action-spacer" aria-hidden="true"></div>
+        <div id="textWordMiniDisplay" class="text-word-mini-display" aria-live="polite"></div>
         <button id="textTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
       </div>
 
@@ -877,6 +897,12 @@ function clearSelectedTextWord() {
 
 function updateTextLexButton(statusText = "") {
   const btn = document.getElementById("textAddLexBtn");
+  const miniDisplay = document.getElementById("textWordMiniDisplay");
+
+  if (miniDisplay) {
+    miniDisplay.textContent = selectedTextWord || "";
+    miniDisplay.title = selectedTextWord || "";
+  }
 
   if (!btn) return;
 
@@ -909,7 +935,7 @@ async function addSelectedTextWordToDictionary() {
   try {
     await addWordCardToDictionary(dictionaryId, word);
 
-    updateTextLexButton("Добавлено");
+    updateTextLexButton("+ ok");
 
     setTimeout(() => {
       clearSelectedTextWord();
