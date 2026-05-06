@@ -144,23 +144,57 @@ function ensureDictionaryPickerStyles() {
       display: flex;
       align-items: center;
       gap: 10px;
+      width: 100%;
     }
 
     .text-action-spacer {
       flex: 1 1 auto;
-      min-width: 18px;
+      min-width: 42px;
       background: transparent;
     }
 
     .text-add-lex-btn {
-      flex: 0 0 auto;
+      flex: 0 0 112px;
+      width: 112px;
       min-width: 112px;
       text-transform: lowercase;
     }
 
     .text-translate-compact-btn {
-      flex: 0 0 auto;
-      min-width: 160px;
+      flex: 0 0 112px;
+      width: 112px;
+      min-width: 112px;
+      font-size: 32px;
+      line-height: 1;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .text-mode-shell .text-swipe-frame {
+      width: calc(100% + 36px);
+      margin-left: -18px;
+      margin-right: -18px;
+      border-left: 0 !important;
+      border-right: 0 !important;
+      border-color: transparent !important;
+      border-radius: 0 !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    .text-mode-shell .text-panel {
+      background: #ffffff !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    .text-mode-shell .text-big-input,
+    .text-mode-shell .text-clickable-output,
+    .text-mode-shell .text-translation-output {
+      border: 0 !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
     }
 
     .text-panel {
@@ -546,7 +580,7 @@ function ensureTextModeMarkup() {
       <div class="text-mode-actions text-mode-actions-compact">
         <button id="textAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled>+ lex</button>
         <div class="text-action-spacer" aria-hidden="true"></div>
-        <button id="textTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button">Перевести →</button>
+        <button id="textTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
       </div>
 
       <div id="textPanelTabs" class="text-panel-tabs hidden">
