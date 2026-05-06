@@ -14,6 +14,8 @@ let textSourceValue = "";
 let textTranslatedValue = "";
 let selectedTextWord = "";
 let selectedTextWordElement = null;
+let textQuickTranslateRequestId = 0;
+let textQuickTranslateTimer = null;
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -187,6 +189,17 @@ function ensureDictionaryPickerStyles() {
       text-align: center;
       white-space: nowrap;
       text-overflow: ellipsis;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .text-word-mini-display.loading {
+      letter-spacing: 0.18em;
+      opacity: 0.72;
+    }
+
+    .text-word-mini-display.ready {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .text-mode-shell .text-swipe-frame {
@@ -882,6 +895,7 @@ function selectTextWord(word, element) {
   }
 
   updateTextLexButton();
+  startQuickWordTranslation(cleanWord);
 }
 
 function clearSelectedTextWord() {
@@ -892,17 +906,14 @@ function clearSelectedTextWord() {
   selectedTextWord = "";
   selectedTextWordElement = null;
 
+  stopQuickWordTranslation();
+  setTextWordMiniDisplay("");
+
   updateTextLexButton();
 }
 
 function updateTextLexButton(statusText = "") {
   const btn = document.getElementById("textAddLexBtn");
-  const miniDisplay = document.getElementById("textWordMiniDisplay");
-
-  if (miniDisplay) {
-    miniDisplay.textContent = selectedTextWord || "";
-    miniDisplay.title = selectedTextWord || "";
-  }
 
   if (!btn) return;
 
@@ -914,6 +925,78 @@ function updateTextLexButton(statusText = "") {
   btn.textContent = "+ lex";
   btn.disabled = !selectedTextWord;
   btn.classList.toggle("active", Boolean(selectedTextWord));
+}
+
+function setTextWordMiniDisplay(text, state = "") {
+  const miniDisplay = document.getElementById("textWordMiniDisplay");
+
+  if (!miniDisplay) return;
+
+  miniDisplay.textContent = text || "";
+  miniDisplay.title = text || "";
+  miniDisplay.classList.toggle("loading", state === "loading");
+  miniDisplay.classList.toggle("ready", state === "ready");
+}
+
+function stopQuickWordTranslation() {
+  textQuickTranslateRequestId += 1;
+
+  if (textQuickTranslateTimer) {
+    clearInterval(textQuickTranslateTimer);
+    textQuickTranslateTimer = null;
+  }
+}
+
+function startQuickWordTranslation(word) {
+  const cleanWord = String(word || "").trim();
+
+  stopQuickWordTranslation();
+
+  if (!cleanWord) {
+    setTextWordMiniDisplay("");
+    return;
+  }
+
+  const requestId = textQuickTranslateRequestId;
+  let dotCount = 1;
+
+  setTextWordMiniDisplay(".", "loading");
+
+  textQuickTranslateTimer = setInterval(() => {
+    if (requestId !== textQuickTranslateRequestId) return;
+
+    dotCount = dotCount >= 3 ? 1 : dotCount + 1;
+    setTextWordMiniDisplay(".".repeat(dotCount), "loading");
+  }, 280);
+
+  quickTranslateWord(cleanWord, requestId);
+}
+
+async function quickTranslateWord(word, requestId) {
+  try {
+    const data = await callAi("word_quick_translate", word);
+
+    if (requestId !== textQuickTranslateRequestId) return;
+
+    if (textQuickTranslateTimer) {
+      clearInterval(textQuickTranslateTimer);
+      textQuickTranslateTimer = null;
+    }
+
+    const result = String(data.result || data.raw || "").trim() || "—";
+    const compactResult = result.split("\\n").map((line) => line.trim()).filter(Boolean)[0] || "—";
+
+    setTextWordMiniDisplay(compactResult, "ready");
+  } catch {
+    if (requestId !== textQuickTranslateRequestId) return;
+
+    if (textQuickTranslateTimer) {
+      clearInterval(textQuickTranslateTimer);
+      textQuickTranslateTimer = null;
+    }
+
+    setTextWordMiniDisplay("—", "ready");
+  }
 }
 
 async function addSelectedTextWordToDictionary() {
