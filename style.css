@@ -41,12 +41,46 @@ button { -webkit-tap-highlight-color: transparent; }
 .hero-card { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
 .muted-card { background: rgba(251,251,248,0.86); }
 
-.top-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(86px, 1fr) minmax(72px, 0.82fr); gap: 24px; align-items: center; margin-bottom: 22px; }
-.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: transparent; border-radius: 0; padding: 0; flex: unset; }
-.mode-btn, .mini-btn { min-height: 66px; border: 0; background: var(--surface); color: #5f6260; padding: 0 18px; border-radius: 28px; font-size: clamp(17px, 4.2vw, 25px); font-weight: 500; cursor: pointer; box-shadow: -9px -9px 18px rgba(255,255,255,0.98), 9px 10px 22px rgba(186,193,184,0.34); }
-.mode-switch .mode-btn:first-child { margin-right: 12px; }
-.mode-btn.active { background: #ffffff; color: var(--accent-dark); box-shadow: -9px -9px 18px rgba(255,255,255,0.98), 9px 10px 22px rgba(186,193,184,0.28), inset 1px 1px 0 rgba(255,255,255,0.88); }
-.mini-btn { width: 100%; }
+.top-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 0.72fr);
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mode-switch {
+  display: contents;
+}
+
+.mode-btn,
+.mini-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  border: 0;
+  background: var(--surface);
+  color: #5f6260;
+  padding: 0 8px;
+  border-radius: 24px;
+  font-size: clamp(17px, 3.7vw, 23px);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: -8px -8px 16px rgba(255,255,255,0.98), 8px 9px 19px rgba(186,193,184,0.32);
+}
+
+.mode-switch .mode-btn:first-child {
+  margin-right: 0;
+}
+
+.mode-btn.active {
+  background: #ffffff;
+  color: var(--accent-dark);
+  box-shadow: -8px -8px 16px rgba(255,255,255,0.98), 8px 9px 19px rgba(186,193,184,0.25), inset 1px 1px 0 rgba(255,255,255,0.88);
+}
 
 .field { display: block; margin: 12px 0; }
 .field span { display: block; margin-bottom: 8px; font-weight: 650; }
@@ -117,12 +151,27 @@ textarea { resize: vertical; }
 .text-mode-hint { color: var(--muted); font-size: 12px; line-height: 1.35; padding: 0 2px; }
 
 @media (max-width: 520px) {
-  .app { padding: 28px 24px 18px; }
+  .app { padding: 28px 20px 18px; }
   .topbar { margin-bottom: 24px; }
   .brand { font-size: 36px; letter-spacing: 0.16em; }
-  .top-controls { grid-template-columns: 1.2fr 0.9fr 0.7fr; gap: 14px; margin-bottom: 20px; }
-  .mode-btn, .mini-btn { min-height: 56px; padding: 0 12px; border-radius: 24px; font-size: 20px; }
-  .mode-switch .mode-btn:first-child { margin-right: 10px; }
+
+  .top-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 0.72fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .mode-btn,
+  .mini-btn {
+    min-height: 50px;
+    padding: 0 5px;
+    border-radius: 22px;
+    font-size: 18px;
+  }
+
+  .mode-switch .mode-btn:first-child {
+    margin-right: 0;
+  }
   .lexicon-topline { padding: 13px; gap: 8px; }
   .lexicon-title-block h1 { font-size: 21px; }
   .lexicon-icon-btn, .lexicon-add-btn { width: 40px; height: 40px; }
@@ -132,7 +181,17 @@ textarea { resize: vertical; }
 }
 
 @media (max-width: 390px) {
-  .app { padding-left: 18px; padding-right: 18px; }
-  .top-controls { gap: 10px; }
-  .mode-btn, .mini-btn { min-height: 52px; font-size: 18px; border-radius: 22px; }
+  .app { padding-left: 16px; padding-right: 16px; }
+
+  .top-controls {
+    gap: 8px;
+  }
+
+  .mode-btn,
+  .mini-btn {
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 20px;
+    padding: 0 4px;
+  }
 }
