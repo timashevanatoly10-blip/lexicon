@@ -65,6 +65,7 @@ refreshFileElements();
 bindEvents();
 initAccessToken();
 ensureDictionaryPickerStyles();
+bootstrapDictionaries();
 showPage("home");
 
 if ("serviceWorker" in navigator) {
@@ -345,6 +346,199 @@ async function buildShortWordCard(word) {
 }
 
 
+// ===== DICTIONARIES API / D1 =====
+async function dictionaryApi(path, options = {}) {
+  if (!ensureAccessToken()) {
+    throw new Error("Нет токена доступа.");
+  }
+
+  const headers = {
+    ...authHeaders(),
+    ...(options.headers || {})
+  };
+
+  let res;
+
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    });
+  } catch (err) {
+    throw new Error("Не удалось связаться с Worker/D1. Проверь деплой Worker, CORS и интернет.\n" + err.message);
+  }
+
+  return await readJsonOrThrow(res);
+}
+
+function normalizeDictionaryFromApi(dict) {
+  return {
+    id: String(dict.id || uid("dict")),
+    title: String(dict.title || "Без названия"),
+    note: String(dict.note || "личный словарь"),
+    words: Array.isArray(dict.words) ? dict.words.map(normalizeWordFromApi) : [],
+    createdAt: dict.createdAt || dict.created_at || new Date().toISOString(),
+    updatedAt: dict.updatedAt || dict.updated_at || new Date().toISOString()
+  };
+}
+
+function normalizeWordFromApi(item) {
+  return {
+    id: String(item.id || uid("word")),
+    word: String(item.word || "").trim(),
+    transcription: String(item.transcription || "—").trim(),
+    translation: String(item.translation || "перевод позже").trim(),
+    partOfSpeech: String(item.partOfSpeech || item.part_of_speech || "").trim(),
+    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.updated_at || new Date().toISOString()
+  };
+}
+
+async function bootstrapDictionaries() {
+  if (!getAccessToken()) return;
+
+  const localDictionaries = loadDictionaries();
+
+  try {
+    const data = await dictionaryApi("/api/dictionaries", {
+      method: "GET"
+    });
+
+    const cloudDictionaries = Array.isArray(data.dictionaries)
+      ? data.dictionaries.map(normalizeDictionaryFromApi)
+      : [];
+
+    if (!cloudDictionaries.length && localDictionaries.length) {
+      dictionaries = localDictionaries;
+      saveDictionaries();
+
+      await migrateLocalDictionariesToCloud(localDictionaries);
+
+      const afterMigration = await dictionaryApi("/api/dictionaries", {
+        method: "GET"
+      });
+
+      dictionaries = Array.isArray(afterMigration.dictionaries)
+        ? afterMigration.dictionaries.map(normalizeDictionaryFromApi)
+        : localDictionaries;
+    } else {
+      dictionaries = cloudDictionaries;
+    }
+
+    saveDictionaries();
+
+    if (lexiconPage && lexiconPage.classList.contains("active")) {
+      renderLexiconPage();
+    }
+  } catch (err) {
+    console.warn("Cloud dictionaries are unavailable, using local cache:", err);
+    dictionaries = localDictionaries;
+    saveDictionaries();
+
+    if (lexiconPage && lexiconPage.classList.contains("active")) {
+      renderLexiconPage();
+      const list = document.getElementById("dictionaryList");
+      if (list && !dictionaries.length) {
+        list.innerHTML = `<div class="lexicon-empty">Облако D1 недоступно: ${escapeHTML(err.message)}</div>`;
+      }
+    }
+  }
+}
+
+async function migrateLocalDictionariesToCloud(localDictionaries) {
+  for (const dict of localDictionaries) {
+    if (!dict || !dict.id) continue;
+
+    try {
+      await createDictionaryInCloud(dict);
+    } catch (err) {
+      console.warn("Dictionary migration failed:", dict.title, err);
+      continue;
+    }
+
+    for (const word of dict.words || []) {
+      if (!word || !word.word) continue;
+
+      try {
+        await createWordInCloud(dict.id, word);
+      } catch (err) {
+        console.warn("Word migration failed:", word.word, err);
+      }
+    }
+  }
+}
+
+async function createDictionaryInCloud(dict) {
+  return await dictionaryApi("/api/dictionaries", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id: dict.id,
+      title: dict.title,
+      note: dict.note
+    })
+  });
+}
+
+async function updateDictionaryInCloud(dict) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dict.id)}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title: dict.title,
+      note: dict.note
+    })
+  });
+}
+
+async function deleteDictionaryInCloud(dictionaryId) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}`, {
+    method: "DELETE"
+  });
+}
+
+async function createWordInCloud(dictionaryId, wordItem) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}/words`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id: wordItem.id,
+      word: wordItem.word,
+      transcription: wordItem.transcription,
+      translation: wordItem.translation,
+      partOfSpeech: wordItem.partOfSpeech
+    })
+  });
+}
+
+async function deleteWordInCloud(dictionaryId, wordId) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}/words/${encodeURIComponent(wordId)}`, {
+    method: "DELETE"
+  });
+}
+
+async function createWordInCloudWithDictionaryRetry(dict, wordItem) {
+  try {
+    return await createWordInCloud(dict.id, wordItem);
+  } catch (err) {
+    const message = String(err && err.message ? err.message : err);
+
+    if (!message.includes("Dictionary not found")) {
+      throw err;
+    }
+
+    await createDictionaryInCloud(dict);
+    return await createWordInCloud(dict.id, wordItem);
+  }
+}
+
+
 function showAddCurrentWordButton(word) {
   if (!homeResultCard || !word) return;
 
@@ -524,16 +718,18 @@ function chooseDictionaryIdFromModal(selectedWord = "") {
     if (cancelBtn) cancelBtn.addEventListener("click", () => finish(""));
 
     if (newBtn) {
-      newBtn.addEventListener("click", () => {
+      newBtn.addEventListener("click", async () => {
         const title = prompt("Название нового словаря:", "Новый словарь");
 
         if (title === null) return;
 
-        const dict = createDictionary((title || "").trim() || "Новый словарь");
-        expandedDictionaryId = dict.id;
-        saveDictionaries();
-
-        finish(dict.id);
+        try {
+          const dict = await createDictionary((title || "").trim() || "Новый словарь");
+          expandedDictionaryId = dict.id;
+          finish(dict.id);
+        } catch (err) {
+          alert("Не удалось создать словарь:\n" + err.message);
+        }
       });
     }
 
@@ -591,6 +787,14 @@ async function addWordCardToDictionary(dictionaryId, rawWord) {
     wordItem.updatedAt = new Date().toISOString();
 
     dict.updatedAt = new Date().toISOString();
+
+    const saved = await createWordInCloudWithDictionaryRetry(dict, wordItem);
+    const savedWord = saved.word ? normalizeWordFromApi(saved.word) : null;
+
+    if (savedWord) {
+      Object.assign(wordItem, savedWord);
+    }
+
     saveDictionaries();
   } catch (err) {
     wordItem.transcription = "—";
@@ -1295,6 +1499,7 @@ function showLexiconPage() {
   if (!lexiconPage) return;
   renderLexiconPage();
   showExistingPage(lexiconPage);
+  bootstrapDictionaries();
 }
 
 // ===== LEXICON =====
@@ -1302,34 +1507,12 @@ function loadDictionaries() {
   try {
     const raw = localStorage.getItem(LEXICON_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : null;
-    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed)) {
+      return parsed.map(normalizeDictionaryFromApi);
+    }
   } catch {}
 
-  return [
-    {
-      id: uid("dict"),
-      title: "Мой словарь",
-      note: "личные слова",
-      words: [
-        makeWordItem("cat", "[kæt]", "кот / кошка", "noun"),
-        makeWordItem("vessel", "[ˈvesəl]", "судно / сосуд", "noun"),
-        makeWordItem("maintain", "[meɪnˈteɪn]", "обслуживать / поддерживать", "verb")
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: uid("dict"),
-      title: "Marine English",
-      note: "работа / рейс / судно",
-      words: [
-        makeWordItem("anchor", "[ˈæŋkər]", "якорь", "noun"),
-        makeWordItem("cargo", "[ˈkɑːrɡoʊ]", "груз", "noun")
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ];
+  return [];
 }
 
 function saveDictionaries() {
@@ -1529,19 +1712,23 @@ function renderWordsHtml(dict) {
   `).join("");
 }
 
-function addDictionary() {
+async function addDictionary() {
   const name = prompt("Название словаря:", "Новый словарь");
   if (name === null) return;
 
   const title = (name || "").toString().trim() || "Новый словарь";
-  const dict = createDictionary(title);
 
-  expandedDictionaryId = dict.id;
-  saveDictionaries();
-  renderLexiconPage();
+  try {
+    const dict = await createDictionary(title);
+
+    expandedDictionaryId = dict.id;
+    renderLexiconPage();
+  } catch (err) {
+    alert("Не удалось создать словарь:\n" + err.message);
+  }
 }
 
-function createDictionary(title) {
+async function createDictionary(title) {
   const now = new Date().toISOString();
 
   const dict = {
@@ -1556,6 +1743,18 @@ function createDictionary(title) {
   dictionaries.unshift(dict);
   saveDictionaries();
 
+  try {
+    const data = await createDictionaryInCloud(dict);
+    if (data.dictionary) {
+      Object.assign(dict, normalizeDictionaryFromApi(data.dictionary));
+    }
+    saveDictionaries();
+  } catch (err) {
+    dictionaries = dictionaries.filter((item) => item.id !== dict.id);
+    saveDictionaries();
+    throw err;
+  }
+
   return dict;
 }
 
@@ -1567,25 +1766,37 @@ function toggleDictionary(dictionaryId) {
   renderDictionaryList(searchInput ? searchInput.value : "");
 }
 
-function renameDictionary(dictionaryId) {
+async function renameDictionary(dictionaryId) {
   const dict = dictionaries.find((item) => item.id === dictionaryId);
   if (!dict) return;
 
   const nextTitle = prompt("Новое название словаря:", dict.title || "");
   if (nextTitle === null) return;
 
+  const prevTitle = dict.title;
   dict.title = (nextTitle || "").toString().trim() || "Без названия";
   dict.updatedAt = new Date().toISOString();
 
   saveDictionaries();
   renderLexiconPage();
+
+  try {
+    await updateDictionaryInCloud(dict);
+  } catch (err) {
+    dict.title = prevTitle;
+    saveDictionaries();
+    renderLexiconPage();
+    alert("Не удалось переименовать словарь:\n" + err.message);
+  }
 }
 
-function deleteDictionary(dictionaryId) {
+async function deleteDictionary(dictionaryId) {
   const dict = dictionaries.find((item) => item.id === dictionaryId);
   if (!dict) return;
 
   if (!confirm(`Удалить словарь «${dict.title || "Без названия"}»?`)) return;
+
+  const prevDictionaries = dictionaries.slice();
 
   dictionaries = dictionaries.filter((item) => item.id !== dictionaryId);
 
@@ -1593,6 +1804,15 @@ function deleteDictionary(dictionaryId) {
 
   saveDictionaries();
   renderLexiconPage();
+
+  try {
+    await deleteDictionaryInCloud(dictionaryId);
+  } catch (err) {
+    dictionaries = prevDictionaries;
+    saveDictionaries();
+    renderLexiconPage();
+    alert("Не удалось удалить словарь:\n" + err.message);
+  }
 }
 
 async function addWordToDictionary(dictionaryId) {
@@ -1611,8 +1831,8 @@ async function addWordToDictionary(dictionaryId) {
 
   try {
     await addWordCardToDictionary(dictionaryId, rawWord);
-  } catch {
-    // Слово остаётся в словаре как черновик "перевод позже".
+  } catch (err) {
+    alert("Не удалось сохранить слово в облако:\n" + err.message);
   }
 
   renderDictionaryList(getDictionarySearchValue());
@@ -1632,9 +1852,11 @@ function getDictionarySearchValue() {
   return searchInput ? searchInput.value : "";
 }
 
-function deleteWord(wordId, dictionaryId) {
+async function deleteWord(wordId, dictionaryId) {
   const dict = dictionaries.find((item) => item.id === dictionaryId);
   if (!dict) return;
+
+  const prevWords = (dict.words || []).slice();
 
   dict.words = (dict.words || []).filter((item) => item.id !== wordId);
   dict.updatedAt = new Date().toISOString();
@@ -1643,6 +1865,15 @@ function deleteWord(wordId, dictionaryId) {
 
   const searchInput = document.getElementById("dictionarySearchInput");
   renderDictionaryList(searchInput ? searchInput.value : "");
+
+  try {
+    await deleteWordInCloud(dictionaryId, wordId);
+  } catch (err) {
+    dict.words = prevWords;
+    saveDictionaries();
+    renderDictionaryList(searchInput ? searchInput.value : "");
+    alert("Не удалось удалить слово:\n" + err.message);
+  }
 }
 
 function openWordFromDictionary(word) {
