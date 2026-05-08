@@ -111,30 +111,24 @@ function ensureDictionaryPickerStyles() {
   style.id = "dictionaryPickerStyles";
   style.textContent = `
     @keyframes dictionaryPickerRise {
-      from {
-        transform: translateY(18px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(18px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .text-word-token {
       display: inline;
       padding: 1px 3px;
       margin: 0 1px;
-      border-radius: 7px;
+      border-radius: 8px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
     }
 
     .text-word-token.selected {
-      background: #dff1e5;
-      color: #1f6b42;
-      box-shadow: 0 0 0 1px rgba(79, 143, 104, 0.28) inset;
+      background: rgba(95, 153, 98, 0.13);
+      color: #1f6f56;
+      box-shadow: 0 0 0 1px rgba(95, 153, 98, 0.28) inset;
     }
 
     .text-clickable-output {
@@ -143,139 +137,235 @@ function ensureDictionaryPickerStyles() {
       word-break: break-word;
     }
 
-    .text-mode-actions-compact {
-      display: grid;
-      grid-template-columns: 52px minmax(0, 1fr) 52px;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
+    .text-mode-shell {
+      --neo-bg: #f3f4f1;
+      --neo-surface: #fbfbf8;
+      --neo-surface-2: #fdfdfc;
+      --neo-white: #ffffff;
+      --neo-green: #5f9962;
+      --neo-green-deep: #1f6f56;
+      --neo-muted: #777a77;
+      --neo-text: #1f211f;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .text-add-lex-btn {
-      width: 52px;
-      min-width: 52px;
-      height: 48px;
-      padding-left: 0;
-      padding-right: 0;
-      text-transform: lowercase;
-      font-size: 30px;
-      font-weight: 850;
+    .text-mode-actions-compact {
+      position: relative;
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) 74px;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      min-height: 82px;
+      padding: 10px 14px;
+      border-radius: 42px;
+      background: rgba(251, 251, 248, 0.84);
+      box-shadow: -12px -12px 24px rgba(255,255,255,0.96), 12px 14px 32px rgba(186,193,184,0.30), inset 1px 1px 0 rgba(255,255,255,0.78);
+    }
+
+    .text-action-secondary,
+    .text-action-primary {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .text-add-lex-btn,
+    .text-translate-compact-btn {
+      width: 66px;
+      min-width: 66px;
+      height: 66px;
+      padding: 0;
+      border-radius: 999px;
+      background: #fdfdfc;
+      color: #5f9962;
+      font-size: 44px;
+      font-weight: 500;
       line-height: 1;
-      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: -9px -9px 18px rgba(255,255,255,0.98), 9px 10px 22px rgba(186,193,184,0.36);
+      transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
     }
 
     .text-translate-compact-btn {
-      width: 52px;
-      min-width: 52px;
-      height: 48px;
-      padding-left: 0;
-      padding-right: 0;
-      font-size: 30px;
-      line-height: 1;
-      border-radius: 16px;
+      font-size: 46px;
+      padding-bottom: 5px;
+    }
+
+    .text-add-lex-btn:active,
+    .text-translate-compact-btn:active,
+    .text-bottom-icon-btn:active {
+      transform: scale(0.96);
+      box-shadow: -4px -4px 10px rgba(255,255,255,0.98), 4px 5px 12px rgba(186,193,184,0.34), inset 2px 2px 6px rgba(186,193,184,0.12);
+    }
+
+    .text-add-lex-btn:disabled { opacity: 0.62; color: #5f9962; }
+
+    #textAddLexBtn.active {
+      opacity: 1;
+      color: #5f9962;
+      background: #fdfdfc;
+      border-color: transparent;
+      font-weight: 500;
     }
 
     .text-word-mini-display {
       min-width: 0;
-      height: 54px;
+      height: 58px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border-radius: 18px;
+      border-radius: 22px;
       background: transparent;
-      color: #2f6f4b;
-      font-size: 18px;
-      font-weight: 800;
+      color: #1f6f56;
+      font-size: clamp(18px, 4.8vw, 27px);
+      font-weight: 500;
       line-height: 1.15;
+      letter-spacing: 0.01em;
       text-align: center;
       white-space: nowrap;
       text-overflow: ellipsis;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
 
-    .text-word-mini-display.loading {
-      letter-spacing: 0.18em;
-      opacity: 0.72;
+    .text-word-mini-display.loading { letter-spacing: 0.18em; opacity: 0.72; }
+    .text-word-mini-display.ready { opacity: 1; transform: translateY(0); background: transparent; }
+
+    .text-panel-tabs {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: rgba(251, 251, 248, 0.86) !important;
+      padding: 8px !important;
+      border-radius: 32px !important;
+      box-shadow: -10px -10px 20px rgba(255,255,255,0.92), 10px 12px 26px rgba(186,193,184,0.28), inset 1px 1px 0 rgba(255,255,255,0.8);
     }
 
-    .text-word-mini-display.ready {
-      opacity: 1;
-      transform: translateY(0);
-      background: transparent;
-    }
-
-    .text-mode-shell .text-swipe-frame {
-      width: calc(100% + 36px);
-      margin-left: -18px;
-      margin-right: -18px;
-      border-left: 0 !important;
-      border-right: 0 !important;
-      border-color: transparent !important;
-      border-radius: 0 !important;
-      background: #ffffff !important;
+    .text-panel-tab {
+      min-height: 54px;
+      border: 0 !important;
+      border-radius: 26px !important;
+      background: transparent !important;
+      color: #777a77 !important;
+      font-size: clamp(17px, 4.5vw, 26px);
+      font-weight: 500 !important;
+      letter-spacing: 0.01em;
+      cursor: pointer;
       box-shadow: none !important;
     }
 
-    .text-mode-shell .text-panel {
+    .text-panel-tab.active {
       background: #ffffff !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      padding-top: 42px !important;
+      color: #5f9962 !important;
+      box-shadow: -7px -7px 14px rgba(255,255,255,0.98), 7px 8px 17px rgba(186,193,184,0.24) !important;
     }
 
-    .text-mode-shell .text-big-input,
-    .text-mode-shell .text-clickable-output,
-    .text-mode-shell .text-translation-output {
+    .text-swipe-frame {
+      width: 100% !important;
+      height: min(61vh, 650px) !important;
+      min-height: 485px !important;
+      overflow: hidden !important;
       border: 0 !important;
-      outline: none !important;
-      box-shadow: none !important;
-      background: #ffffff !important;
+      border-radius: 34px !important;
+      background: #fbfbf8 !important;
+      box-shadow: -14px -14px 28px rgba(255,255,255,0.95), 14px 18px 42px rgba(180,186,176,0.30), inset 1px 1px 0 rgba(255,255,255,0.85) !important;
     }
+
+    .text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
 
     .text-panel {
       position: relative;
+      width: 50%;
+      height: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #fbfbf8 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
     }
 
-    .text-inline-clear-btn {
+    .text-big-input,
+    .text-clickable-output,
+    .text-translation-output {
+      width: 100%;
+      min-height: calc(100% - 88px);
+      border: 0 !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      color: #1f211f;
+      padding: 32px 34px 110px !important;
+      font-size: clamp(22px, 5.8vw, 34px);
+      font-weight: 400;
+      line-height: 1.42;
+      letter-spacing: -0.015em;
+      white-space: pre-wrap;
+    }
+
+    .text-big-input { height: calc(100% - 88px); resize: none; }
+    .text-big-input::placeholder { color: rgba(119,122,119,0.42); }
+
+    .text-bottom-toolbar {
       position: absolute;
-      top: 10px;
-      right: 18px;
-      z-index: 6;
-      width: 32px;
-      height: 32px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 7;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 16px;
+      padding: 18px 32px 24px;
+      background: linear-gradient(to top, rgba(251,251,248,0.98) 0%, rgba(251,251,248,0.92) 70%, rgba(251,251,248,0) 100%);
+      pointer-events: none;
+    }
+
+    .text-bottom-icon-btn {
+      pointer-events: auto;
+      width: 56px;
+      height: 56px;
       border: 0;
       border-radius: 999px;
-      background: #4f8f68;
-      color: #ffffff;
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
+      background: #fdfdfc;
+      color: #5f9962;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0;
-      box-shadow: 0 8px 18px rgba(47, 111, 75, 0.22);
+      box-shadow: -8px -8px 16px rgba(255,255,255,0.98), 8px 9px 19px rgba(186,193,184,0.34);
       -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
 
-    .text-inline-clear-btn.hidden {
-      display: none;
+    .text-bottom-icon-btn svg { width: 25px; height: 25px; stroke: currentColor; stroke-width: 2.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .text-bottom-icon-btn.text-bottom-clear svg { width: 24px; height: 24px; stroke-width: 2.6; }
+    .text-bottom-icon-btn.hidden { display: none; }
+    .text-mode-hint { display: none !important; }
+
+    @media (max-width: 520px) {
+      .text-mode-shell { gap: 12px; }
+      .text-mode-actions-compact { grid-template-columns: 68px minmax(0, 1fr) 68px; min-height: 76px; gap: 14px; padding: 8px 12px; border-radius: 38px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 62px; min-width: 62px; height: 62px; font-size: 42px; }
+      .text-panel-tab { min-height: 52px; }
+      .text-swipe-frame { height: min(60vh, 610px) !important; min-height: 455px !important; border-radius: 32px !important; }
+      .text-big-input, .text-clickable-output, .text-translation-output { padding: 28px 32px 104px !important; }
+      .text-bottom-toolbar { padding: 16px 28px 22px; }
+      .text-bottom-icon-btn { width: 53px; height: 53px; }
     }
 
-    .text-panel .text-big-input,
-    .text-panel .text-clickable-output,
-    .text-panel .text-translation-output {
-      padding-right: 58px;
-    }
-
-    #textAddLexBtn.active {
-      background: #4f8f68;
-      color: #ffffff;
-      border-color: #4f8f68;
-      font-weight: 800;
+    @media (max-width: 390px) {
+      .text-mode-actions-compact { grid-template-columns: 62px minmax(0, 1fr) 62px; gap: 10px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 58px; min-width: 58px; height: 58px; font-size: 38px; }
+      .text-bottom-toolbar { gap: 10px; padding-left: 22px; padding-right: 22px; }
+      .text-bottom-icon-btn { width: 50px; height: 50px; }
     }
   `;
 
@@ -813,6 +903,33 @@ async function addWordCardToDictionary(dictionaryId, rawWord) {
 
 
 // ===== TEXT MODE UI =====
+function iconCamera() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5 8.7 5.4h6.6L17 7.5h2.1c1 0 1.9.8 1.9 1.9v8.1c0 1-.8 1.9-1.9 1.9H4.9c-1 0-1.9-.8-1.9-1.9V9.4c0-1 .8-1.9 1.9-1.9H7Z"/><circle cx="12" cy="13.4" r="3.4"/></svg>`;
+}
+
+function iconMic() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5c2 0 3.4-1.5 3.4-3.5V6.6c0-2-1.4-3.5-3.4-3.5S8.6 4.6 8.6 6.6V11c0 2 1.4 3.5 3.4 3.5Z"/><path d="M5.7 10.8c0 3.5 2.6 6.1 6.3 6.1s6.3-2.6 6.3-6.1"/><path d="M12 16.9v4"/></svg>`;
+}
+
+function iconCopy() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 16V6.8C5 5.8 5.8 5 6.8 5H16"/></svg>`;
+}
+
+function iconClose() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5"/><path d="M17.5 6.5 6.5 17.5"/></svg>`;
+}
+
+function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn") {
+  return `
+    <div class="text-bottom-toolbar">
+      <button class="text-bottom-icon-btn text-camera-btn" type="button" title="Фото">${iconCamera()}</button>
+      <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
+      <button class="text-bottom-icon-btn text-copy-btn" type="button" title="Копировать">${iconCopy()}</button>
+      <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear hidden" type="button" title="Очистить">${iconClose()}</button>
+    </div>
+  `;
+}
+
 function ensureTextModeMarkup() {
   if (!textInputBox) return;
 
@@ -832,15 +949,15 @@ function ensureTextModeMarkup() {
       <div id="textSwipeFrame" class="text-swipe-frame">
         <div id="textSwipeTrack" class="text-swipe-track">
           <section class="text-panel" data-text-panel="source">
-            <button id="textInlineClearBtn" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
             <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
+            ${renderTextBottomToolbar("textInlineClearBtn")}
           </section>
 
           <section class="text-panel" data-text-panel="translation">
-            <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
             <div id="textTranslationOutput" class="text-translation-output">
               Перевод появится здесь.
             </div>
+            ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
           </section>
         </div>
       </div>
@@ -989,6 +1106,39 @@ function bindTextInlineClearButtons() {
 
   if (inlineClearBtn) inlineClearBtn.onclick = clearTextMode;
   if (inlineClearBtnTranslation) inlineClearBtnTranslation.onclick = clearTextMode;
+
+  document.querySelectorAll(".text-camera-btn, .text-mic-btn").forEach((btn) => {
+    btn.onclick = () => {};
+  });
+
+  document.querySelectorAll(".text-copy-btn").forEach((btn) => {
+    btn.onclick = copyActiveTextPanel;
+  });
+}
+
+async function copyActiveTextPanel() {
+  const textInput = document.getElementById("textInput");
+  const value = textActivePanel === "translation"
+    ? (textTranslatedValue || document.getElementById("textTranslationOutput")?.textContent || "")
+    : (textSourceValue || textInput?.value || document.getElementById("textSourceClickableOutput")?.textContent || "");
+
+  const clean = String(value || "").trim();
+
+  if (!clean) return;
+
+  try {
+    await navigator.clipboard.writeText(clean);
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = clean;
+    area.style.position = "fixed";
+    area.style.left = "-9999px";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    try { document.execCommand("copy"); } catch {}
+    area.remove();
+  }
 }
 
 function bindTextInputAfterReset() {
@@ -1030,19 +1180,19 @@ function renderClickableTextPanels(sourceText, translatedText) {
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
-      <button id="textInlineClearBtn" class="text-inline-clear-btn" type="button" title="Очистить">×</button>
       <div id="textSourceClickableOutput" class="text-clickable-output" data-clickable-text="source">
         ${makeClickableTextHtml(sourceText)}
       </div>
+      ${renderTextBottomToolbar("textInlineClearBtn")}
     `;
   }
 
   if (translationPanel) {
     translationPanel.innerHTML = `
-      <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn" type="button" title="Очистить">×</button>
       <div id="textTranslationOutput" class="text-translation-output text-clickable-output" data-clickable-text="translation">
         ${makeClickableTextHtml(translatedText)}
       </div>
+      ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
     `;
   }
 
@@ -1312,17 +1462,17 @@ function clearTextMode() {
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
-      <button id="textInlineClearBtn" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
       <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
+      ${renderTextBottomToolbar("textInlineClearBtn")}
     `;
   }
 
   if (translationPanel) {
     translationPanel.innerHTML = `
-      <button id="textInlineClearBtnTranslation" class="text-inline-clear-btn hidden" type="button" title="Очистить">×</button>
       <div id="textTranslationOutput" class="text-translation-output">
         Перевод появится здесь.
       </div>
+      ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
     `;
   }
 
