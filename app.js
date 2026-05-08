@@ -154,12 +154,12 @@ function ensureDictionaryPickerStyles() {
     .text-mode-actions-compact {
       position: relative;
       display: grid;
-      grid-template-columns: 74px minmax(0, 1fr) 74px;
+      grid-template-columns: 68px minmax(0, 1fr) 68px;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       width: 100%;
-      min-height: 82px;
-      padding: 10px 14px;
+      min-height: 76px;
+      padding: 8px 12px;
       border-radius: 42px;
       background: rgba(251, 251, 248, 0.84);
       box-shadow: -12px -12px 24px rgba(255,255,255,0.96), 12px 14px 32px rgba(186,193,184,0.30), inset 1px 1px 0 rgba(255,255,255,0.78);
@@ -174,14 +174,14 @@ function ensureDictionaryPickerStyles() {
 
     .text-add-lex-btn,
     .text-translate-compact-btn {
-      width: 66px;
-      min-width: 66px;
-      height: 66px;
+      width: 60px;
+      min-width: 60px;
+      height: 60px;
       padding: 0;
       border-radius: 999px;
       background: #fdfdfc;
       color: #5f9962;
-      font-size: 44px;
+      font-size: 40px;
       font-weight: 500;
       line-height: 1;
       display: inline-flex;
@@ -192,7 +192,7 @@ function ensureDictionaryPickerStyles() {
     }
 
     .text-translate-compact-btn {
-      font-size: 46px;
+      font-size: 42px;
       padding-bottom: 5px;
     }
 
@@ -246,6 +246,10 @@ function ensureDictionaryPickerStyles() {
       padding: 8px !important;
       border-radius: 32px !important;
       box-shadow: -10px -10px 20px rgba(255,255,255,0.92), 10px 12px 26px rgba(186,193,184,0.28), inset 1px 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .text-panel-tabs.hidden {
+      display: none !important;
     }
 
     .text-panel-tab {
@@ -351,19 +355,19 @@ function ensureDictionaryPickerStyles() {
     .text-mode-hint { display: none !important; }
 
     @media (max-width: 520px) {
-      .text-mode-shell { gap: 12px; }
-      .text-mode-actions-compact { grid-template-columns: 68px minmax(0, 1fr) 68px; min-height: 76px; gap: 14px; padding: 8px 12px; border-radius: 38px; }
-      .text-add-lex-btn, .text-translate-compact-btn { width: 62px; min-width: 62px; height: 62px; font-size: 42px; }
-      .text-panel-tab { min-height: 52px; }
-      .text-swipe-frame { height: min(60vh, 610px) !important; min-height: 455px !important; border-radius: 32px !important; }
+      .text-mode-shell { gap: 11px; }
+      .text-mode-actions-compact { grid-template-columns: 62px minmax(0, 1fr) 62px; min-height: 70px; gap: 12px; padding: 7px 10px; border-radius: 36px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 56px; min-width: 56px; height: 56px; font-size: 38px; }
+      .text-panel-tab { min-height: 48px; }
+      .text-swipe-frame { height: min(58vh, 590px) !important; min-height: 430px !important; border-radius: 32px !important; }
       .text-big-input, .text-clickable-output, .text-translation-output { padding: 28px 32px 104px !important; }
       .text-bottom-toolbar { padding: 16px 28px 22px; }
       .text-bottom-icon-btn { width: 53px; height: 53px; }
     }
 
     @media (max-width: 390px) {
-      .text-mode-actions-compact { grid-template-columns: 62px minmax(0, 1fr) 62px; gap: 10px; }
-      .text-add-lex-btn, .text-translate-compact-btn { width: 58px; min-width: 58px; height: 58px; font-size: 38px; }
+      .text-mode-actions-compact { grid-template-columns: 58px minmax(0, 1fr) 58px; gap: 9px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 52px; min-width: 52px; height: 52px; font-size: 35px; }
       .text-bottom-toolbar { gap: 10px; padding-left: 22px; padding-right: 22px; }
       .text-bottom-icon-btn { width: 50px; height: 50px; }
     }
