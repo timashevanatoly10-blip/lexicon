@@ -1,202 +1,70 @@
-:root {
-  --bg: #f6f7f4;
-  --card: #fbfbf8;
-  --surface: #fdfdfc;
-  --surface-white: #ffffff;
-  --text: #1f211f;
-  --muted: #777a77;
-  --border: #eceeea;
-  --accent: #5f9962;
-  --accent-dark: #1f6f56;
-  --danger: #b00020;
-  --soft: #fdfdfc;
-  --soft-2: #fbfbf8;
-  --shadow-dark: rgba(186, 193, 184, 0.35);
-  --shadow-dark-wide: rgba(180, 186, 176, 0.28);
-  --shadow-light: rgba(255, 255, 255, 0.95);
-}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Lexicon</title>
 
-* { box-sizing: border-box; }
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button id="brandBtn" class="brand" type="button">LEXICON</button>
+    </header>
 
-html, body {
-  margin: 0;
-  min-height: 100%;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.985) 0, rgba(255,255,255,0.82) 30%, rgba(246,247,244,1) 72%),
-    var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+    <section id="homePage" class="page active">
 
-body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-button, input, select, textarea { font: inherit; }
-button { -webkit-tap-highlight-color: transparent; }
+      <section class="card hero-card">
 
-.app { width: min(760px, 100%); margin: 0 auto; padding: 20px 22px 19px; }
-.topbar { text-align: center; margin-bottom: 18px; }
-.brand { font-size: clamp(23px, 5.65vw, 37px); font-weight: 540; letter-spacing: 0.235em; background: none; border: none; color: #2b7355; cursor: pointer; padding: 0; line-height: 1; }
-.page { width: 100%; }
+        <div class="top-controls">
+          <div class="mode-switch">
+            <button id="wordModeBtn" class="mode-btn active" type="button">Слово</button>
+            <button id="textModeBtn" class="mode-btn" type="button">Текст</button>
+          </div>
 
-.card { background: radial-gradient(circle at 35% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.84) 50%, rgba(243,245,242,0.78) 100%); border: 1px solid rgba(255,255,255,0.50); border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.62), inset -2px -2px 6px rgba(205,214,204,0.06), -11px -11px 22px rgba(255,255,255,0.90), 11px 15px 31px rgba(180,186,176,0.21); }
-.hero-card { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
-.muted-card { background: rgba(251,251,248,0.86); }
+          <button id="openFilesBtn" class="mini-btn">Файлы</button>
+          <button id="openAiBtn" class="mini-btn">ИИ</button>
+        </div>
 
-.top-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 0.72fr);
-  gap: 9px;
-  align-items: center;
-  margin-bottom: 15px;
-}
+        <div id="wordInputBox" class="input-box active">
+          <label class="field main-field">
+            <span>Перевод</span>
+            <textarea id="wordInput" rows="3" placeholder="Введите слово, список слов или фразу"></textarea>
+          </label>
+          <button id="wordTranslateBtn" class="primary" type="button">Перевести</button>
+        </div>
 
-.mode-switch { display: contents; }
+        <div id="textInputBox" class="input-box hidden">
+          <label class="field main-field">
+            <span>Перевод текста</span>
+            <textarea id="textInput" rows="6" placeholder="Вставьте текст для перевода"></textarea>
+          </label>
+          <button id="textTranslateBtn" class="primary" type="button">Перевести</button>
+        </div>
 
-.mode-btn,
-.mini-btn {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  border: 2px solid rgba(255,255,255,0.94);
-  background:
-    radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%);
-  color: #5f6260;
-  padding: 0 5px;
-  border-radius: 20px;
-  font-size: clamp(14px, 3.0vw, 18px);
-  font-weight: 430;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow:
-    inset 0 0 0 3px rgba(255,255,255,0.42),
-    inset 2px 2px 5px rgba(255,255,255,0.80),
-    inset -3px -3px 7px rgba(205,214,204,0.15),
-    -6px -6px 13px rgba(255,255,255,0.92),
-    6px 7px 13px rgba(186,193,184,0.20);
-}
+      </section>
 
-.mode-switch .mode-btn:first-child { margin-right: 0; }
+      <section id="homeResultCard" class="card muted-card">
+        <h2>Результат</h2>
+        <div id="homeResult" class="status">Пока это UI-заглушка.</div>
+      </section>
 
-.mode-btn.active {
-  background:
-    radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
-  border-color: rgba(255,255,255,0.96);
-  color: var(--accent-dark);
-  box-shadow:
-    inset 0 0 0 3px rgba(255,255,255,0.46),
-    inset 2px 2px 5px rgba(255,255,255,0.82),
-    inset -3px -3px 7px rgba(205,214,204,0.12),
-    -6px -6px 13px rgba(255,255,255,0.94),
-    6px 7px 13px rgba(186,193,184,0.15);
-}
+    </section>
 
-.field { display: block; margin: 12px 0; }
-.field span { display: block; margin-bottom: 8px; font-weight: 650; }
-input, select, textarea { width: 100%; border-radius: 20px; padding: 14px; border: 1px solid var(--border); background: #fbfdfb; color: var(--text); }
-textarea { resize: vertical; }
-.primary { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 18px; margin-top: 12px; font-weight: 750; cursor: pointer; }
-.status { padding: 14px; background: rgba(253,253,252,0.72); border-radius: 18px; white-space: pre-wrap; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.actions button { flex: 1; min-width: 150px; }
-.page-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.back-btn { border: none; background: transparent; color: var(--accent-dark); padding: 8px 0; cursor: pointer; }
-.hidden { display:none !important; }
+    <!-- FILES PAGE ОСТАВЛЕНА -->
+    <section id="filesPage" class="page hidden"></section>
 
-/* ===== LEXICON PAGE ===== */
-.lexicon-shell { display: flex; flex-direction: column; gap: 14px; }
-.lexicon-topline { display: flex; align-items: center; gap: 12px; background: radial-gradient(circle at 35% 20%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 50%, rgba(240,243,239,0.74) 100%); border: 1px solid rgba(255,255,255,0.68); border-radius: 30px; padding: 16px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.78), inset -2px -2px 6px rgba(205,214,204,0.08), -10px -10px 20px rgba(255,255,255,0.90), 10px 12px 24px rgba(186,193,184,0.24); }
-.lexicon-title-block { flex: 1; min-width: 0; }
-.lexicon-title-block h1 { margin: 0; font-size: 24px; line-height: 1.1; }
-.lexicon-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
-.lexicon-actions { display: flex; align-items: center; gap: 8px; }
-.lexicon-icon-btn, .lexicon-add-btn { border: 2px solid rgba(255,255,255,0.94); background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%); color: var(--text); border-radius: 999px; width: 44px; height: 44px; padding: 0; font-size: 21px; font-weight: 750; cursor: pointer; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.42), inset 2px 2px 5px rgba(255,255,255,0.80), inset -3px -3px 7px rgba(205,214,204,0.15), -7px -7px 14px rgba(255,255,255,0.92), 7px 8px 15px rgba(186,193,184,0.22); }
-.lexicon-add-btn { color: var(--accent); font-size: 34px; line-height: 1; }
-.lexicon-search-card { background: radial-gradient(circle at 35% 24%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 48%, rgba(241,243,240,0.76) 100%); border: 1px solid rgba(255,255,255,0.66); border-radius: 26px; padding: 12px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.76), inset -2px -2px 5px rgba(205,214,204,0.08), -9px -9px 18px rgba(255,255,255,0.90), 9px 10px 21px rgba(186,193,184,0.21); }
-.lexicon-search { border: none; background: var(--surface); border-radius: 18px; padding: 14px 16px; outline: none; }
-.dictionary-list { display: flex; flex-direction: column; gap: 12px; }
-.dictionary-block { background: rgba(251,251,248,0.88); border: 0; border-radius: 28px; overflow: hidden; box-shadow: -9px -9px 18px rgba(255,255,255,0.92), 9px 10px 24px rgba(186,193,184,0.26); }
-.dictionary-line { width: 100%; display: flex; align-items: center; gap: 10px; border: none; background: transparent; color: var(--text); padding: 16px; cursor: pointer; text-align: left; }
-.dictionary-chevron { width: 24px; color: var(--accent-dark); font-size: 24px; line-height: 1; }
-.dictionary-line-main { flex: 1; min-width: 0; }
-.dictionary-name { font-weight: 800; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dictionary-note { margin-top: 3px; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dictionary-count { min-width: 38px; height: 32px; padding: 0 11px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: var(--surface); color: var(--accent-dark); font-weight: 800; font-size: 13px; }
-.dictionary-panel { border-top: 1px solid rgba(236,238,234,0.9); background: rgba(253,253,252,0.55); padding: 14px; }
-.dictionary-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.dictionary-panel-title { font-weight: 800; font-size: 16px; }
-.dictionary-panel-subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; }
-.dictionary-panel-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
-.small-action-btn { border: none; background: var(--surface); color: var(--text); border-radius: 14px; padding: 8px 11px; font-size: 12px; font-weight: 700; cursor: pointer; }
-.small-action-btn.danger { color: var(--danger); background: #fff0f2; }
-.dictionary-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.dictionary-word-input { flex: 1; min-width: 0; border: 1px solid var(--border); background: white; border-radius: 18px; padding: 12px 13px; }
-.dictionary-add-word-btn { border: none; background: var(--accent); color: white; border-radius: 18px; padding: 0 15px; font-weight: 800; cursor: pointer; }
-.word-list { display: flex; flex-direction: column; gap: 8px; }
-.word-row { display: grid; grid-template-columns: minmax(96px, 1.2fr) minmax(90px, 1fr) 28px; align-items: center; gap: 8px; background: white; border: 1px solid rgba(236,238,234,0.85); border-radius: 18px; padding: 10px 8px 10px 11px; cursor: pointer; }
-.word-main { min-width: 0; }
-.word-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.word-text { font-weight: 850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.word-pos { flex: 0 0 auto; border-radius: 999px; background: var(--soft); color: var(--accent-dark); padding: 2px 6px; font-size: 10px; font-weight: 800; }
-.word-transcription { margin-top: 2px; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.word-translation { min-width: 0; color: var(--text); font-size: 13px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; }
-.word-delete-btn { width: 28px; height: 28px; border: none; border-radius: 999px; background: #fff3f5; color: var(--danger); font-size: 18px; line-height: 1; cursor: pointer; }
-.empty-word-list, .lexicon-empty { padding: 15px; border-radius: 18px; background: var(--surface); color: var(--muted); text-align: center; font-size: 14px; }
+    <section id="aiPage" class="page hidden"></section>
+    <section id="lexiconPage" class="page hidden"></section>
 
-/* ===== TEXT TRANSLATION MODE ===== */
-.text-mode-shell { display: flex; flex-direction: column; gap: 14px; }
-.text-mode-actions { display: flex; gap: 8px; align-items: center; }
-.text-action-primary, .text-action-secondary { border: none; border-radius: 13px; padding: 10px 12px; font-weight: 800; cursor: pointer; }
-.text-action-primary { flex: 1; background: var(--accent); color: #fff; }
-.text-action-secondary { flex: 0 0 auto; background: var(--soft); color: var(--text); }
-.text-panel-tabs { display: flex; gap: 6px; background: var(--soft); padding: 4px; border-radius: 13px; }
-.text-panel-tab { flex: 1; border: none; background: transparent; border-radius: 10px; padding: 9px 10px; font-weight: 750; color: var(--muted); cursor: pointer; }
-.text-panel-tab.active { background: #fff; color: var(--accent-dark); box-shadow: 0 2px 8px rgba(20, 40, 30, 0.08); }
-.text-swipe-frame { width: 100%; height: min(58vh, 560px); min-height: 360px; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: #fff; }
-.text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
-.text-panel { width: 50%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; background: #fff; }
-.text-big-input { width: 100%; height: 100%; min-height: 100%; border: none; border-radius: 0; padding: 16px; background: #fff; resize: none; outline: none; font-size: 16px; line-height: 1.45; }
-.text-translation-output { min-height: 100%; padding: 16px; white-space: pre-wrap; line-height: 1.45; font-size: 16px; }
-.text-mode-hint { color: var(--muted); font-size: 12px; line-height: 1.35; padding: 0 2px; }
+  </main>
 
-@media (max-width: 520px) {
-  .app { padding: 20px 20px 18px; }
-  .topbar { margin-bottom: 17px; }
-  .brand { font-size: 25.5px; letter-spacing: 0.235em; font-weight: 540; }
-
-  .top-controls {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 0.72fr);
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .mode-btn,
-  .mini-btn {
-    min-height: 40px;
-    padding: 0 4px;
-    border-radius: 18px;
-    font-size: 14px;
-  }
-
-  .mode-switch .mode-btn:first-child { margin-right: 0; }
-  .lexicon-topline { padding: 13px; gap: 8px; }
-  .lexicon-title-block h1 { font-size: 21px; }
-  .lexicon-icon-btn, .lexicon-add-btn { width: 40px; height: 40px; }
-  .word-row { grid-template-columns: minmax(88px, 1fr) minmax(80px, 1fr) 28px; }
-  .dictionary-panel-actions { gap: 5px; }
-  .small-action-btn { padding: 7px 8px; }
-}
-
-@media (max-width: 390px) {
-  .app { padding-left: 16px; padding-right: 16px; }
-
-  .top-controls { gap: 7px; }
-
-  .mode-btn,
-  .mini-btn {
-    min-height: 38px;
-    font-size: 13px;
-    border-radius: 17px;
-    padding: 0 3px;
-  }
-}
+  <script src="./app.js"></script>
+</body>
+</html>
