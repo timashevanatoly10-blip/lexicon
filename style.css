@@ -37,7 +37,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .brand { font-size: clamp(27px, 6.8vw, 44px); font-weight: 700; letter-spacing: 0.17em; background: none; border: none; color: #246f52; cursor: pointer; padding: 0; line-height: 1; }
 .page { width: 100%; }
 
-.card { background: rgba(251,251,248,0.80); border: 0; border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: -11px -11px 22px rgba(255,255,255,0.91), 11px 15px 33px rgba(180,186,176,0.23), inset 1px 1px 0 rgba(255,255,255,0.68); }
+.card { background: radial-gradient(circle at 35% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.84) 50%, rgba(243,245,242,0.78) 100%); border: 1px solid rgba(255,255,255,0.64); border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.74), inset -2px -2px 6px rgba(205,214,204,0.08), -11px -11px 22px rgba(255,255,255,0.90), 11px 15px 31px rgba(180,186,176,0.21); }
 .hero-card { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
 .muted-card { background: rgba(251,251,248,0.86); }
 
@@ -56,8 +56,9 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   min-width: 0;
   min-height: 49px;
-  border: 0;
-  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.74);
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255,255,255,0.98) 0%, rgba(253,253,250,0.92) 48%, rgba(240,243,239,0.80) 100%);
   color: #5f6260;
   padding: 0 6px;
   border-radius: 22px;
@@ -67,15 +68,25 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: -7px -7px 15px rgba(255,255,255,0.95), 7px 8px 17px rgba(186,193,184,0.26);
+  box-shadow:
+    inset 1px 1px 2px rgba(255,255,255,0.90),
+    inset -2px -2px 5px rgba(205,214,204,0.13),
+    -7px -7px 15px rgba(255,255,255,0.92),
+    7px 8px 16px rgba(186,193,184,0.23);
 }
 
 .mode-switch .mode-btn:first-child { margin-right: 0; }
 
 .mode-btn.active {
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255,255,255,0.99) 0%, rgba(253,253,250,0.94) 48%, rgba(242,244,241,0.82) 100%);
+  border-color: rgba(255,255,255,0.80);
   color: var(--accent-dark);
-  box-shadow: -7px -7px 15px rgba(255,255,255,0.97), 7px 8px 16px rgba(186,193,184,0.20), inset 1px 1px 0 rgba(255,255,255,0.84);
+  box-shadow:
+    inset 1px 1px 2px rgba(255,255,255,0.92),
+    inset -2px -2px 5px rgba(205,214,204,0.10),
+    -7px -7px 15px rgba(255,255,255,0.94),
+    7px 8px 15px rgba(186,193,184,0.18);
 }
 
 .field { display: block; margin: 12px 0; }
@@ -92,14 +103,14 @@ textarea { resize: vertical; }
 
 /* ===== LEXICON PAGE ===== */
 .lexicon-shell { display: flex; flex-direction: column; gap: 14px; }
-.lexicon-topline { display: flex; align-items: center; gap: 12px; background: rgba(251,251,248,0.82); border: 0; border-radius: 30px; padding: 16px; box-shadow: -10px -10px 20px rgba(255,255,255,0.92), 10px 12px 26px rgba(186,193,184,0.28); }
+.lexicon-topline { display: flex; align-items: center; gap: 12px; background: radial-gradient(circle at 35% 20%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 50%, rgba(240,243,239,0.74) 100%); border: 1px solid rgba(255,255,255,0.68); border-radius: 30px; padding: 16px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.78), inset -2px -2px 6px rgba(205,214,204,0.08), -10px -10px 20px rgba(255,255,255,0.90), 10px 12px 24px rgba(186,193,184,0.24); }
 .lexicon-title-block { flex: 1; min-width: 0; }
 .lexicon-title-block h1 { margin: 0; font-size: 24px; line-height: 1.1; }
 .lexicon-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
 .lexicon-actions { display: flex; align-items: center; gap: 8px; }
-.lexicon-icon-btn, .lexicon-add-btn { border: none; background: var(--surface); color: var(--text); border-radius: 999px; width: 44px; height: 44px; padding: 0; font-size: 21px; font-weight: 750; cursor: pointer; box-shadow: -7px -7px 14px rgba(255,255,255,0.95), 7px 8px 16px rgba(186,193,184,0.28); }
+.lexicon-icon-btn, .lexicon-add-btn { border: 1px solid rgba(255,255,255,0.74); background: radial-gradient(circle at 35% 24%, rgba(255,255,255,0.98) 0%, rgba(253,253,250,0.92) 48%, rgba(240,243,239,0.80) 100%); color: var(--text); border-radius: 999px; width: 44px; height: 44px; padding: 0; font-size: 21px; font-weight: 750; cursor: pointer; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.90), inset -2px -2px 5px rgba(205,214,204,0.12), -7px -7px 14px rgba(255,255,255,0.92), 7px 8px 15px rgba(186,193,184,0.24); }
 .lexicon-add-btn { color: var(--accent); font-size: 34px; line-height: 1; }
-.lexicon-search-card { background: rgba(251,251,248,0.84); border: 0; border-radius: 26px; padding: 12px; box-shadow: -9px -9px 18px rgba(255,255,255,0.92), 9px 10px 22px rgba(186,193,184,0.24); }
+.lexicon-search-card { background: radial-gradient(circle at 35% 24%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 48%, rgba(241,243,240,0.76) 100%); border: 1px solid rgba(255,255,255,0.66); border-radius: 26px; padding: 12px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.76), inset -2px -2px 5px rgba(205,214,204,0.08), -9px -9px 18px rgba(255,255,255,0.90), 9px 10px 21px rgba(186,193,184,0.21); }
 .lexicon-search { border: none; background: var(--surface); border-radius: 18px; padding: 14px 16px; outline: none; }
 .dictionary-list { display: flex; flex-direction: column; gap: 12px; }
 .dictionary-block { background: rgba(251,251,248,0.88); border: 0; border-radius: 28px; overflow: hidden; box-shadow: -9px -9px 18px rgba(255,255,255,0.92), 9px 10px 24px rgba(186,193,184,0.26); }
