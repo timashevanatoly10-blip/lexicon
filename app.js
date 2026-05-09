@@ -161,8 +161,14 @@ function ensureDictionaryPickerStyles() {
       min-height: 62px;
       padding: 6px 9px;
       border-radius: 33px;
-      background: rgba(251, 251, 248, 0.80);
-      box-shadow: -9px -9px 18px rgba(255,255,255,0.93), 9px 11px 25px rgba(186,193,184,0.24), inset 1px 1px 0 rgba(255,255,255,0.70);
+      background:
+        radial-gradient(circle at 35% 20%, rgba(255,255,255,0.96) 0%, rgba(251,251,248,0.86) 48%, rgba(239,242,238,0.74) 100%);
+      border: 1px solid rgba(255,255,255,0.72);
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.86),
+        inset -2px -2px 5px rgba(205,214,204,0.12),
+        -9px -9px 18px rgba(255,255,255,0.91),
+        9px 11px 24px rgba(186,193,184,0.22);
     }
 
     .text-action-secondary,
@@ -179,7 +185,9 @@ function ensureDictionaryPickerStyles() {
       height: 44px;
       padding: 0;
       border-radius: 999px;
-      background: #fdfdfc;
+      background:
+        radial-gradient(circle at 34% 24%, rgba(255,255,255,0.98) 0%, rgba(253,253,250,0.92) 48%, rgba(240,243,239,0.82) 100%);
+      border: 1px solid rgba(255,255,255,0.76);
       color: #5f9962;
       font-size: 31px;
       font-weight: 420;
@@ -187,7 +195,11 @@ function ensureDictionaryPickerStyles() {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: -8px -8px 16px rgba(255,255,255,0.96), 8px 9px 19px rgba(186,193,184,0.30);
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.92),
+        inset -2px -2px 5px rgba(205,214,204,0.14),
+        -8px -8px 16px rgba(255,255,255,0.94),
+        8px 9px 18px rgba(186,193,184,0.26);
       transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
     }
 
@@ -208,8 +220,9 @@ function ensureDictionaryPickerStyles() {
     #textAddLexBtn.active {
       opacity: 1;
       color: #5f9962;
-      background: #fdfdfc;
-      border-color: transparent;
+      background:
+        radial-gradient(circle at 34% 24%, rgba(255,255,255,0.98) 0%, rgba(253,253,250,0.94) 48%, rgba(240,243,239,0.82) 100%);
+      border-color: rgba(255,255,255,0.78);
       font-weight: 500;
     }
 
@@ -242,10 +255,16 @@ function ensureDictionaryPickerStyles() {
       display: grid !important;
       grid-template-columns: 1fr 1fr;
       gap: 0;
-      background: rgba(251, 251, 248, 0.86) !important;
+      background:
+        radial-gradient(circle at 34% 18%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.86) 52%, rgba(239,242,238,0.72) 100%) !important;
       padding: 5px !important;
+      border: 1px solid rgba(255,255,255,0.70) !important;
       border-radius: 27px !important;
-      box-shadow: -9px -9px 18px rgba(255,255,255,0.91), 9px 11px 23px rgba(186,193,184,0.24), inset 1px 1px 0 rgba(255,255,255,0.76);
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.82),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        -9px -9px 18px rgba(255,255,255,0.90),
+        9px 11px 23px rgba(186,193,184,0.22);
     }
 
     .text-panel-tabs.hidden {
@@ -266,9 +285,15 @@ function ensureDictionaryPickerStyles() {
     }
 
     .text-panel-tab.active {
-      background: #ffffff !important;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.99) 0%, rgba(253,253,250,0.94) 50%, rgba(242,244,241,0.82) 100%) !important;
+      border: 1px solid rgba(255,255,255,0.76) !important;
       color: #5f9962 !important;
-      box-shadow: -7px -7px 14px rgba(255,255,255,0.98), 7px 8px 17px rgba(186,193,184,0.24) !important;
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.88),
+        inset -2px -2px 4px rgba(205,214,204,0.10),
+        -7px -7px 14px rgba(255,255,255,0.94),
+        7px 8px 16px rgba(186,193,184,0.20) !important;
     }
 
     .text-swipe-frame {
@@ -276,10 +301,15 @@ function ensureDictionaryPickerStyles() {
       height: min(55vh, 565px) !important;
       min-height: 395px !important;
       overflow: hidden !important;
-      border: 0 !important;
+      border: 1px solid rgba(255,255,255,0.66) !important;
       border-radius: 30px !important;
-      background: #fbfbf8 !important;
-      box-shadow: -12px -12px 25px rgba(255,255,255,0.93), 12px 16px 37px rgba(180,186,176,0.26), inset 1px 1px 0 rgba(255,255,255,0.80) !important;
+      background:
+        radial-gradient(circle at 36% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.92) 48%, rgba(244,246,243,0.84) 100%) !important;
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.78),
+        inset -2px -2px 6px rgba(205,214,204,0.08),
+        -12px -12px 25px rgba(255,255,255,0.91),
+        12px 16px 35px rgba(180,186,176,0.23) !important;
     }
 
     .text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
@@ -338,13 +368,19 @@ function ensureDictionaryPickerStyles() {
       height: 46px;
       border: 0;
       border-radius: 999px;
-      background: #fdfdfc;
+      background:
+        radial-gradient(circle at 34% 24%, rgba(255,255,255,0.98) 0%, rgba(253,253,250,0.92) 48%, rgba(240,243,239,0.82) 100%);
+      border: 1px solid rgba(255,255,255,0.76);
       color: #5f9962;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0;
-      box-shadow: -7px -7px 15px rgba(255,255,255,0.95), 7px 8px 17px rgba(186,193,184,0.29);
+      box-shadow:
+        inset 1px 1px 2px rgba(255,255,255,0.90),
+        inset -2px -2px 5px rgba(205,214,204,0.13),
+        -7px -7px 15px rgba(255,255,255,0.93),
+        7px 8px 16px rgba(186,193,184,0.25);
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
     }
