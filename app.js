@@ -148,21 +148,21 @@ function ensureDictionaryPickerStyles() {
       --neo-text: #1f211f;
       display: flex;
       flex-direction: column;
-      gap: 11px;
+      gap: 10px;
     }
 
     .text-mode-actions-compact {
       position: relative;
       display: grid;
-      grid-template-columns: 58px minmax(0, 1fr) 58px;
+      grid-template-columns: 54px minmax(0, 1fr) 54px;
       align-items: center;
-      gap: 12px;
+      gap: 11px;
       width: 100%;
-      min-height: 66px;
-      padding: 7px 10px;
-      border-radius: 34px;
+      min-height: 62px;
+      padding: 6px 9px;
+      border-radius: 33px;
       background: rgba(251, 251, 248, 0.80);
-      box-shadow: -10px -10px 20px rgba(255,255,255,0.94), 10px 12px 28px rgba(186,193,184,0.26), inset 1px 1px 0 rgba(255,255,255,0.72);
+      box-shadow: -9px -9px 18px rgba(255,255,255,0.93), 9px 11px 25px rgba(186,193,184,0.24), inset 1px 1px 0 rgba(255,255,255,0.70);
     }
 
     .text-action-secondary,
@@ -174,26 +174,26 @@ function ensureDictionaryPickerStyles() {
 
     .text-add-lex-btn,
     .text-translate-compact-btn {
-      width: 52px;
-      min-width: 52px;
-      height: 52px;
+      width: 48px;
+      min-width: 48px;
+      height: 44px;
       padding: 0;
       border-radius: 999px;
       background: #fdfdfc;
       color: #5f9962;
-      font-size: 34px;
-      font-weight: 450;
+      font-size: 31px;
+      font-weight: 420;
       line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: -9px -9px 18px rgba(255,255,255,0.98), 9px 10px 22px rgba(186,193,184,0.36);
+      box-shadow: -8px -8px 16px rgba(255,255,255,0.96), 8px 9px 19px rgba(186,193,184,0.30);
       transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
     }
 
     .text-translate-compact-btn {
-      font-size: 36px;
-      padding-bottom: 4px;
+      font-size: 33px;
+      padding-bottom: 3px;
     }
 
     .text-add-lex-btn:active,
@@ -223,8 +223,8 @@ function ensureDictionaryPickerStyles() {
       border-radius: 22px;
       background: transparent;
       color: #1f6f56;
-      font-size: clamp(16px, 4.1vw, 23px);
-      font-weight: 450;
+      font-size: clamp(15px, 3.85vw, 22px);
+      font-weight: 430;
       line-height: 1.15;
       letter-spacing: 0.01em;
       text-align: center;
@@ -243,9 +243,9 @@ function ensureDictionaryPickerStyles() {
       grid-template-columns: 1fr 1fr;
       gap: 0;
       background: rgba(251, 251, 248, 0.86) !important;
-      padding: 6px !important;
-      border-radius: 28px !important;
-      box-shadow: -10px -10px 20px rgba(255,255,255,0.92), 10px 12px 26px rgba(186,193,184,0.28), inset 1px 1px 0 rgba(255,255,255,0.8);
+      padding: 5px !important;
+      border-radius: 27px !important;
+      box-shadow: -9px -9px 18px rgba(255,255,255,0.91), 9px 11px 23px rgba(186,193,184,0.24), inset 1px 1px 0 rgba(255,255,255,0.76);
     }
 
     .text-panel-tabs.hidden {
@@ -253,13 +253,13 @@ function ensureDictionaryPickerStyles() {
     }
 
     .text-panel-tab {
-      min-height: 44px;
+      min-height: 41px;
       border: 0 !important;
       border-radius: 26px !important;
       background: transparent !important;
       color: #777a77 !important;
-      font-size: clamp(15px, 3.8vw, 22px);
-      font-weight: 450 !important;
+      font-size: clamp(14px, 3.55vw, 21px);
+      font-weight: 430 !important;
       letter-spacing: 0.01em;
       cursor: pointer;
       box-shadow: none !important;
@@ -273,13 +273,13 @@ function ensureDictionaryPickerStyles() {
 
     .text-swipe-frame {
       width: 100% !important;
-      height: min(57vh, 590px) !important;
-      min-height: 420px !important;
+      height: min(55vh, 565px) !important;
+      min-height: 395px !important;
       overflow: hidden !important;
       border: 0 !important;
-      border-radius: 31px !important;
+      border-radius: 30px !important;
       background: #fbfbf8 !important;
-      box-shadow: -14px -14px 28px rgba(255,255,255,0.95), 14px 18px 42px rgba(180,186,176,0.30), inset 1px 1px 0 rgba(255,255,255,0.85) !important;
+      box-shadow: -12px -12px 25px rgba(255,255,255,0.93), 12px 16px 37px rgba(180,186,176,0.26), inset 1px 1px 0 rgba(255,255,255,0.80) !important;
     }
 
     .text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
@@ -306,10 +306,10 @@ function ensureDictionaryPickerStyles() {
       box-shadow: none !important;
       background: transparent !important;
       color: #1f211f;
-      padding: 28px 30px 98px !important;
-      font-size: clamp(20px, 4.9vw, 30px);
+      padding: 25px 28px 92px !important;
+      font-size: clamp(19px, 4.55vw, 28px);
       font-weight: 400;
-      line-height: 1.42;
+      line-height: 1.4;
       letter-spacing: -0.015em;
       white-space: pre-wrap;
     }
@@ -326,16 +326,16 @@ function ensureDictionaryPickerStyles() {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      gap: 14px;
-      padding: 16px 30px 22px;
+      gap: 13px;
+      padding: 15px 29px 20px;
       background: linear-gradient(to top, rgba(251,251,248,0.98) 0%, rgba(251,251,248,0.92) 70%, rgba(251,251,248,0) 100%);
       pointer-events: none;
     }
 
     .text-bottom-icon-btn {
       pointer-events: auto;
-      width: 50px;
-      height: 50px;
+      width: 46px;
+      height: 46px;
       border: 0;
       border-radius: 999px;
       background: #fdfdfc;
@@ -344,34 +344,34 @@ function ensureDictionaryPickerStyles() {
       align-items: center;
       justify-content: center;
       padding: 0;
-      box-shadow: -8px -8px 16px rgba(255,255,255,0.98), 8px 9px 19px rgba(186,193,184,0.34);
+      box-shadow: -7px -7px 15px rgba(255,255,255,0.95), 7px 8px 17px rgba(186,193,184,0.29);
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
     }
 
-    .text-bottom-icon-btn svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .text-bottom-icon-btn.text-bottom-clear svg { width: 24px; height: 24px; stroke-width: 2.6; }
+    .text-bottom-icon-btn svg { width: 21px; height: 21px; stroke: currentColor; stroke-width: 2.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .text-bottom-icon-btn.text-bottom-clear svg { width: 22px; height: 22px; stroke-width: 2.5; }
     .text-bottom-icon-btn.hidden { display: none; }
     .text-mode-hint { display: none !important; }
 
     @media (max-width: 520px) {
-      .text-mode-shell { gap: 10px; }
-      .text-mode-actions-compact { grid-template-columns: 56px minmax(0, 1fr) 56px; min-height: 64px; gap: 10px; padding: 6px 9px; border-radius: 32px; }
-      .text-add-lex-btn, .text-translate-compact-btn { width: 50px; min-width: 50px; height: 50px; font-size: 32px; }
-      .text-translate-compact-btn { font-size: 34px; }
-      .text-panel-tab { min-height: 42px; }
-      .text-swipe-frame { height: min(56vh, 560px) !important; min-height: 400px !important; border-radius: 30px !important; }
-      .text-big-input, .text-clickable-output, .text-translation-output { padding: 24px 28px 96px !important; font-size: clamp(19px, 4.7vw, 28px); }
-      .text-bottom-toolbar { padding: 15px 26px 20px; }
-      .text-bottom-icon-btn { width: 48px; height: 48px; }
+      .text-mode-shell { gap: 9px; }
+      .text-mode-actions-compact { grid-template-columns: 52px minmax(0, 1fr) 52px; min-height: 60px; gap: 9px; padding: 6px 8px; border-radius: 31px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 46px; min-width: 46px; height: 46px; font-size: 29px; }
+      .text-translate-compact-btn { font-size: 31px; }
+      .text-panel-tab { min-height: 39px; }
+      .text-swipe-frame { height: min(54vh, 545px) !important; min-height: 380px !important; border-radius: 29px !important; }
+      .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 26px 90px !important; font-size: clamp(18px, 4.4vw, 27px); }
+      .text-bottom-toolbar { padding: 14px 25px 19px; }
+      .text-bottom-icon-btn { width: 44px; height: 44px; }
     }
 
     @media (max-width: 390px) {
-      .text-mode-actions-compact { grid-template-columns: 52px minmax(0, 1fr) 52px; gap: 8px; }
-      .text-add-lex-btn, .text-translate-compact-btn { width: 46px; min-width: 46px; height: 46px; font-size: 30px; }
-      .text-translate-compact-btn { font-size: 32px; }
-      .text-bottom-toolbar { gap: 9px; padding-left: 22px; padding-right: 22px; }
-      .text-bottom-icon-btn { width: 46px; height: 46px; }
+      .text-mode-actions-compact { grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 8px; }
+      .text-add-lex-btn, .text-translate-compact-btn { width: 42px; min-width: 42px; height: 42px; font-size: 27px; }
+      .text-translate-compact-btn { font-size: 29px; }
+      .text-bottom-toolbar { gap: 8px; padding-left: 21px; padding-right: 21px; }
+      .text-bottom-icon-btn { width: 42px; height: 42px; }
     }
   `;
 
