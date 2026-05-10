@@ -322,25 +322,31 @@ function ensureDictionaryPickerStyles() {
       position: relative;
       width: 50%;
       height: 100%;
-      overflow: auto;
+      overflow: hidden;
       -webkit-overflow-scrolling: touch;
       background: #fbfbf8 !important;
       border: 0 !important;
       border-radius: 0 !important;
       padding: 0 !important;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .text-big-input,
     .text-clickable-output,
     .text-translation-output {
       width: 100%;
-      min-height: calc(100% - 88px);
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
       border: 0 !important;
       outline: none !important;
       box-shadow: none !important;
       background: transparent !important;
       color: #1f211f;
-      padding: 25px 28px 92px !important;
+      padding: 25px 20px 20px !important;
       font-size: clamp(18px, 4.25vw, 26px);
       font-weight: 400;
       line-height: 1.4;
@@ -348,21 +354,19 @@ function ensureDictionaryPickerStyles() {
       white-space: pre-wrap;
     }
 
-    .text-big-input { height: calc(100% - 88px); resize: none; }
+    .text-big-input { height: auto; resize: none; }
     .text-big-input::placeholder { color: rgba(119,122,119,0.42); }
 
     .text-bottom-toolbar {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      position: relative;
+      flex: 0 0 auto;
       z-index: 7;
       display: flex;
       align-items: center;
       justify-content: space-around;
       gap: 12px;
-      padding: 14px 28px 19px;
-      background: linear-gradient(to top, rgba(251,251,248,0.98) 0%, rgba(251,251,248,0.92) 70%, rgba(251,251,248,0) 100%);
+      padding: 12px 28px 18px;
+      background: linear-gradient(to top, rgba(251,251,248,0.98) 0%, rgba(251,251,248,0.94) 78%, rgba(251,251,248,0.72) 100%);
       pointer-events: none;
     }
 
@@ -402,8 +406,8 @@ function ensureDictionaryPickerStyles() {
       .text-translate-compact-btn { font-size: 28px; }
       .text-panel-tab { min-height: 35px; }
       .text-swipe-frame { height: min(54vh, 545px) !important; min-height: 380px !important; border-radius: 29px !important; }
-      .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 26px 88px !important; font-size: clamp(17px, 4.15vw, 25px); }
-      .text-bottom-toolbar { padding: 13px 24px 18px; }
+      .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 18px 18px !important; font-size: clamp(17px, 4.15vw, 25px); }
+      .text-bottom-toolbar { padding: 11px 24px 17px; }
       .text-bottom-icon-btn { width: 40px; height: 40px; }
     }
 
@@ -1165,27 +1169,39 @@ function bindTextInlineClearButtons() {
 
 async function copyActiveTextPanel() {
   const textInput = document.getElementById("textInput");
+  const sourceClickable = document.getElementById("textSourceClickableOutput");
+  const translationOutput = document.getElementById("textTranslationOutput");
+
   const value = textActivePanel === "translation"
-    ? (textTranslatedValue || document.getElementById("textTranslationOutput")?.textContent || "")
-    : (textSourceValue || textInput?.value || document.getElementById("textSourceClickableOutput")?.textContent || "");
+    ? (translationOutput?.innerText || textTranslatedValue || "")
+    : (textInput?.value || sourceClickable?.innerText || textSourceValue || "");
 
   const clean = String(value || "").trim();
 
   if (!clean) return;
 
   try {
-    await navigator.clipboard.writeText(clean);
-  } catch {
-    const area = document.createElement("textarea");
-    area.value = clean;
-    area.style.position = "fixed";
-    area.style.left = "-9999px";
-    document.body.appendChild(area);
-    area.focus();
-    area.select();
-    try { document.execCommand("copy"); } catch {}
-    area.remove();
-  }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(clean);
+      return;
+    }
+  } catch {}
+
+  const area = document.createElement("textarea");
+  area.value = clean;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
+  area.style.top = "0";
+  document.body.appendChild(area);
+  area.focus();
+  area.select();
+
+  try {
+    document.execCommand("copy");
+  } catch {}
+
+  area.remove();
 }
 
 function bindTextInputAfterReset() {
