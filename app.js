@@ -16,6 +16,8 @@ let selectedTextWord = "";
 let selectedTextWordElement = null;
 let textQuickTranslateRequestId = 0;
 let textQuickTranslateTimer = null;
+let textCopiedPanel = "";
+let textCopiedValue = "";
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -346,7 +348,7 @@ function ensureDictionaryPickerStyles() {
       box-shadow: none !important;
       background: transparent !important;
       color: #1f211f;
-      padding: 25px 20px 20px !important;
+      padding: 25px 14px 86px !important;
       font-size: clamp(18px, 4.25vw, 26px);
       font-weight: 400;
       line-height: 1.4;
@@ -358,15 +360,22 @@ function ensureDictionaryPickerStyles() {
     .text-big-input::placeholder { color: rgba(119,122,119,0.42); }
 
     .text-bottom-toolbar {
-      position: relative;
-      flex: 0 0 auto;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 7;
       display: flex;
       align-items: center;
       justify-content: space-around;
       gap: 12px;
-      padding: 12px 28px 18px;
-      background: linear-gradient(to top, rgba(251,251,248,0.98) 0%, rgba(251,251,248,0.94) 78%, rgba(251,251,248,0.72) 100%);
+      padding: 15px 28px 19px;
+      background:
+        linear-gradient(to top,
+          rgba(251,251,248,0.96) 0%,
+          rgba(251,251,248,0.72) 56%,
+          rgba(251,251,248,0.18) 86%,
+          rgba(251,251,248,0) 100%);
       pointer-events: none;
     }
 
@@ -397,6 +406,25 @@ function ensureDictionaryPickerStyles() {
     .text-bottom-icon-btn svg { width: 19px; height: 19px; stroke: currentColor; stroke-width: 2.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     .text-bottom-icon-btn.text-bottom-clear svg { width: 20px; height: 20px; stroke-width: 2.45; }
     .text-bottom-icon-btn.hidden { display: none; }
+
+    .text-bottom-icon-btn.inactive {
+      opacity: 0.42;
+      color: rgba(95, 153, 98, 0.58);
+      filter: saturate(0.78);
+    }
+
+    .text-bottom-icon-btn.copied {
+      color: #2f7d59;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.92) 0%, rgba(244,249,243,0.96) 56%, rgba(255,255,255,0.99) 100%);
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.48),
+        inset 2px 2px 5px rgba(255,255,255,0.82),
+        inset -3px -3px 7px rgba(143,177,147,0.16),
+        -6px -6px 13px rgba(255,255,255,0.94),
+        6px 7px 13px rgba(143,177,147,0.24);
+    }
+
     .text-mode-hint { display: none !important; }
 
     @media (max-width: 520px) {
@@ -406,8 +434,8 @@ function ensureDictionaryPickerStyles() {
       .text-translate-compact-btn { font-size: 28px; }
       .text-panel-tab { min-height: 35px; }
       .text-swipe-frame { height: min(54vh, 545px) !important; min-height: 380px !important; border-radius: 29px !important; }
-      .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 18px 18px !important; font-size: clamp(17px, 4.15vw, 25px); }
-      .text-bottom-toolbar { padding: 11px 24px 17px; }
+      .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 12px 82px !important; font-size: clamp(17px, 4.15vw, 25px); }
+      .text-bottom-toolbar { padding: 14px 24px 18px; }
       .text-bottom-icon-btn { width: 40px; height: 40px; }
     }
 
@@ -966,17 +994,21 @@ function iconCopy() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 16V6.8C5 5.8 5.8 5 6.8 5H16"/></svg>`;
 }
 
+function iconCheck() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 12.4 10 16.8 18.6 7.2"/></svg>`;
+}
+
 function iconClose() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5"/><path d="M17.5 6.5 6.5 17.5"/></svg>`;
 }
 
-function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn") {
+function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn", panelName = "source") {
   return `
     <div class="text-bottom-toolbar">
       <button class="text-bottom-icon-btn text-camera-btn" type="button" title="Фото">${iconCamera()}</button>
       <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
-      <button class="text-bottom-icon-btn text-copy-btn" type="button" title="Копировать">${iconCopy()}</button>
-      <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear hidden" type="button" title="Очистить">${iconClose()}</button>
+      <button class="text-bottom-icon-btn text-copy-btn" type="button" data-copy-panel="${panelName}" title="Копировать">${iconCopy()}</button>
+      <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
     </div>
   `;
 }
@@ -1001,14 +1033,14 @@ function ensureTextModeMarkup() {
         <div id="textSwipeTrack" class="text-swipe-track">
           <section class="text-panel" data-text-panel="source">
             <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
-            ${renderTextBottomToolbar("textInlineClearBtn")}
+            ${renderTextBottomToolbar("textInlineClearBtn", "source")}
           </section>
 
           <section class="text-panel" data-text-panel="translation">
             <div id="textTranslationOutput" class="text-translation-output">
               Перевод появится здесь.
             </div>
-            ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
+            ${renderTextBottomToolbar("textInlineClearBtnTranslation", "translation")}
           </section>
         </div>
       </div>
@@ -1053,8 +1085,13 @@ function bindTextModeEvents() {
   on(textInput, "input", () => {
     updateTextInlineClearVisibility();
 
-    if (!textTranslationReady) return;
+    if (!textTranslationReady) {
+      updateTextCopyFeedback();
+      return;
+    }
+
     textSourceValue = textInput.value;
+    updateTextCopyFeedback();
   });
 
   updateTextInlineClearVisibility();
@@ -1155,8 +1192,12 @@ function bindTextInlineClearButtons() {
   const inlineClearBtn = document.getElementById("textInlineClearBtn");
   const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
 
-  if (inlineClearBtn) inlineClearBtn.onclick = clearTextMode;
-  if (inlineClearBtnTranslation) inlineClearBtnTranslation.onclick = clearTextMode;
+  if (inlineClearBtn) inlineClearBtn.onclick = () => {
+    if (!inlineClearBtn.classList.contains("inactive")) clearTextMode();
+  };
+  if (inlineClearBtnTranslation) inlineClearBtnTranslation.onclick = () => {
+    if (!inlineClearBtnTranslation.classList.contains("inactive")) clearTextMode();
+  };
 
   document.querySelectorAll(".text-camera-btn, .text-mic-btn").forEach((btn) => {
     btn.onclick = () => {};
@@ -1165,43 +1206,75 @@ function bindTextInlineClearButtons() {
   document.querySelectorAll(".text-copy-btn").forEach((btn) => {
     btn.onclick = copyActiveTextPanel;
   });
+
+  updateTextCopyFeedback();
+  updateTextInlineClearVisibility();
 }
 
-async function copyActiveTextPanel() {
-  const textInput = document.getElementById("textInput");
-  const sourceClickable = document.getElementById("textSourceClickableOutput");
-  const translationOutput = document.getElementById("textTranslationOutput");
-
-  const value = textActivePanel === "translation"
-    ? (translationOutput?.innerText || textTranslatedValue || "")
-    : (textInput?.value || sourceClickable?.innerText || textSourceValue || "");
-
-  const clean = String(value || "").trim();
+async function copyActiveTextPanel(event) {
+  const panelName = event?.currentTarget?.dataset?.copyPanel || textActivePanel;
+  const clean = getTextPanelCopyValue(panelName).trim();
 
   if (!clean) return;
+
+  let copied = false;
 
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(clean);
-      return;
+      copied = true;
     }
   } catch {}
 
-  const area = document.createElement("textarea");
-  area.value = clean;
-  area.setAttribute("readonly", "");
-  area.style.position = "fixed";
-  area.style.left = "-9999px";
-  area.style.top = "0";
-  document.body.appendChild(area);
-  area.focus();
-  area.select();
+  if (!copied) {
+    const area = document.createElement("textarea");
+    area.value = clean;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.left = "-9999px";
+    area.style.top = "0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
 
-  try {
-    document.execCommand("copy");
-  } catch {}
+    try {
+      copied = document.execCommand("copy");
+    } catch {
+      copied = false;
+    }
 
-  area.remove();
+    area.remove();
+  }
+
+  if (copied) {
+    textCopiedPanel = panelName;
+    textCopiedValue = clean;
+    updateTextCopyFeedback();
+  }
+}
+
+function getTextPanelCopyValue(panelName) {
+  const textInput = document.getElementById("textInput");
+  const sourceClickable = document.getElementById("textSourceClickableOutput");
+  const translationOutput = document.getElementById("textTranslationOutput");
+
+  if (panelName === "translation") {
+    return String(translationOutput?.innerText || textTranslatedValue || "");
+  }
+
+  return String(textInput?.value || sourceClickable?.innerText || textSourceValue || "");
+}
+
+function updateTextCopyFeedback() {
+  document.querySelectorAll(".text-copy-btn").forEach((btn) => {
+    const panelName = btn.dataset.copyPanel || "source";
+    const currentValue = getTextPanelCopyValue(panelName).trim();
+    const isCopied = Boolean(textCopiedValue && textCopiedPanel === panelName && currentValue === textCopiedValue);
+
+    btn.classList.toggle("copied", isCopied);
+    btn.innerHTML = isCopied ? iconCheck() : iconCopy();
+    btn.title = isCopied ? "Скопировано" : "Копировать";
+  });
 }
 
 function bindTextInputAfterReset() {
@@ -1212,8 +1285,13 @@ function bindTextInputAfterReset() {
   textInput.oninput = () => {
     updateTextInlineClearVisibility();
 
-    if (!textTranslationReady) return;
+    if (!textTranslationReady) {
+      updateTextCopyFeedback();
+      return;
+    }
+
     textSourceValue = textInput.value;
+    updateTextCopyFeedback();
   };
 
   updateTextInlineClearVisibility();
@@ -1231,8 +1309,8 @@ function updateTextInlineClearVisibility() {
     (textInput && textInput.value.trim())
   );
 
-  if (inlineClearBtn) inlineClearBtn.classList.toggle("hidden", !hasText);
-  if (inlineClearBtnTranslation) inlineClearBtnTranslation.classList.toggle("hidden", !hasText);
+  if (inlineClearBtn) inlineClearBtn.classList.toggle("inactive", !hasText);
+  if (inlineClearBtnTranslation) inlineClearBtnTranslation.classList.toggle("inactive", !hasText);
 }
 
 function renderClickableTextPanels(sourceText, translatedText) {
@@ -1246,7 +1324,7 @@ function renderClickableTextPanels(sourceText, translatedText) {
       <div id="textSourceClickableOutput" class="text-clickable-output" data-clickable-text="source">
         ${makeClickableTextHtml(sourceText)}
       </div>
-      ${renderTextBottomToolbar("textInlineClearBtn")}
+      ${renderTextBottomToolbar("textInlineClearBtn", "source")}
     `;
   }
 
@@ -1255,13 +1333,14 @@ function renderClickableTextPanels(sourceText, translatedText) {
       <div id="textTranslationOutput" class="text-translation-output text-clickable-output" data-clickable-text="translation">
         ${makeClickableTextHtml(translatedText)}
       </div>
-      ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
+      ${renderTextBottomToolbar("textInlineClearBtnTranslation", "translation")}
     `;
   }
 
   bindClickableTextWords();
   bindTextInlineClearButtons();
   updateTextInlineClearVisibility();
+  updateTextCopyFeedback();
 }
 
 function bindClickableTextWords() {
@@ -1521,12 +1600,14 @@ function clearTextMode() {
   textTranslatedValue = "";
   textPanelScroll.source = 0;
   textPanelScroll.translation = 0;
+  textCopiedPanel = "";
+  textCopiedValue = "";
   clearSelectedTextWord();
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
       <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
-      ${renderTextBottomToolbar("textInlineClearBtn")}
+      ${renderTextBottomToolbar("textInlineClearBtn", "source")}
     `;
   }
 
@@ -1535,11 +1616,12 @@ function clearTextMode() {
       <div id="textTranslationOutput" class="text-translation-output">
         Перевод появится здесь.
       </div>
-      ${renderTextBottomToolbar("textInlineClearBtnTranslation")}
+      ${renderTextBottomToolbar("textInlineClearBtnTranslation", "translation")}
     `;
   }
 
   bindTextInlineClearButtons();
+  updateTextCopyFeedback();
 
   if (tabs) tabs.classList.add("hidden");
 
