@@ -256,10 +256,11 @@ function ensureDictionaryPickerStyles() {
     .text-panel-tabs {
       display: grid !important;
       grid-template-columns: 1fr 1fr;
+      align-items: stretch;
       gap: 0;
       background:
         radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%) !important;
-      padding: 3px !important;
+      padding: 2px !important;
       border: 2px solid rgba(255,255,255,0.90) !important;
       border-radius: 24px !important;
       box-shadow:
@@ -274,8 +275,12 @@ function ensureDictionaryPickerStyles() {
     }
 
     .text-panel-tab {
-      min-height: 39px;
-      border: 0 !important;
+      width: 100%;
+      min-height: 42px;
+      height: 42px;
+      margin: 0 !important;
+      padding: 0 10px !important;
+      border: 2px solid transparent !important;
       border-radius: 22px !important;
       background: transparent !important;
       color: #777a77 !important;
@@ -284,12 +289,15 @@ function ensureDictionaryPickerStyles() {
       letter-spacing: 0.01em;
       cursor: pointer;
       box-shadow: none !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .text-panel-tab.active {
       background:
         radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
-      border: 2px solid rgba(255,255,255,0.94) !important;
+      border-color: rgba(255,255,255,0.94) !important;
       color: #5f9962 !important;
       box-shadow:
         inset 0 0 0 2px rgba(255,255,255,0.42),
@@ -425,7 +433,7 @@ function ensureDictionaryPickerStyles() {
       .text-mode-actions-compact { grid-template-columns: 47px minmax(0, 1fr) 47px; min-height: 50px; gap: 8px; padding: 3px 7px; border-radius: 26px; }
       .text-add-lex-btn, .text-translate-compact-btn { width: 41px; min-width: 41px; height: 41px; font-size: 26px; }
       .text-translate-compact-btn { font-size: 28px; }
-      .text-panel-tab { min-height: 37px; }
+      .text-panel-tab { min-height: 40px; height: 40px; }
       .text-swipe-frame { height: min(54vh, 545px) !important; min-height: 380px !important; border-radius: 29px !important; }
       .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 12px 82px !important; font-size: clamp(17px, 4.15vw, 25px); }
       .text-bottom-toolbar { padding: 14px 24px 18px; }
