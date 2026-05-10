@@ -170,8 +170,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 2px rgba(255,255,255,0.46),
         inset 2px 2px 5px rgba(255,255,255,0.76),
         inset -3px -3px 7px rgba(205,214,204,0.12),
-        -8px -8px 16px rgba(255,255,255,0.91),
-        8px 10px 21px rgba(186,193,184,0.20);
+        0 2px 6px rgba(186,193,184,0.08);
     }
 
     .text-action-secondary,
@@ -202,8 +201,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 3px rgba(255,255,255,0.42),
         inset 2px 2px 5px rgba(255,255,255,0.80),
         inset -3px -3px 7px rgba(205,214,204,0.16),
-        -7px -7px 14px rgba(255,255,255,0.94),
-        7px 8px 15px rgba(186,193,184,0.23);
+        0 2px 5px rgba(186,193,184,0.08);
       transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
     }
 
@@ -216,7 +214,7 @@ function ensureDictionaryPickerStyles() {
     .text-translate-compact-btn:active,
     .text-bottom-icon-btn:active {
       transform: scale(0.96);
-      box-shadow: -4px -4px 10px rgba(255,255,255,0.98), 4px 5px 12px rgba(186,193,184,0.34), inset 2px 2px 6px rgba(186,193,184,0.12);
+      box-shadow: inset 2px 2px 6px rgba(186,193,184,0.12), 0 1px 4px rgba(186,193,184,0.10);
     }
 
     .text-add-lex-btn:disabled { opacity: 0.62; color: #5f9962; }
@@ -268,8 +266,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 2px rgba(255,255,255,0.40),
         inset 2px 2px 5px rgba(255,255,255,0.72),
         inset -3px -3px 7px rgba(205,214,204,0.10),
-        -8px -8px 16px rgba(255,255,255,0.90),
-        8px 10px 19px rgba(186,193,184,0.19);
+        0 2px 6px rgba(186,193,184,0.08);
     }
 
     .text-panel-tabs.hidden {
@@ -298,8 +295,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 2px rgba(255,255,255,0.42),
         inset 2px 2px 5px rgba(255,255,255,0.78),
         inset -3px -3px 6px rgba(205,214,204,0.12),
-        -6px -6px 12px rgba(255,255,255,0.94),
-        6px 7px 13px rgba(186,193,184,0.16) !important;
+        0 2px 5px rgba(186,193,184,0.07) !important;
     }
 
     .text-swipe-frame {
@@ -309,13 +305,12 @@ function ensureDictionaryPickerStyles() {
       overflow: hidden !important;
       border: 1px solid rgba(255,255,255,0.54) !important;
       border-radius: 30px !important;
-      background:
-        radial-gradient(circle at 36% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.92) 48%, rgba(244,246,243,0.84) 100%) !important;
+      background: rgba(251,251,248,0.92) !important;
       box-shadow:
-        inset 1px 1px 2px rgba(255,255,255,0.66),
-        inset -2px -2px 6px rgba(205,214,204,0.06),
-        -12px -12px 25px rgba(255,255,255,0.91),
-        12px 16px 35px rgba(180,186,176,0.23) !important;
+        inset 0 0 0 2px rgba(255,255,255,0.34),
+        inset 2px 2px 5px rgba(255,255,255,0.58),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 2px 8px rgba(180,186,176,0.09) !important;
     }
 
     .text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
@@ -397,8 +392,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 3px rgba(255,255,255,0.42),
         inset 2px 2px 5px rgba(255,255,255,0.78),
         inset -3px -3px 7px rgba(205,214,204,0.15),
-        -6px -6px 13px rgba(255,255,255,0.93),
-        6px 7px 13px rgba(186,193,184,0.21);
+        0 2px 5px rgba(186,193,184,0.08);
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
     }
@@ -421,8 +415,7 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 3px rgba(255,255,255,0.48),
         inset 2px 2px 5px rgba(255,255,255,0.82),
         inset -3px -3px 7px rgba(143,177,147,0.16),
-        -6px -6px 13px rgba(255,255,255,0.94),
-        6px 7px 13px rgba(143,177,147,0.24);
+        0 2px 5px rgba(143,177,147,0.10);
     }
 
     .text-mode-hint { display: none !important; }
