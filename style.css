@@ -36,7 +36,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .page { width: 100%; }
 
 .card { background: radial-gradient(circle at 35% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.84) 50%, rgba(243,245,242,0.78) 100%); border: 1px solid rgba(255,255,255,0.50); border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.62), inset -2px -2px 6px rgba(205,214,204,0.06), -11px -11px 22px rgba(255,255,255,0.90), 11px 15px 31px rgba(180,186,176,0.21); }
-.hero-card { padding: 0; background: transparent; box-shadow: none; border: 0; border-radius: 0; }
+.hero-card { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
 .muted-card { background: rgba(251,251,248,0.86); }
 
 .top-controls {
