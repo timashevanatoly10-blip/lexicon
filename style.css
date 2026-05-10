@@ -11,9 +11,9 @@
   --danger: #b00020;
   --soft: #fdfdfc;
   --soft-2: #fbfbf8;
-  --shadow-dark: rgba(186, 193, 184, 0.35);
-  --shadow-dark-wide: rgba(180, 186, 176, 0.28);
-  --shadow-light: rgba(255, 255, 255, 0.95);
+  --shadow-dark: rgba(186, 193, 184, 0.18);
+  --shadow-dark-wide: rgba(180, 186, 176, 0.12);
+  --shadow-light: rgba(255, 255, 255, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -35,7 +35,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .brand { font-size: clamp(22px, 5.3vw, 35px); font-weight: 520; letter-spacing: 0.245em; background: none; border: none; color: #2b7355; cursor: pointer; padding: 0; line-height: 1; }
 .page { width: 100%; }
 
-.card { background: radial-gradient(circle at 35% 18%, rgba(255,255,255,0.92) 0%, rgba(251,251,248,0.84) 50%, rgba(243,245,242,0.78) 100%); border: 1px solid rgba(255,255,255,0.50); border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.62), inset -2px -2px 6px rgba(205,214,204,0.06), -11px -11px 22px rgba(255,255,255,0.90), 11px 15px 31px rgba(180,186,176,0.21); }
+.card { background: rgba(251,251,248,0.90); border: 1px solid rgba(255,255,255,0.50); border-radius: 31px; padding: 21px; margin-bottom: 19px; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.34), inset 2px 2px 5px rgba(255,255,255,0.58), inset -2px -2px 5px rgba(205,214,204,0.08), 0 2px 7px rgba(180,186,176,0.08); }
 .hero-card { padding: 0; background: transparent; box-shadow: none; border: 0; border-radius: 0; }
 .muted-card { background: rgba(251,251,248,0.86); }
 
@@ -70,8 +70,7 @@ button { -webkit-tap-highlight-color: transparent; }
     inset 0 0 0 3px rgba(255,255,255,0.42),
     inset 2px 2px 5px rgba(255,255,255,0.80),
     inset -3px -3px 7px rgba(205,214,204,0.15),
-    -6px -6px 13px rgba(255,255,255,0.92),
-    6px 7px 13px rgba(186,193,184,0.20);
+    0 2px 5px rgba(186,193,184,0.08);
 }
 
 .mode-switch .mode-btn:first-child { margin-right: 0; }
@@ -85,8 +84,7 @@ button { -webkit-tap-highlight-color: transparent; }
     inset 0 0 0 3px rgba(255,255,255,0.46),
     inset 2px 2px 5px rgba(255,255,255,0.82),
     inset -3px -3px 7px rgba(205,214,204,0.12),
-    -6px -6px 13px rgba(255,255,255,0.94),
-    6px 7px 13px rgba(186,193,184,0.15);
+    0 2px 5px rgba(186,193,184,0.07);
 }
 
 .field { display: block; margin: 12px 0; }
@@ -103,17 +101,17 @@ textarea { resize: vertical; }
 
 /* ===== LEXICON PAGE ===== */
 .lexicon-shell { display: flex; flex-direction: column; gap: 14px; }
-.lexicon-topline { display: flex; align-items: center; gap: 12px; background: radial-gradient(circle at 35% 20%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 50%, rgba(240,243,239,0.74) 100%); border: 1px solid rgba(255,255,255,0.68); border-radius: 30px; padding: 16px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.78), inset -2px -2px 6px rgba(205,214,204,0.08), -10px -10px 20px rgba(255,255,255,0.90), 10px 12px 24px rgba(186,193,184,0.24); }
+.lexicon-topline { display: flex; align-items: center; gap: 12px; background: rgba(251,251,248,0.90); border: 1px solid rgba(255,255,255,0.68); border-radius: 30px; padding: 16px; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.34), inset 2px 2px 5px rgba(255,255,255,0.62), inset -2px -2px 5px rgba(205,214,204,0.08), 0 2px 7px rgba(186,193,184,0.08); }
 .lexicon-title-block { flex: 1; min-width: 0; }
 .lexicon-title-block h1 { margin: 0; font-size: 24px; line-height: 1.1; }
 .lexicon-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
 .lexicon-actions { display: flex; align-items: center; gap: 8px; }
-.lexicon-icon-btn, .lexicon-add-btn { border: 2px solid rgba(255,255,255,0.94); background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%); color: var(--text); border-radius: 999px; width: 44px; height: 44px; padding: 0; font-size: 21px; font-weight: 750; cursor: pointer; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.42), inset 2px 2px 5px rgba(255,255,255,0.80), inset -3px -3px 7px rgba(205,214,204,0.15), -7px -7px 14px rgba(255,255,255,0.92), 7px 8px 15px rgba(186,193,184,0.22); }
+.lexicon-icon-btn, .lexicon-add-btn { border: 2px solid rgba(255,255,255,0.94); background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%); color: var(--text); border-radius: 999px; width: 44px; height: 44px; padding: 0; font-size: 21px; font-weight: 750; cursor: pointer; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.42), inset 2px 2px 5px rgba(255,255,255,0.80), inset -3px -3px 7px rgba(205,214,204,0.15), 0 2px 5px rgba(186,193,184,0.08); }
 .lexicon-add-btn { color: var(--accent); font-size: 34px; line-height: 1; }
-.lexicon-search-card { background: radial-gradient(circle at 35% 24%, rgba(255,255,255,0.94) 0%, rgba(251,251,248,0.84) 48%, rgba(241,243,240,0.76) 100%); border: 1px solid rgba(255,255,255,0.66); border-radius: 26px; padding: 12px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.76), inset -2px -2px 5px rgba(205,214,204,0.08), -9px -9px 18px rgba(255,255,255,0.90), 9px 10px 21px rgba(186,193,184,0.21); }
+.lexicon-search-card { background: rgba(251,251,248,0.90); border: 1px solid rgba(255,255,255,0.66); border-radius: 26px; padding: 12px; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.32), inset 2px 2px 5px rgba(255,255,255,0.58), inset -2px -2px 5px rgba(205,214,204,0.08), 0 2px 6px rgba(186,193,184,0.07); }
 .lexicon-search { border: none; background: var(--surface); border-radius: 18px; padding: 14px 16px; outline: none; }
 .dictionary-list { display: flex; flex-direction: column; gap: 12px; }
-.dictionary-block { background: rgba(251,251,248,0.88); border: 0; border-radius: 28px; overflow: hidden; box-shadow: -9px -9px 18px rgba(255,255,255,0.92), 9px 10px 24px rgba(186,193,184,0.26); }
+.dictionary-block { background: rgba(251,251,248,0.88); border: 0; border-radius: 28px; overflow: hidden; box-shadow: 0 2px 8px rgba(186,193,184,0.10); }
 .dictionary-line { width: 100%; display: flex; align-items: center; gap: 10px; border: none; background: transparent; color: var(--text); padding: 16px; cursor: pointer; text-align: left; }
 .dictionary-chevron { width: 24px; color: var(--accent-dark); font-size: 24px; line-height: 1; }
 .dictionary-line-main { flex: 1; min-width: 0; }
