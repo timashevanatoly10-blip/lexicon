@@ -308,8 +308,8 @@ function ensureDictionaryPickerStyles() {
 
     .text-swipe-frame {
       width: 100% !important;
-      height: min(52vh, 520px) !important;
-      min-height: 363px !important;
+      height: min(64dvh, 650px) !important;
+      min-height: 470px !important;
       overflow: hidden !important;
       border: 2px solid rgba(255,255,255,0.76) !important;
       border-radius: 27.5px !important;
@@ -434,7 +434,7 @@ function ensureDictionaryPickerStyles() {
       .text-add-lex-btn, .text-translate-compact-btn { width: 38px; min-width: 38px; height: 38px; font-size: 24px; }
       .text-translate-compact-btn { font-size: 26px; }
       .text-panel-tab { min-height: 34px; height: 34px; }
-      .text-swipe-frame { height: min(51vh, 500px) !important; min-height: 350px !important; border-radius: 27px !important; }
+      .text-swipe-frame { height: min(62dvh, 620px) !important; min-height: 455px !important; border-radius: 27px !important; }
       .text-big-input, .text-clickable-output, .text-translation-output { padding: 20px 11px 76px !important; font-size: clamp(15.8px, 3.8vw, 23px); }
       .text-bottom-toolbar { padding: 13px 22px 17px; }
       .text-bottom-icon-btn { width: 37px; height: 37px; }
@@ -445,6 +445,7 @@ function ensureDictionaryPickerStyles() {
       .text-add-lex-btn, .text-translate-compact-btn { width: 35px; min-width: 35px; height: 35px; font-size: 22px; }
       .text-translate-compact-btn { font-size: 24px; }
       .text-panel-tab { min-height: 32px; height: 32px; font-size: clamp(11px, 2.6vw, 15px); }
+      .text-swipe-frame { height: min(61dvh, 590px) !important; min-height: 430px !important; }
       .text-bottom-toolbar { gap: 6px; padding-left: 17px; padding-right: 17px; }
       .text-bottom-icon-btn { width: 35px; height: 35px; }
     }
