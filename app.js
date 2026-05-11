@@ -260,9 +260,10 @@ function ensureDictionaryPickerStyles() {
       gap: 0;
       background:
         radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%) !important;
-      padding: 2px !important;
+      padding: 0 !important;
       border: 2px solid rgba(255,255,255,0.90) !important;
-      border-radius: 24px !important;
+      border-radius: 25px !important;
+      overflow: hidden;
       box-shadow:
         inset 0 0 0 2px rgba(255,255,255,0.40),
         inset 2px 2px 5px rgba(255,255,255,0.72),
@@ -276,12 +277,12 @@ function ensureDictionaryPickerStyles() {
 
     .text-panel-tab {
       width: 100%;
-      min-height: 42px;
-      height: 42px;
+      min-height: 45px;
+      height: 45px;
       margin: 0 !important;
       padding: 0 10px !important;
-      border: 2px solid transparent !important;
-      border-radius: 22px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
       background: transparent !important;
       color: #777a77 !important;
       font-size: clamp(13px, 3.25vw, 19px);
@@ -294,16 +295,23 @@ function ensureDictionaryPickerStyles() {
       justify-content: center;
     }
 
+    .text-panel-tab:first-child.active {
+      border-radius: 23px 0 0 23px !important;
+    }
+
+    .text-panel-tab:last-child.active {
+      border-radius: 0 23px 23px 0 !important;
+    }
+
     .text-panel-tab.active {
       background:
         radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
-      border-color: rgba(255,255,255,0.94) !important;
       color: #5f9962 !important;
       box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 0 0 0 2px rgba(255,255,255,0.44),
         inset 2px 2px 5px rgba(255,255,255,0.78),
         inset -3px -3px 6px rgba(205,214,204,0.12),
-        0 2px 5px rgba(186,193,184,0.07) !important;
+        0 1px 5px rgba(186,193,184,0.07) !important;
     }
 
     .text-swipe-frame {
@@ -433,7 +441,7 @@ function ensureDictionaryPickerStyles() {
       .text-mode-actions-compact { grid-template-columns: 47px minmax(0, 1fr) 47px; min-height: 50px; gap: 8px; padding: 3px 7px; border-radius: 26px; }
       .text-add-lex-btn, .text-translate-compact-btn { width: 41px; min-width: 41px; height: 41px; font-size: 26px; }
       .text-translate-compact-btn { font-size: 28px; }
-      .text-panel-tab { min-height: 40px; height: 40px; }
+      .text-panel-tab { min-height: 43px; height: 43px; }
       .text-swipe-frame { height: min(54vh, 545px) !important; min-height: 380px !important; border-radius: 29px !important; }
       .text-big-input, .text-clickable-output, .text-translation-output { padding: 22px 12px 82px !important; font-size: clamp(17px, 4.15vw, 25px); }
       .text-bottom-toolbar { padding: 14px 24px 18px; }
