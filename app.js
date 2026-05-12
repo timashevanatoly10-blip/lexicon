@@ -16,8 +16,8 @@ let selectedTextWord = "";
 let selectedTextWordElement = null;
 let textQuickTranslateRequestId = 0;
 let textQuickTranslateTimer = null;
-let textCopiedPanel = "";
-let textCopiedValue = "";
+let textCopiedPanels = [];
+let textCopiedSignature = "";
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -1086,6 +1086,7 @@ function bindTextModeEvents() {
   });
 
   on(textInput, "input", () => {
+    resetTextCopyState();
     updateTextInlineClearVisibility();
 
     if (!textTranslationReady) {
@@ -1143,6 +1144,7 @@ async function handleTextTranslate() {
   }
 
   textSourceValue = source;
+  resetTextCopyState();
   updateTextInlineClearVisibility();
   clearSelectedTextWord();
   textTranslationReady = true;
@@ -1216,22 +1218,108 @@ function bindTextInlineClearButtons() {
 
 async function copyActiveTextPanel(event) {
   const panelName = event?.currentTarget?.dataset?.copyPanel || textActivePanel;
-  const clean = getTextPanelCopyValue(panelName).trim();
 
-  if (!clean) return;
+  if (panelName !== "source" && panelName !== "translation") return;
 
+  const panelValue = getTextPanelCopyValue(panelName).trim();
+
+  if (!panelValue) return;
+
+  let nextPanels = Array.isArray(textCopiedPanels) ? textCopiedPanels.slice() : [];
+  const alreadySelected = nextPanels.includes(panelName);
+
+  if (alreadySelected && nextPanels.length > 1) {
+    nextPanels = nextPanels.filter((item) => item !== panelName);
+  } else if (!alreadySelected) {
+    nextPanels.push(panelName);
+  }
+
+  nextPanels = normalizeCopyPanelOrder(nextPanels).filter((item) => {
+    return Boolean(getTextPanelCopyValue(item).trim());
+  });
+
+  if (!nextPanels.length) {
+    nextPanels = [panelName];
+  }
+
+  const copyText = buildCombinedCopyText(nextPanels);
+
+  if (!copyText.trim()) return;
+
+  const copied = await writeTextToClipboard(copyText);
+
+  if (copied) {
+    textCopiedPanels = nextPanels;
+    textCopiedSignature = buildCopySignature(nextPanels);
+    updateTextCopyFeedback();
+  }
+}
+
+function getTextPanelCopyValue(panelName) {
+  const textInput = document.getElementById("textInput");
+  const sourceClickable = document.getElementById("textSourceClickableOutput");
+  const translationOutput = document.getElementById("textTranslationOutput");
+
+  if (panelName === "translation") {
+    return String(translationOutput?.innerText || textTranslatedValue || "");
+  }
+
+  return String(textInput?.value || sourceClickable?.innerText || textSourceValue || "");
+}
+
+function normalizeCopyPanelOrder(panels) {
+  const unique = Array.from(new Set((panels || []).filter(Boolean)));
+
+  return ["source", "translation"].filter((panelName) => unique.includes(panelName));
+}
+
+function getTextPanelCopyLabel(panelName) {
+  return panelName === "translation" ? "Перевод" : "Оригинал";
+}
+
+function buildCombinedCopyText(panels) {
+  const orderedPanels = normalizeCopyPanelOrder(panels);
+
+  if (orderedPanels.length === 1) {
+    return getTextPanelCopyValue(orderedPanels[0]).trim();
+  }
+
+  return orderedPanels
+    .map((panelName) => {
+      const value = getTextPanelCopyValue(panelName).trim();
+
+      if (!value) return "";
+
+      return `${getTextPanelCopyLabel(panelName)}:\n\n${value}`;
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function buildCopySignature(panels) {
+  return normalizeCopyPanelOrder(panels)
+    .map((panelName) => `${panelName}:${getTextPanelCopyValue(panelName).trim()}`)
+    .join("\n---LEXICON-COPY---\n");
+}
+
+function resetTextCopyState() {
+  textCopiedPanels = [];
+  textCopiedSignature = "";
+}
+
+async function writeTextToClipboard(text) {
   let copied = false;
 
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(clean);
+      await navigator.clipboard.writeText(text);
       copied = true;
     }
   } catch {}
 
   if (!copied) {
     const area = document.createElement("textarea");
-    area.value = clean;
+    area.value = text;
     area.setAttribute("readonly", "");
     area.style.position = "fixed";
     area.style.left = "-9999px";
@@ -1249,34 +1337,30 @@ async function copyActiveTextPanel(event) {
     area.remove();
   }
 
-  if (copied) {
-    textCopiedPanel = panelName;
-    textCopiedValue = clean;
-    updateTextCopyFeedback();
-  }
-}
-
-function getTextPanelCopyValue(panelName) {
-  const textInput = document.getElementById("textInput");
-  const sourceClickable = document.getElementById("textSourceClickableOutput");
-  const translationOutput = document.getElementById("textTranslationOutput");
-
-  if (panelName === "translation") {
-    return String(translationOutput?.innerText || textTranslatedValue || "");
-  }
-
-  return String(textInput?.value || sourceClickable?.innerText || textSourceValue || "");
+  return copied;
 }
 
 function updateTextCopyFeedback() {
+  const selectedPanels = normalizeCopyPanelOrder(textCopiedPanels);
+  const signatureIsCurrent = Boolean(
+    selectedPanels.length &&
+    textCopiedSignature &&
+    buildCopySignature(selectedPanels) === textCopiedSignature
+  );
+
   document.querySelectorAll(".text-copy-btn").forEach((btn) => {
     const panelName = btn.dataset.copyPanel || "source";
     const currentValue = getTextPanelCopyValue(panelName).trim();
-    const isCopied = Boolean(textCopiedValue && textCopiedPanel === panelName && currentValue === textCopiedValue);
+    const isCopied = Boolean(signatureIsCurrent && currentValue && selectedPanels.includes(panelName));
 
     btn.classList.toggle("copied", isCopied);
     btn.innerHTML = isCopied ? iconCheck() : iconCopy();
-    btn.title = isCopied ? "Скопировано" : "Копировать";
+
+    if (isCopied && selectedPanels.length > 1) {
+      btn.title = "Скопировано вместе";
+    } else {
+      btn.title = isCopied ? "Скопировано" : "Копировать";
+    }
   });
 }
 
@@ -1286,6 +1370,7 @@ function bindTextInputAfterReset() {
   if (!textInput) return;
 
   textInput.oninput = () => {
+    resetTextCopyState();
     updateTextInlineClearVisibility();
 
     if (!textTranslationReady) {
@@ -1603,8 +1688,7 @@ function clearTextMode() {
   textTranslatedValue = "";
   textPanelScroll.source = 0;
   textPanelScroll.translation = 0;
-  textCopiedPanel = "";
-  textCopiedValue = "";
+  resetTextCopyState();
   clearSelectedTextWord();
 
   if (sourcePanel) {
