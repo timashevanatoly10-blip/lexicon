@@ -95,8 +95,6 @@ function bindEvents() {
   on(wordModeBtn, "click", () => setMode("word"));
   on(textModeBtn, "click", () => setMode("text"));
 
-  on(wordTranslateBtn, "click", handleWordTranslate);
-
   bindWordModeEvents();
   bindTextModeEvents();
 }
@@ -429,8 +427,31 @@ function ensureDictionaryPickerStyles() {
         0 2px 5px rgba(143,177,147,0.10);
     }
 
-    .word-mode-shell .text-word-mini-display.ready {
+    .word-panel {
+      width: 100% !important;
+    }
+
+    .word-capsule-input {
+      width: 100%;
+      height: 38.5px;
+      border: 0;
+      outline: none;
+      background: transparent;
       color: #1f6f56;
+      font: inherit;
+      font-size: clamp(13px, 3.25vw, 18.5px);
+      font-weight: 430;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 6px;
+    }
+
+    .word-capsule-input::placeholder {
+      color: rgba(119,122,119,0.42);
     }
 
     .word-result-output {
@@ -439,9 +460,9 @@ function ensureDictionaryPickerStyles() {
       word-break: break-word;
     }
 
-    .word-result-output.hidden,
-    .word-big-input.hidden {
-      display: none !important;
+    .word-result-output.empty {
+      color: rgba(119,122,119,0.42);
+      font-weight: 500;
     }
 
     .word-mode-hint { display: none !important; }
@@ -512,21 +533,20 @@ async function handleWordTranslate() {
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
-  setWordMiniDisplay(source, "ready");
-  setWordResult("Перевожу через GPT...");
+  setWordResult("Перевожу через GPT...", false);
   updateWordModeButtons();
 
   if (translateBtn) translateBtn.disabled = true;
 
   try {
     const data = await callAi("word_translate", source);
-    setWordResult(data.result || data.raw || "Пустой ответ.");
-    setWordMiniDisplay(source, "ready");
+    setWordResult(data.result || data.raw || "Пустой ответ.", false);
   } catch (err) {
-    setWordResult("Ошибка перевода:\n" + err.message);
+    setWordResult("Ошибка перевода:\n" + err.message, false);
   } finally {
     if (translateBtn) translateBtn.disabled = false;
     updateWordModeButtons();
+    updateWordCopyFeedback();
   }
 }
 
@@ -1018,20 +1038,19 @@ function ensureWordModeMarkup() {
     <div class="text-mode-shell word-mode-shell">
       <div class="text-mode-actions text-mode-actions-compact">
         <button id="wordAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled title="Добавить в словарь">+</button>
-        <div id="wordMiniDisplay" class="text-word-mini-display" aria-live="polite"></div>
+        <input id="wordInput" class="text-word-mini-display word-capsule-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Введите слово" />
         <button id="wordTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
       </div>
 
       <div id="wordSwipeFrame" class="text-swipe-frame word-swipe-frame">
         <section class="text-panel word-panel">
-          <textarea id="wordInput" class="text-big-input word-big-input" placeholder="Введите слово"></textarea>
-          <div id="wordResultOutput" class="text-translation-output word-result-output hidden"></div>
+          <div id="wordResultOutput" class="text-translation-output word-result-output empty">Перевод появится здесь.</div>
           ${renderWordBottomToolbar()}
         </section>
       </div>
 
       <div id="wordModeHint" class="word-mode-hint">
-        Введите слово и нажмите стрелку.
+        Введите слово в верхней капсуле и нажмите стрелку.
       </div>
     </div>
   `;
@@ -1052,7 +1071,6 @@ function bindWordModeEvents() {
   const wordInput = document.getElementById("wordInput");
   const translateBtn = document.getElementById("wordTranslateBtn");
   const addLexBtn = document.getElementById("wordAddLexBtn");
-  const miniDisplay = document.getElementById("wordMiniDisplay");
   const copyBtn = document.getElementById("wordCopyBtn");
   const clearBtn = document.getElementById("wordClearBtn");
 
@@ -1066,28 +1084,20 @@ function bindWordModeEvents() {
     };
   }
 
-  if (miniDisplay) {
-    miniDisplay.onclick = () => {
-      const wordInput = document.getElementById("wordInput");
-      if (wordInput) wordInput.focus();
-    };
-  }
-
   document.querySelectorAll(".word-camera-btn, .word-mic-btn").forEach((btn) => {
     btn.onclick = () => {};
   });
 
   if (wordInput) {
     wordInput.oninput = () => {
-      wordCopiedValue = "";
       lastWordTranslateSource = wordInput.value.trim();
-      setWordMiniDisplay(lastWordTranslateSource, lastWordTranslateSource ? "ready" : "");
+      wordCopiedValue = "";
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
 
     wordInput.onkeydown = (event) => {
-      if (event.key === "Enter" && !event.shiftKey) {
+      if (event.key === "Enter") {
         event.preventDefault();
         handleWordTranslate();
       }
@@ -1106,7 +1116,7 @@ function getWordModeInputValue() {
 function getWordModeResultValue() {
   const resultOutput = document.getElementById("wordResultOutput");
 
-  if (!resultOutput || resultOutput.classList.contains("hidden")) {
+  if (!resultOutput || resultOutput.classList.contains("empty")) {
     return "";
   }
 
@@ -1121,50 +1131,27 @@ function getWordModeCopyValue() {
   return getWordModeInputValue();
 }
 
-function setWordMiniDisplay(text, state = "") {
-  const miniDisplay = document.getElementById("wordMiniDisplay");
-
-  if (!miniDisplay) return;
-
-  miniDisplay.textContent = text || "";
-  miniDisplay.title = text || "";
-  miniDisplay.classList.toggle("loading", state === "loading");
-  miniDisplay.classList.toggle("ready", state === "ready");
-}
-
-function setWordResult(text) {
-  const wordInput = document.getElementById("wordInput");
+function setWordResult(text, isEmpty = false) {
   const resultOutput = document.getElementById("wordResultOutput");
 
-  if (wordInput) wordInput.classList.add("hidden");
+  if (!resultOutput) return;
 
-  if (resultOutput) {
-    resultOutput.classList.remove("hidden");
-    resultOutput.textContent = text || "";
-  }
-
-  updateWordModeButtons();
+  resultOutput.textContent = text || "";
+  resultOutput.classList.toggle("empty", Boolean(isEmpty));
 }
 
 function clearWordMode() {
   const wordInput = document.getElementById("wordInput");
-  const resultOutput = document.getElementById("wordResultOutput");
 
   lastWordTranslateSource = "";
   wordCopiedValue = "";
 
   if (wordInput) {
     wordInput.value = "";
-    wordInput.classList.remove("hidden");
     wordInput.focus();
   }
 
-  if (resultOutput) {
-    resultOutput.textContent = "";
-    resultOutput.classList.add("hidden");
-  }
-
-  setWordMiniDisplay("");
+  setWordResult("Перевод появится здесь.", true);
   hideAddCurrentWordButton();
   updateWordModeButtons();
   updateWordCopyFeedback();
@@ -1173,18 +1160,13 @@ function clearWordMode() {
 }
 
 function updateWordModeButtons() {
-  const wordInput = document.getElementById("wordInput");
-  const resultOutput = document.getElementById("wordResultOutput");
   const addLexBtn = document.getElementById("wordAddLexBtn");
   const clearBtn = document.getElementById("wordClearBtn");
 
-  const inputValue = String(wordInput?.value || "").trim();
-  const resultValue = resultOutput && !resultOutput.classList.contains("hidden")
-    ? String(resultOutput.innerText || "").trim()
-    : "";
-
-  const hasWord = Boolean(inputValue || lastWordTranslateSource);
-  const hasAnything = Boolean(inputValue || resultValue || lastWordTranslateSource);
+  const inputValue = getWordModeInputValue();
+  const resultValue = getWordModeResultValue();
+  const hasWord = Boolean(inputValue);
+  const hasAnything = Boolean(inputValue || resultValue);
 
   if (addLexBtn) {
     addLexBtn.textContent = "+";
@@ -1838,24 +1820,17 @@ function openSelectedTextWordInWordMode() {
   setMode("word");
 
   const wordInput = document.getElementById("wordInput");
-  const resultOutput = document.getElementById("wordResultOutput");
 
   lastWordTranslateSource = word;
   wordCopiedValue = "";
 
   if (wordInput) {
-    wordInput.classList.remove("hidden");
     wordInput.value = word;
     wordInput.focus();
   }
 
-  if (resultOutput) {
-    resultOutput.textContent = "";
-    resultOutput.classList.add("hidden");
-  }
-
   hideAddCurrentWordButton();
-  setWordMiniDisplay(word, "ready");
+  setWordResult("Перевод появится здесь.", true);
   updateWordModeButtons();
   updateWordCopyFeedback();
 
@@ -2517,23 +2492,16 @@ function openWordFromDictionary(word) {
   setMode("word");
 
   const wordInput = document.getElementById("wordInput");
-  const resultOutput = document.getElementById("wordResultOutput");
 
   lastWordTranslateSource = String(word || "").trim();
   wordCopiedValue = "";
 
   if (wordInput) {
-    wordInput.classList.remove("hidden");
     wordInput.value = lastWordTranslateSource;
     wordInput.focus();
   }
 
-  if (resultOutput) {
-    resultOutput.textContent = "";
-    resultOutput.classList.add("hidden");
-  }
-
-  setWordMiniDisplay(lastWordTranslateSource, "ready");
+  setWordResult("Перевод появится здесь.", true);
   updateWordModeButtons();
   updateWordCopyFeedback();
 
