@@ -18,6 +18,7 @@ let textQuickTranslateRequestId = 0;
 let textQuickTranslateTimer = null;
 let textCopiedPanels = [];
 let textCopiedSignature = "";
+let wordCopiedValue = "";
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -61,6 +62,7 @@ let manualId = document.getElementById("manualId");
 let manualKey = document.getElementById("manualKey");
 let manualCheckBtn = document.getElementById("manualCheckBtn");
 
+ensureWordModeMarkup();
 ensureTextModeMarkup();
 ensureFilesPageMarkup();
 refreshFileElements();
@@ -95,6 +97,7 @@ function bindEvents() {
 
   on(wordTranslateBtn, "click", handleWordTranslate);
 
+  bindWordModeEvents();
   bindTextModeEvents();
 }
 
@@ -426,6 +429,23 @@ function ensureDictionaryPickerStyles() {
         0 2px 5px rgba(143,177,147,0.10);
     }
 
+    .word-mode-shell .text-word-mini-display.ready {
+      color: #1f6f56;
+    }
+
+    .word-result-output {
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .word-result-output.hidden,
+    .word-big-input.hidden {
+      display: none !important;
+    }
+
+    .word-mode-hint { display: none !important; }
+
     .text-mode-hint { display: none !important; }
 
     @media (max-width: 520px) {
@@ -479,6 +499,7 @@ async function callAi(mode, text, options = {}) {
 
 async function handleWordTranslate() {
   const wordInput = document.getElementById("wordInput");
+  const translateBtn = document.getElementById("wordTranslateBtn");
   const source = wordInput ? wordInput.value.trim() : "";
 
   if (!source) {
@@ -487,21 +508,25 @@ async function handleWordTranslate() {
   }
 
   lastWordTranslateSource = source;
+  wordCopiedValue = "";
 
-  if (homeResultCard) homeResultCard.classList.remove("hidden");
+  if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
-  showHomeResult("Перевожу через GPT...");
+  setWordMiniDisplay(source, "ready");
+  setWordResult("Перевожу через GPT...");
+  updateWordModeButtons();
 
-  if (wordTranslateBtn) wordTranslateBtn.disabled = true;
+  if (translateBtn) translateBtn.disabled = true;
 
   try {
     const data = await callAi("word_translate", source);
-    showHomeResult(data.result || data.raw || "Пустой ответ.");
-    showAddCurrentWordButton(source);
+    setWordResult(data.result || data.raw || "Пустой ответ.");
+    setWordMiniDisplay(source, "ready");
   } catch (err) {
-    showHomeResult("Ошибка перевода:\n" + err.message);
+    setWordResult("Ошибка перевода:\n" + err.message);
   } finally {
-    if (wordTranslateBtn) wordTranslateBtn.disabled = false;
+    if (translateBtn) translateBtn.disabled = false;
+    updateWordModeButtons();
   }
 }
 
@@ -981,6 +1006,221 @@ async function addWordCardToDictionary(dictionaryId, rawWord) {
   }
 
   return wordItem;
+}
+
+
+
+// ===== WORD MODE UI =====
+function ensureWordModeMarkup() {
+  if (!wordInputBox) return;
+
+  wordInputBox.innerHTML = `
+    <div class="text-mode-shell word-mode-shell">
+      <div class="text-mode-actions text-mode-actions-compact">
+        <button id="wordAddLexBtn" class="text-action-secondary text-add-lex-btn" type="button" disabled title="Добавить в словарь">+</button>
+        <div id="wordMiniDisplay" class="text-word-mini-display" aria-live="polite"></div>
+        <button id="wordTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
+      </div>
+
+      <div id="wordSwipeFrame" class="text-swipe-frame word-swipe-frame">
+        <section class="text-panel word-panel">
+          <textarea id="wordInput" class="text-big-input word-big-input" placeholder="Введите слово"></textarea>
+          <div id="wordResultOutput" class="text-translation-output word-result-output hidden"></div>
+          ${renderWordBottomToolbar()}
+        </section>
+      </div>
+
+      <div id="wordModeHint" class="word-mode-hint">
+        Введите слово и нажмите стрелку.
+      </div>
+    </div>
+  `;
+}
+
+function renderWordBottomToolbar() {
+  return `
+    <div class="text-bottom-toolbar word-bottom-toolbar">
+      <button class="text-bottom-icon-btn word-camera-btn" type="button" title="Фото">${iconCamera()}</button>
+      <button class="text-bottom-icon-btn word-mic-btn" type="button" title="Голос">${iconMic()}</button>
+      <button id="wordCopyBtn" class="text-bottom-icon-btn word-copy-btn" type="button" title="Копировать">${iconCopy()}</button>
+      <button id="wordClearBtn" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
+    </div>
+  `;
+}
+
+function bindWordModeEvents() {
+  const wordInput = document.getElementById("wordInput");
+  const translateBtn = document.getElementById("wordTranslateBtn");
+  const addLexBtn = document.getElementById("wordAddLexBtn");
+  const miniDisplay = document.getElementById("wordMiniDisplay");
+  const copyBtn = document.getElementById("wordCopyBtn");
+  const clearBtn = document.getElementById("wordClearBtn");
+
+  on(translateBtn, "click", handleWordTranslate);
+  on(addLexBtn, "click", addCurrentWordTranslationToDictionary);
+  on(copyBtn, "click", copyWordModeContent);
+
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      if (!clearBtn.classList.contains("inactive")) clearWordMode();
+    };
+  }
+
+  if (miniDisplay) {
+    miniDisplay.onclick = () => {
+      const wordInput = document.getElementById("wordInput");
+      if (wordInput) wordInput.focus();
+    };
+  }
+
+  document.querySelectorAll(".word-camera-btn, .word-mic-btn").forEach((btn) => {
+    btn.onclick = () => {};
+  });
+
+  if (wordInput) {
+    wordInput.oninput = () => {
+      wordCopiedValue = "";
+      lastWordTranslateSource = wordInput.value.trim();
+      setWordMiniDisplay(lastWordTranslateSource, lastWordTranslateSource ? "ready" : "");
+      updateWordModeButtons();
+      updateWordCopyFeedback();
+    };
+
+    wordInput.onkeydown = (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        handleWordTranslate();
+      }
+    };
+  }
+
+  updateWordModeButtons();
+  updateWordCopyFeedback();
+}
+
+function getWordModeInputValue() {
+  const wordInput = document.getElementById("wordInput");
+  return String(wordInput?.value || lastWordTranslateSource || "").trim();
+}
+
+function getWordModeResultValue() {
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  if (!resultOutput || resultOutput.classList.contains("hidden")) {
+    return "";
+  }
+
+  return String(resultOutput.innerText || "").trim();
+}
+
+function getWordModeCopyValue() {
+  const resultValue = getWordModeResultValue();
+
+  if (resultValue) return resultValue;
+
+  return getWordModeInputValue();
+}
+
+function setWordMiniDisplay(text, state = "") {
+  const miniDisplay = document.getElementById("wordMiniDisplay");
+
+  if (!miniDisplay) return;
+
+  miniDisplay.textContent = text || "";
+  miniDisplay.title = text || "";
+  miniDisplay.classList.toggle("loading", state === "loading");
+  miniDisplay.classList.toggle("ready", state === "ready");
+}
+
+function setWordResult(text) {
+  const wordInput = document.getElementById("wordInput");
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  if (wordInput) wordInput.classList.add("hidden");
+
+  if (resultOutput) {
+    resultOutput.classList.remove("hidden");
+    resultOutput.textContent = text || "";
+  }
+
+  updateWordModeButtons();
+}
+
+function clearWordMode() {
+  const wordInput = document.getElementById("wordInput");
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  lastWordTranslateSource = "";
+  wordCopiedValue = "";
+
+  if (wordInput) {
+    wordInput.value = "";
+    wordInput.classList.remove("hidden");
+    wordInput.focus();
+  }
+
+  if (resultOutput) {
+    resultOutput.textContent = "";
+    resultOutput.classList.add("hidden");
+  }
+
+  setWordMiniDisplay("");
+  hideAddCurrentWordButton();
+  updateWordModeButtons();
+  updateWordCopyFeedback();
+
+  if (homeResultCard) homeResultCard.classList.add("hidden");
+}
+
+function updateWordModeButtons() {
+  const wordInput = document.getElementById("wordInput");
+  const resultOutput = document.getElementById("wordResultOutput");
+  const addLexBtn = document.getElementById("wordAddLexBtn");
+  const clearBtn = document.getElementById("wordClearBtn");
+
+  const inputValue = String(wordInput?.value || "").trim();
+  const resultValue = resultOutput && !resultOutput.classList.contains("hidden")
+    ? String(resultOutput.innerText || "").trim()
+    : "";
+
+  const hasWord = Boolean(inputValue || lastWordTranslateSource);
+  const hasAnything = Boolean(inputValue || resultValue || lastWordTranslateSource);
+
+  if (addLexBtn) {
+    addLexBtn.textContent = "+";
+    addLexBtn.disabled = !hasWord;
+    addLexBtn.classList.toggle("active", hasWord);
+  }
+
+  if (clearBtn) {
+    clearBtn.classList.toggle("inactive", !hasAnything);
+  }
+}
+
+async function copyWordModeContent() {
+  const value = getWordModeCopyValue().trim();
+
+  if (!value) return;
+
+  const copied = await writeTextToClipboard(value);
+
+  if (copied) {
+    wordCopiedValue = value;
+    updateWordCopyFeedback();
+  }
+}
+
+function updateWordCopyFeedback() {
+  const copyBtn = document.getElementById("wordCopyBtn");
+
+  if (!copyBtn) return;
+
+  const value = getWordModeCopyValue().trim();
+  const isCopied = Boolean(value && wordCopiedValue && value === wordCopiedValue);
+
+  copyBtn.classList.toggle("copied", isCopied);
+  copyBtn.innerHTML = isCopied ? iconCheck() : iconCopy();
+  copyBtn.title = isCopied ? "Скопировано" : "Копировать";
 }
 
 
@@ -1598,18 +1838,28 @@ function openSelectedTextWordInWordMode() {
   setMode("word");
 
   const wordInput = document.getElementById("wordInput");
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  lastWordTranslateSource = word;
+  wordCopiedValue = "";
 
   if (wordInput) {
+    wordInput.classList.remove("hidden");
     wordInput.value = word;
     wordInput.focus();
   }
 
-  if (homeResultCard) {
-    homeResultCard.classList.remove("hidden");
+  if (resultOutput) {
+    resultOutput.textContent = "";
+    resultOutput.classList.add("hidden");
   }
 
   hideAddCurrentWordButton();
-  showHomeResult(`Слово «${word}» перенесено из текста. Нажми «Перевести», чтобы получить полный разбор.`);
+  setWordMiniDisplay(word, "ready");
+  updateWordModeButtons();
+  updateWordCopyFeedback();
+
+  if (homeResultCard) homeResultCard.classList.add("hidden");
 }
 
 async function addSelectedTextWordToDictionary() {
@@ -1734,7 +1984,7 @@ function clearTextMode() {
 
 function syncTextModeVisibility(mode) {
   if (homeResultCard) {
-    homeResultCard.classList.toggle("hidden", mode === "text");
+    homeResultCard.classList.add("hidden");
   }
 
   if (mode === "text") {
@@ -1742,6 +1992,8 @@ function syncTextModeVisibility(mode) {
     updateTextPanelUI();
   } else {
     clearSelectedTextWord();
+    updateWordModeButtons();
+    updateWordCopyFeedback();
   }
 }
 
@@ -2265,12 +2517,27 @@ function openWordFromDictionary(word) {
   setMode("word");
 
   const wordInput = document.getElementById("wordInput");
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  lastWordTranslateSource = String(word || "").trim();
+  wordCopiedValue = "";
+
   if (wordInput) {
-    wordInput.value = word;
+    wordInput.classList.remove("hidden");
+    wordInput.value = lastWordTranslateSource;
     wordInput.focus();
   }
 
-  showHomeResult(`Слово «${word}» перенесено в поле перевода. Нажми «Перевести», чтобы получить полный разбор.`);
+  if (resultOutput) {
+    resultOutput.textContent = "";
+    resultOutput.classList.add("hidden");
+  }
+
+  setWordMiniDisplay(lastWordTranslateSource, "ready");
+  updateWordModeButtons();
+  updateWordCopyFeedback();
+
+  if (homeResultCard) homeResultCard.classList.add("hidden");
 }
 
 // ===== MODE SWITCH =====
