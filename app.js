@@ -69,6 +69,7 @@ refreshFileElements();
 bindEvents();
 initAccessToken();
 ensureDictionaryPickerStyles();
+retireLegacyHomeResultCard();
 bootstrapDictionaries();
 showPage("home");
 
@@ -101,6 +102,12 @@ function bindEvents() {
 
 function on(el, eventName, handler) {
   if (el) el.addEventListener(eventName, handler);
+}
+
+function retireLegacyHomeResultCard() {
+  if (homeResultCard && homeResultCard.parentNode) {
+    homeResultCard.remove();
+  }
 }
 
 function uid(prefix = "id") {
