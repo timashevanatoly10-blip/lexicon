@@ -32,21 +32,9 @@
           <button id="openAiBtn" class="mini-btn">ИИ</button>
         </div>
 
-        <div id="wordInputBox" class="input-box active">
-          <label class="field main-field">
-            <span>Перевод</span>
-            <textarea id="wordInput" rows="3" placeholder="Введите слово, список слов или фразу"></textarea>
-          </label>
-          <button id="wordTranslateBtn" class="primary" type="button">Перевести</button>
-        </div>
+        <div id="wordInputBox" class="input-box active"></div>
 
-        <div id="textInputBox" class="input-box hidden">
-          <label class="field main-field">
-            <span>Перевод текста</span>
-            <textarea id="textInput" rows="6" placeholder="Вставьте текст для перевода"></textarea>
-          </label>
-          <button id="textTranslateBtn" class="primary" type="button">Перевести</button>
-        </div>
+        <div id="textInputBox" class="input-box hidden"></div>
 
       </section>
 
