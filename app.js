@@ -21,6 +21,7 @@ let textCopiedSignature = "";
 let wordCopiedValue = "";
 let currentWordTranslationCard = null;
 let currentWordPartIndex = 0;
+let wordExamplesExpanded = false;
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -464,158 +465,245 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-result-output {
-      line-height: 1.45;
-      white-space: pre-wrap;
-      word-break: break-word;
+      line-height: 1.34;
+      white-space: normal;
+      word-break: normal;
+      padding: 0 0 82px !important;
+      font-size: clamp(13px, 3.05vw, 18px);
+      overflow-x: hidden;
     }
 
     .word-result-output.empty {
       color: rgba(119,122,119,0.42);
       font-weight: 500;
+      padding: 20px 11px 76px !important;
+      white-space: pre-wrap;
     }
 
     .word-card-view {
+      min-height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      padding-bottom: 6px;
+      background: rgba(250,251,248,0.94);
     }
 
-    .word-card-head {
+    .word-card-hero {
+      padding: 19px 20px 15px;
+      border-radius: 25px 25px 18px 18px;
+      background: linear-gradient(135deg, rgba(231,243,231,0.78) 0%, rgba(246,249,244,0.88) 58%, rgba(255,255,255,0.72) 100%);
+      border-bottom: 1px solid rgba(224,232,222,0.66);
+    }
+
+    .word-card-mainline {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      align-items: baseline;
+      gap: 12px;
+      min-width: 0;
     }
 
     .word-card-title {
-      color: #1f6f56;
-      font-size: clamp(24px, 6vw, 38px);
-      font-weight: 560;
-      line-height: 1.05;
-      letter-spacing: -0.035em;
+      color: #111512;
+      font-size: clamp(25px, 6.1vw, 39px);
+      font-weight: 650;
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
-    .word-card-subtitle {
-      color: rgba(119,122,119,0.82);
-      font-size: clamp(12px, 2.7vw, 15px);
+    .word-card-transcription {
+      color: rgba(31,33,31,0.66);
+      font-size: clamp(15px, 3.55vw, 21px);
       font-weight: 430;
-      line-height: 1.25;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .word-sound-btn {
+      width: 31px;
+      height: 31px;
+      border: 0;
+      background: transparent;
+      color: #2f7d59;
+      padding: 0;
+      margin-left: 1px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.95;
+    }
+
+    .word-sound-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .word-pos-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
-      margin: 2px 0 1px;
+      gap: 9px;
+      margin-top: 17px;
     }
 
     .word-pos-tab {
-      border: 2px solid rgba(255,255,255,0.92);
-      border-radius: 999px;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.90) 56%, rgba(255,255,255,0.98) 100%);
-      color: #777a77;
-      padding: 7px 11px;
-      font-size: clamp(11.5px, 2.7vw, 15px);
-      font-weight: 520;
+      border: 1px solid rgba(225,231,224,0.82);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.84);
+      color: #4d5250;
+      padding: 8px 13px;
+      min-width: 62px;
+      min-height: 36px;
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 600;
       line-height: 1;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.40),
-        inset 2px 2px 5px rgba(255,255,255,0.76),
-        inset -3px -3px 7px rgba(205,214,204,0.12),
-        0 2px 5px rgba(186,193,184,0.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.66), 0 2px 5px rgba(180,188,178,0.06);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
 
     .word-pos-tab.active {
-      color: #1f6f56;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.88) 0%, rgba(244,249,243,0.96) 56%, rgba(255,255,255,0.99) 100%);
-      border-color: rgba(255,255,255,0.96);
+      color: #ffffff;
+      background: #168346;
+      border-color: rgba(22,131,70,0.18);
+      box-shadow: 0 5px 12px rgba(22,131,70,0.12);
     }
 
-    .word-part-title {
-      color: #1f211f;
-      font-size: clamp(17px, 4vw, 24px);
-      font-weight: 560;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      margin-top: 2px;
+    .word-card-body {
+      padding: 18px 21px 18px;
+      background: rgba(255,255,255,0.54);
     }
 
     .word-section-title {
-      color: #1f6f56;
-      font-size: clamp(13px, 3vw, 17px);
-      font-weight: 620;
+      color: rgba(31,33,31,0.70);
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 650;
       line-height: 1.2;
-      margin: 6px 0 2px;
+      letter-spacing: 0.04em;
+      margin: 2px 0 13px;
     }
 
-    .word-meanings-list,
-    .word-examples-list {
+    .word-meanings-list {
       display: flex;
       flex-direction: column;
-      gap: 9px;
-      margin: 0;
+      gap: 0;
+      margin: 0 0 18px;
       padding: 0;
       list-style: none;
     }
 
     .word-meaning-item {
-      border-radius: 18px;
-      background: rgba(253,253,252,0.55);
-      border: 1px solid rgba(236,238,234,0.78);
-      padding: 11px 12px;
+      position: relative;
+      display: grid;
+      grid-template-columns: 27px minmax(0, 1fr);
+      gap: 8px;
+      padding: 0 0 13px;
+      margin-bottom: 13px;
+      border-bottom: 1px solid rgba(224,228,222,0.78);
+      background: transparent;
+      border-radius: 0;
     }
+
+    .word-meaning-item:last-child { margin-bottom: 0; }
+
+    .word-meaning-number {
+      color: #168346;
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 700;
+      line-height: 1.25;
+      padding-top: 1px;
+    }
+
+    .word-meaning-content { min-width: 0; }
 
     .word-meaning-translation {
       color: #1f211f;
-      font-size: clamp(15px, 3.55vw, 20px);
-      font-weight: 560;
-      line-height: 1.25;
+      font-size: clamp(15px, 3.45vw, 20px);
+      font-weight: 650;
+      line-height: 1.23;
+      letter-spacing: -0.015em;
     }
 
     .word-meaning-explanation {
       margin-top: 5px;
-      color: rgba(31,33,31,0.78);
-      font-size: clamp(12.5px, 3vw, 16px);
-      line-height: 1.35;
+      color: rgba(31,33,31,0.68);
+      font-size: clamp(12px, 2.85vw, 15.5px);
+      font-weight: 430;
+      line-height: 1.32;
     }
 
     .word-meaning-usage {
-      margin-top: 6px;
+      margin-top: 7px;
       display: inline-flex;
       width: fit-content;
       max-width: 100%;
       border-radius: 999px;
-      background: rgba(95,153,98,0.10);
+      background: rgba(95,153,98,0.11);
       color: #1f6f56;
-      padding: 4px 8px;
-      font-size: clamp(10.5px, 2.45vw, 13px);
-      font-weight: 520;
-      line-height: 1.2;
+      padding: 4px 9px;
+      font-size: clamp(10px, 2.35vw, 12.5px);
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .word-examples-block { margin-top: 13px; padding-top: 0; }
+
+    .word-examples-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
     .word-example-item {
-      border-radius: 18px;
-      background: rgba(253,253,252,0.45);
-      border: 1px solid rgba(236,238,234,0.70);
-      padding: 11px 12px;
+      border-radius: 13px;
+      background: rgba(253,253,252,0.68);
+      border: 1px solid rgba(226,231,224,0.84);
+      padding: 10px 12px 9px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.54);
     }
 
     .word-example-source {
       color: #1f211f;
-      font-size: clamp(14.5px, 3.45vw, 19px);
-      font-weight: 500;
-      line-height: 1.35;
+      font-size: clamp(13px, 3.05vw, 17px);
+      font-weight: 520;
+      line-height: 1.28;
+      letter-spacing: -0.01em;
     }
 
     .word-example-translation {
-      margin-top: 6px;
-      color: rgba(31,33,31,0.66);
-      font-size: clamp(12.5px, 3vw, 16px);
-      line-height: 1.35;
+      margin-top: 5px;
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(11.5px, 2.7vw, 14.5px);
+      font-style: italic;
+      line-height: 1.28;
+    }
+
+    .word-more-examples-btn {
+      width: 100%;
+      margin: 11px 0 0;
+      border: 0;
+      background: transparent;
+      color: #168346;
+      font-size: clamp(12px, 2.85vw, 15px);
+      font-weight: 650;
+      line-height: 1.2;
+      padding: 9px 8px 5px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .word-more-examples-btn span {
+      display: inline-block;
+      margin-left: 6px;
+      transform: translateY(-1px);
     }
 
     .word-empty-note {
@@ -690,6 +778,7 @@ async function handleWordTranslate() {
   wordCopiedValue = "";
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
+  wordExamplesExpanded = false;
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -1263,6 +1352,7 @@ function bindWordModeEvents() {
       wordCopiedValue = "";
       currentWordTranslationCard = null;
       currentWordPartIndex = 0;
+      wordExamplesExpanded = false;
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -1333,6 +1423,39 @@ function getWordPartShortLabel(part) {
   return String(part?.labelShortRu || part?.label_short_ru || getWordPartLabel(part)).trim() || getWordPartLabel(part);
 }
 
+function getWordPartEnglishLabel(part) {
+  const pos = String(part?.pos || "").trim().toLowerCase();
+
+  const map = {
+    noun: "Noun",
+    verb: "Verb",
+    adjective: "Adjective",
+    adverb: "Adverb",
+    preposition: "Prep.",
+    conjunction: "Conj.",
+    pronoun: "Pron.",
+    interjection: "Interj.",
+    phrase: "Phrase",
+    other: "Other"
+  };
+
+  return map[pos] || getWordPartShortLabel(part) || "Other";
+}
+
+function getWordCardTranscription(card) {
+  return String(
+    card?.transcription ||
+    card?.ipa ||
+    card?.phonetic ||
+    card?.pronunciation ||
+    ""
+  ).trim();
+}
+
+function iconSpeaker() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z"/><path d="M16 9c1.1 1.5 1.1 4.5 0 6"/><path d="M18.8 6.8c2.4 3 2.4 7.4 0 10.4"/></svg>`;
+}
+
 function getWordMeaningTranslation(meaning) {
   return String(meaning?.translation || meaning?.value || meaning?.meaning || "").trim();
 }
@@ -1375,12 +1498,13 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
   const safeIndex = Math.max(0, Math.min(Number(partIndex) || 0, Math.max(parts.length - 1, 0)));
   const activePart = parts[safeIndex] || parts[0] || {};
   const word = String(card?.word || lastWordTranslateSource || "").trim();
+  const transcription = getWordCardTranscription(card);
 
   const tabsHtml = parts.length
     ? `<div class="word-pos-tabs">
         ${parts.map((part, index) => `
           <button class="word-pos-tab ${index === safeIndex ? "active" : ""}" type="button" data-word-part-index="${index}">
-            ${escapeHTML(getWordPartShortLabel(part))}
+            ${escapeHTML(getWordPartEnglishLabel(part))}
           </button>
         `).join("")}
       </div>`
@@ -1388,20 +1512,25 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
 
   const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
   const examples = Array.isArray(activePart.examples) ? activePart.examples : [];
+  const visibleExamples = wordExamplesExpanded ? examples : examples.slice(0, 2);
+  const hiddenExamplesCount = Math.max(0, examples.length - visibleExamples.length);
 
   const meaningsHtml = meanings.length
     ? `<div class="word-section-title">Значения</div>
        <ol class="word-meanings-list">
-        ${meanings.map((meaning) => {
+        ${meanings.map((meaning, index) => {
           const translation = getWordMeaningTranslation(meaning);
           const explanation = getWordMeaningExplanation(meaning);
           const usage = getWordMeaningUsage(meaning);
 
           return `
             <li class="word-meaning-item">
-              ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
-              ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
-              ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
+              <div class="word-meaning-number">${index + 1}.</div>
+              <div class="word-meaning-content">
+                ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
+                ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
+                ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
+              </div>
             </li>
           `;
         }).join("")}
@@ -1409,35 +1538,45 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
     : `<div class="word-empty-note">Значения не пришли в ответе.</div>`;
 
   const examplesHtml = examples.length
-    ? `<div class="word-section-title">Примеры</div>
-       <ol class="word-examples-list">
-        ${examples.map((example) => {
-          const source = getWordExampleSource(example);
-          const translation = getWordExampleTranslation(example);
+    ? `<div class="word-examples-block">
+        <div class="word-section-title">Примеры</div>
+        <ol class="word-examples-list">
+          ${visibleExamples.map((example) => {
+            const source = getWordExampleSource(example);
+            const translation = getWordExampleTranslation(example);
 
-          return `
-            <li class="word-example-item">
-              ${source ? `<div class="word-example-source">${escapeHTML(source)}</div>` : ""}
-              ${translation ? `<div class="word-example-translation">${escapeHTML(translation)}</div>` : ""}
-            </li>
-          `;
-        }).join("")}
-       </ol>`
+            return `
+              <li class="word-example-item">
+                ${source ? `<div class="word-example-source">${escapeHTML(source)}</div>` : ""}
+                ${translation ? `<div class="word-example-translation">${escapeHTML(translation)}</div>` : ""}
+              </li>
+            `;
+          }).join("")}
+        </ol>
+        ${examples.length > 2 ? `
+          <button class="word-more-examples-btn" type="button" data-word-more-examples="1">
+            ${wordExamplesExpanded ? "Скрыть примеры" : `Показать ещё примеры${hiddenExamplesCount ? ` (${hiddenExamplesCount})` : ""}`}
+            <span>${wordExamplesExpanded ? "⌃" : "⌄"}</span>
+          </button>
+        ` : ""}
+      </div>`
     : `<div class="word-empty-note">Примеры не пришли в ответе.</div>`;
 
   return `
     <div class="word-card-view">
-      <div class="word-card-head">
-        ${word ? `<div class="word-card-title">${escapeHTML(word)}</div>` : ""}
-        <div class="word-card-subtitle">Разбор по частям речи</div>
+      <div class="word-card-hero">
+        <div class="word-card-mainline">
+          ${word ? `<div class="word-card-title">${escapeHTML(word)}</div>` : ""}
+          ${transcription ? `<div class="word-card-transcription">${escapeHTML(transcription)}</div>` : ""}
+          <button class="word-sound-btn" type="button" title="Озвучить">${iconSpeaker()}</button>
+        </div>
+        ${tabsHtml}
       </div>
 
-      ${tabsHtml}
-
-      <div class="word-part-title">${escapeHTML(getWordPartLabel(activePart))}</div>
-
-      ${meaningsHtml}
-      ${examplesHtml}
+      <div class="word-card-body">
+        ${meaningsHtml}
+        ${examplesHtml}
+      </div>
     </div>
   `;
 }
@@ -1450,8 +1589,23 @@ function bindWordPartTabs() {
       if (!currentWordTranslationCard) return;
 
       wordCopiedValue = "";
+      wordExamplesExpanded = false;
       renderStructuredWordCard(currentWordTranslationCard, index);
     };
+  });
+
+  document.querySelectorAll("[data-word-more-examples]").forEach((btn) => {
+    btn.onclick = () => {
+      if (!currentWordTranslationCard) return;
+
+      wordCopiedValue = "";
+      wordExamplesExpanded = !wordExamplesExpanded;
+      renderStructuredWordCard(currentWordTranslationCard, currentWordPartIndex);
+    };
+  });
+
+  document.querySelectorAll(".word-sound-btn").forEach((btn) => {
+    btn.onclick = () => {};
   });
 }
 
@@ -1463,6 +1617,7 @@ function clearWordMode() {
   wordCopiedValue = "";
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
+  wordExamplesExpanded = false;
 
   if (wordInput) {
     wordInput.value = "";
@@ -2143,6 +2298,7 @@ function openSelectedTextWordInWordMode() {
   wordCopiedValue = "";
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
+  wordExamplesExpanded = false;
 
   if (wordInput) {
     wordInput.value = word;
@@ -2817,6 +2973,7 @@ function openWordFromDictionary(word) {
   wordCopiedValue = "";
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
+  wordExamplesExpanded = false;
 
   if (wordInput) {
     wordInput.value = lastWordTranslateSource;
