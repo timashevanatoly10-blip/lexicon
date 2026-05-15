@@ -488,41 +488,48 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-hero {
-      padding: 19px 20px 15px;
-      border-radius: 25px 25px 18px 18px;
-      background: linear-gradient(135deg, rgba(231,243,231,0.78) 0%, rgba(246,249,244,0.88) 58%, rgba(255,255,255,0.72) 100%);
-      border-bottom: 1px solid rgba(224,232,222,0.66);
+      margin: 9px 9px 0;
+      padding: 12px 15px 11px;
+      border-radius: 23px;
+      background: rgba(250,251,248,0.94);
+      border: 1px solid rgba(238,241,235,0.82);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.58),
+        inset 2px 2px 5px rgba(255,255,255,0.58),
+        inset -2px -2px 6px rgba(197,207,196,0.08),
+        0 1px 4px rgba(180,186,176,0.05);
     }
 
     .word-card-mainline {
       display: flex;
-      align-items: baseline;
-      gap: 12px;
+      align-items: center;
+      gap: 8px;
       min-width: 0;
+      min-height: 28px;
     }
 
     .word-card-title {
       color: #111512;
-      font-size: clamp(25px, 6.1vw, 39px);
+      font-size: clamp(16.5px, 4vw, 25px);
       font-weight: 650;
-      line-height: 1.02;
-      letter-spacing: -0.055em;
+      line-height: 1.05;
+      letter-spacing: -0.045em;
       min-width: 0;
       overflow-wrap: anywhere;
     }
 
     .word-card-transcription {
-      color: rgba(31,33,31,0.66);
-      font-size: clamp(15px, 3.55vw, 21px);
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(12px, 2.75vw, 16px);
       font-weight: 430;
-      line-height: 1.1;
+      line-height: 1.05;
       letter-spacing: -0.01em;
       white-space: nowrap;
     }
 
     .word-sound-btn {
-      width: 31px;
-      height: 31px;
+      width: 24px;
+      height: 24px;
       border: 0;
       background: transparent;
       color: #2f7d59;
@@ -531,14 +538,15 @@ function ensureDictionaryPickerStyles() {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.95;
+      opacity: 0.92;
+      flex: 0 0 auto;
     }
 
     .word-sound-btn svg {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
       stroke: currentColor;
-      stroke-width: 2.2;
+      stroke-width: 2.05;
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
@@ -547,22 +555,22 @@ function ensureDictionaryPickerStyles() {
     .word-pos-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 17px;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .word-pos-tab {
-      border: 1px solid rgba(225,231,224,0.82);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(225,231,224,0.80);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.78);
       color: #4d5250;
-      padding: 8px 13px;
-      min-width: 62px;
-      min-height: 36px;
-      font-size: clamp(12px, 2.75vw, 15px);
-      font-weight: 600;
+      padding: 5px 9px;
+      min-width: 43px;
+      min-height: 25px;
+      font-size: clamp(10px, 2.25vw, 12.5px);
+      font-weight: 620;
       line-height: 1;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.66), 0 2px 5px rgba(180,188,178,0.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.58), 0 1px 3px rgba(180,188,178,0.04);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
@@ -571,7 +579,7 @@ function ensureDictionaryPickerStyles() {
       color: #ffffff;
       background: #168346;
       border-color: rgba(22,131,70,0.18);
-      box-shadow: 0 5px 12px rgba(22,131,70,0.12);
+      box-shadow: 0 2px 6px rgba(22,131,70,0.08);
     }
 
     .word-card-body {
@@ -1443,13 +1451,32 @@ function getWordPartEnglishLabel(part) {
 }
 
 function getWordCardTranscription(card) {
-  return String(
+  const direct = String(
     card?.transcription ||
     card?.ipa ||
     card?.phonetic ||
     card?.pronunciation ||
     ""
   ).trim();
+
+  if (direct) return direct;
+
+  const word = String(card?.word || lastWordTranslateSource || "").trim().toLowerCase();
+  const map = {
+    play: "/pleɪ/",
+    run: "/rʌn/",
+    go: "/ɡəʊ/",
+    make: "/meɪk/",
+    take: "/teɪk/",
+    get: "/ɡet/",
+    see: "/siː/",
+    look: "/lʊk/",
+    work: "/wɜːrk/",
+    spring: "/sprɪŋ/",
+    light: "/laɪt/"
+  };
+
+  return map[word] || "";
 }
 
 function iconSpeaker() {
