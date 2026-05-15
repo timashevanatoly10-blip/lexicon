@@ -19,6 +19,8 @@ let textQuickTranslateTimer = null;
 let textCopiedPanels = [];
 let textCopiedSignature = "";
 let wordCopiedValue = "";
+let currentWordTranslationCard = null;
+let currentWordPartIndex = 0;
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -472,6 +474,155 @@ function ensureDictionaryPickerStyles() {
       font-weight: 500;
     }
 
+    .word-card-view {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding-bottom: 6px;
+    }
+
+    .word-card-head {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .word-card-title {
+      color: #1f6f56;
+      font-size: clamp(24px, 6vw, 38px);
+      font-weight: 560;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .word-card-subtitle {
+      color: rgba(119,122,119,0.82);
+      font-size: clamp(12px, 2.7vw, 15px);
+      font-weight: 430;
+      line-height: 1.25;
+    }
+
+    .word-pos-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 2px 0 1px;
+    }
+
+    .word-pos-tab {
+      border: 2px solid rgba(255,255,255,0.92);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.90) 56%, rgba(255,255,255,0.98) 100%);
+      color: #777a77;
+      padding: 7px 11px;
+      font-size: clamp(11.5px, 2.7vw, 15px);
+      font-weight: 520;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.76),
+        inset -3px -3px 7px rgba(205,214,204,0.12),
+        0 2px 5px rgba(186,193,184,0.06);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .word-pos-tab.active {
+      color: #1f6f56;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.88) 0%, rgba(244,249,243,0.96) 56%, rgba(255,255,255,0.99) 100%);
+      border-color: rgba(255,255,255,0.96);
+    }
+
+    .word-part-title {
+      color: #1f211f;
+      font-size: clamp(17px, 4vw, 24px);
+      font-weight: 560;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-top: 2px;
+    }
+
+    .word-section-title {
+      color: #1f6f56;
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 620;
+      line-height: 1.2;
+      margin: 6px 0 2px;
+    }
+
+    .word-meanings-list,
+    .word-examples-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .word-meaning-item {
+      border-radius: 18px;
+      background: rgba(253,253,252,0.55);
+      border: 1px solid rgba(236,238,234,0.78);
+      padding: 11px 12px;
+    }
+
+    .word-meaning-translation {
+      color: #1f211f;
+      font-size: clamp(15px, 3.55vw, 20px);
+      font-weight: 560;
+      line-height: 1.25;
+    }
+
+    .word-meaning-explanation {
+      margin-top: 5px;
+      color: rgba(31,33,31,0.78);
+      font-size: clamp(12.5px, 3vw, 16px);
+      line-height: 1.35;
+    }
+
+    .word-meaning-usage {
+      margin-top: 6px;
+      display: inline-flex;
+      width: fit-content;
+      max-width: 100%;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.10);
+      color: #1f6f56;
+      padding: 4px 8px;
+      font-size: clamp(10.5px, 2.45vw, 13px);
+      font-weight: 520;
+      line-height: 1.2;
+    }
+
+    .word-example-item {
+      border-radius: 18px;
+      background: rgba(253,253,252,0.45);
+      border: 1px solid rgba(236,238,234,0.70);
+      padding: 11px 12px;
+    }
+
+    .word-example-source {
+      color: #1f211f;
+      font-size: clamp(14.5px, 3.45vw, 19px);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .word-example-translation {
+      margin-top: 6px;
+      color: rgba(31,33,31,0.66);
+      font-size: clamp(12.5px, 3vw, 16px);
+      line-height: 1.35;
+    }
+
+    .word-empty-note {
+      color: rgba(119,122,119,0.72);
+      line-height: 1.4;
+    }
+
     .word-mode-hint { display: none !important; }
 
     .text-mode-hint { display: none !important; }
@@ -537,6 +688,8 @@ async function handleWordTranslate() {
 
   lastWordTranslateSource = source;
   wordCopiedValue = "";
+  currentWordTranslationCard = null;
+  currentWordPartIndex = 0;
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -547,8 +700,17 @@ async function handleWordTranslate() {
 
   try {
     const data = await callAi("word_translate", source);
-    setWordResult(data.result || data.raw || "Пустой ответ.", false);
+
+    if (data.card && Array.isArray(data.card.parts) && data.card.parts.length) {
+      renderStructuredWordCard(data.card, 0);
+    } else {
+      currentWordTranslationCard = null;
+      currentWordPartIndex = 0;
+      setWordResult(data.result || data.raw || "Пустой ответ.", false);
+    }
   } catch (err) {
+    currentWordTranslationCard = null;
+    currentWordPartIndex = 0;
     setWordResult("Ошибка перевода:\n" + err.message, false);
   } finally {
     if (translateBtn) translateBtn.disabled = false;
@@ -1099,6 +1261,8 @@ function bindWordModeEvents() {
     wordInput.oninput = () => {
       lastWordTranslateSource = wordInput.value.trim();
       wordCopiedValue = "";
+      currentWordTranslationCard = null;
+      currentWordPartIndex = 0;
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -1147,11 +1311,158 @@ function setWordResult(text, isEmpty = false) {
   resultOutput.classList.toggle("empty", Boolean(isEmpty));
 }
 
+
+function setWordResultHtml(html, isEmpty = false) {
+  const resultOutput = document.getElementById("wordResultOutput");
+
+  if (!resultOutput) return;
+
+  resultOutput.innerHTML = html || "";
+  resultOutput.classList.toggle("empty", Boolean(isEmpty));
+}
+
+function getWordCardParts(card) {
+  return Array.isArray(card?.parts) ? card.parts.filter(Boolean) : [];
+}
+
+function getWordPartLabel(part) {
+  return String(part?.labelRu || part?.label_ru || part?.label || part?.pos || "другое").trim() || "другое";
+}
+
+function getWordPartShortLabel(part) {
+  return String(part?.labelShortRu || part?.label_short_ru || getWordPartLabel(part)).trim() || getWordPartLabel(part);
+}
+
+function getWordMeaningTranslation(meaning) {
+  return String(meaning?.translation || meaning?.value || meaning?.meaning || "").trim();
+}
+
+function getWordMeaningExplanation(meaning) {
+  return String(meaning?.explanationRu || meaning?.explanation_ru || meaning?.note || "").trim();
+}
+
+function getWordMeaningUsage(meaning) {
+  return String(meaning?.usageRu || meaning?.usage_ru || meaning?.usage || "").trim();
+}
+
+function getWordExampleSource(example) {
+  return String(example?.source || example?.en || example?.example || "").trim();
+}
+
+function getWordExampleTranslation(example) {
+  return String(example?.translationRu || example?.translation_ru || example?.ru || "").trim();
+}
+
+function renderStructuredWordCard(card, partIndex = 0) {
+  const parts = getWordCardParts(card);
+
+  currentWordTranslationCard = card || null;
+  currentWordPartIndex = Math.max(0, Math.min(Number(partIndex) || 0, Math.max(parts.length - 1, 0)));
+
+  if (!card || !parts.length) {
+    setWordResult("Пустой ответ.", false);
+    return;
+  }
+
+  setWordResultHtml(buildStructuredWordCardHtml(card, currentWordPartIndex), false);
+  bindWordPartTabs();
+  updateWordModeButtons();
+  updateWordCopyFeedback();
+}
+
+function buildStructuredWordCardHtml(card, partIndex = 0) {
+  const parts = getWordCardParts(card);
+  const safeIndex = Math.max(0, Math.min(Number(partIndex) || 0, Math.max(parts.length - 1, 0)));
+  const activePart = parts[safeIndex] || parts[0] || {};
+  const word = String(card?.word || lastWordTranslateSource || "").trim();
+
+  const tabsHtml = parts.length
+    ? `<div class="word-pos-tabs">
+        ${parts.map((part, index) => `
+          <button class="word-pos-tab ${index === safeIndex ? "active" : ""}" type="button" data-word-part-index="${index}">
+            ${escapeHTML(getWordPartShortLabel(part))}
+          </button>
+        `).join("")}
+      </div>`
+    : "";
+
+  const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
+  const examples = Array.isArray(activePart.examples) ? activePart.examples : [];
+
+  const meaningsHtml = meanings.length
+    ? `<div class="word-section-title">Значения</div>
+       <ol class="word-meanings-list">
+        ${meanings.map((meaning) => {
+          const translation = getWordMeaningTranslation(meaning);
+          const explanation = getWordMeaningExplanation(meaning);
+          const usage = getWordMeaningUsage(meaning);
+
+          return `
+            <li class="word-meaning-item">
+              ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
+              ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
+              ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
+            </li>
+          `;
+        }).join("")}
+       </ol>`
+    : `<div class="word-empty-note">Значения не пришли в ответе.</div>`;
+
+  const examplesHtml = examples.length
+    ? `<div class="word-section-title">Примеры</div>
+       <ol class="word-examples-list">
+        ${examples.map((example) => {
+          const source = getWordExampleSource(example);
+          const translation = getWordExampleTranslation(example);
+
+          return `
+            <li class="word-example-item">
+              ${source ? `<div class="word-example-source">${escapeHTML(source)}</div>` : ""}
+              ${translation ? `<div class="word-example-translation">${escapeHTML(translation)}</div>` : ""}
+            </li>
+          `;
+        }).join("")}
+       </ol>`
+    : `<div class="word-empty-note">Примеры не пришли в ответе.</div>`;
+
+  return `
+    <div class="word-card-view">
+      <div class="word-card-head">
+        ${word ? `<div class="word-card-title">${escapeHTML(word)}</div>` : ""}
+        <div class="word-card-subtitle">Разбор по частям речи</div>
+      </div>
+
+      ${tabsHtml}
+
+      <div class="word-part-title">${escapeHTML(getWordPartLabel(activePart))}</div>
+
+      ${meaningsHtml}
+      ${examplesHtml}
+    </div>
+  `;
+}
+
+function bindWordPartTabs() {
+  document.querySelectorAll("[data-word-part-index]").forEach((btn) => {
+    btn.onclick = () => {
+      const index = Number(btn.dataset.wordPartIndex || "0");
+
+      if (!currentWordTranslationCard) return;
+
+      wordCopiedValue = "";
+      renderStructuredWordCard(currentWordTranslationCard, index);
+    };
+  });
+}
+
+
 function clearWordMode() {
   const wordInput = document.getElementById("wordInput");
 
   lastWordTranslateSource = "";
   wordCopiedValue = "";
+  currentWordTranslationCard = null;
+  currentWordPartIndex = 0;
 
   if (wordInput) {
     wordInput.value = "";
@@ -1830,6 +2141,8 @@ function openSelectedTextWordInWordMode() {
 
   lastWordTranslateSource = word;
   wordCopiedValue = "";
+  currentWordTranslationCard = null;
+  currentWordPartIndex = 0;
 
   if (wordInput) {
     wordInput.value = word;
@@ -2502,6 +2815,8 @@ function openWordFromDictionary(word) {
 
   lastWordTranslateSource = String(word || "").trim();
   wordCopiedValue = "";
+  currentWordTranslationCard = null;
+  currentWordPartIndex = 0;
 
   if (wordInput) {
     wordInput.value = lastWordTranslateSource;
