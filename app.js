@@ -662,6 +662,30 @@ function ensureDictionaryPickerStyles() {
       line-height: 1.15;
     }
 
+    .word-meaning-example {
+      margin-top: 9px;
+      padding: 9px 10px 8px;
+      border-radius: 13px;
+      background: rgba(253,253,252,0.54);
+      border: 1px solid rgba(226,231,224,0.70);
+    }
+
+    .word-meaning-example-source {
+      color: #1f211f;
+      font-size: clamp(12px, 2.85vw, 15px);
+      font-weight: 520;
+      line-height: 1.28;
+      letter-spacing: -0.01em;
+    }
+
+    .word-meaning-example-translation {
+      margin-top: 4px;
+      color: rgba(31,33,31,0.60);
+      font-size: clamp(11px, 2.55vw, 13.8px);
+      font-style: italic;
+      line-height: 1.28;
+    }
+
     .word-examples-block { margin-top: 13px; padding-top: 0; }
 
     .word-examples-list {
@@ -800,9 +824,10 @@ async function handleWordTranslate() {
 
   try {
     const data = await callAi("word_translate", source);
+    const card = getStructuredWordCardFromAiData(data);
 
-    if (data.card && Array.isArray(data.card.parts) && data.card.parts.length) {
-      renderStructuredWordCard(data.card, 0);
+    if (card && Array.isArray(card.parts) && card.parts.length) {
+      renderStructuredWordCard(card, 0);
     } else {
       currentWordTranslationCard = null;
       currentWordPartIndex = 0;
@@ -1422,6 +1447,63 @@ function setWordResultHtml(html, isEmpty = false) {
   resultOutput.classList.toggle("empty", Boolean(isEmpty));
 }
 
+function stripJsonCodeFence(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+}
+
+function parseJsonObject(value) {
+  const clean = stripJsonCodeFence(value);
+
+  if (!clean || !clean.startsWith("{")) return null;
+
+  try {
+    const parsed = JSON.parse(clean);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function getStructuredWordCardFromAiData(data) {
+  const rawCard = parseJsonObject(data?.raw);
+
+  if (rawCard && Array.isArray(rawCard.parts) && rawCard.parts.length) {
+    return rawCard;
+  }
+
+  if (data?.card && Array.isArray(data.card.parts) && data.card.parts.length) {
+    return data.card;
+  }
+
+  const resultCard = parseJsonObject(data?.result);
+
+  if (resultCard && Array.isArray(resultCard.parts) && resultCard.parts.length) {
+    return resultCard;
+  }
+
+  return null;
+}
+
+function getWordCardQuery(card) {
+  return String(
+    card?.query ||
+    card?.source_query ||
+    card?.sourceQuery ||
+    card?.word ||
+    lastWordTranslateSource ||
+    ""
+  ).trim();
+}
+
+function isLikelyEnglishText(value) {
+  const text = String(value || "").trim();
+  return Boolean(text && /[A-Za-z]/.test(text) && !/[А-Яа-яЁё]/.test(text));
+}
+
 function getWordCardParts(card) {
   return Array.isArray(card?.parts) ? card.parts.filter(Boolean) : [];
 }
@@ -1431,7 +1513,7 @@ function getWordPartLabel(part) {
 }
 
 function getWordPartShortLabel(part) {
-  return String(part?.labelShortRu || part?.label_short_ru || getWordPartLabel(part)).trim() || getWordPartLabel(part);
+  return String(part?.labelShortRu || part?.label_short_ru || part?.label || getWordPartLabel(part)).trim() || getWordPartLabel(part);
 }
 
 function getWordPartEnglishLabel(part) {
@@ -1464,7 +1546,10 @@ function getWordCardTranscription(card) {
 
   if (direct) return direct;
 
-  const word = String(card?.word || lastWordTranslateSource || "").trim().toLowerCase();
+  const query = getWordCardQuery(card).toLowerCase();
+
+  if (!isLikelyEnglishText(query)) return "";
+
   const map = {
     play: "/pleɪ/",
     run: "/rʌn/",
@@ -1479,7 +1564,7 @@ function getWordCardTranscription(card) {
     light: "/laɪt/"
   };
 
-  return map[word] || "";
+  return map[query] || "";
 }
 
 function iconSpeaker() {
@@ -1491,11 +1576,55 @@ function getWordMeaningTranslation(meaning) {
 }
 
 function getWordMeaningExplanation(meaning) {
-  return String(meaning?.explanationRu || meaning?.explanation_ru || meaning?.note || "").trim();
+  return String(
+    meaning?.meaning_ru ||
+    meaning?.meaningRu ||
+    meaning?.explanationRu ||
+    meaning?.explanation_ru ||
+    meaning?.note ||
+    ""
+  ).trim();
 }
 
 function getWordMeaningUsage(meaning) {
-  return String(meaning?.usageRu || meaning?.usage_ru || meaning?.usage || "").trim();
+  const raw = String(meaning?.usageRu || meaning?.usage_ru || meaning?.usage || "").trim();
+  const lower = raw.toLowerCase();
+  const map = {
+    common: "обычное значение",
+    informal: "разговорное",
+    technical: "техническое",
+    figurative: "переносное",
+    rare: "редкое"
+  };
+
+  return map[lower] || raw;
+}
+
+function getWordMeaningExample(meaning) {
+  const example = meaning?.example || meaning?.sample || meaning?.usage_example || meaning?.usageExample || null;
+
+  if (example && typeof example === "object") return example;
+
+  const source = String(meaning?.example_source || meaning?.exampleSource || "").trim();
+  const translationRu = String(meaning?.example_translation_ru || meaning?.exampleTranslationRu || "").trim();
+
+  if (source || translationRu) {
+    return { source, translation_ru: translationRu };
+  }
+
+  return null;
+}
+
+function getWordPartExtraExamples(part) {
+  const direct = Array.isArray(part?.extra_examples)
+    ? part.extra_examples
+    : Array.isArray(part?.extraExamples)
+      ? part.extraExamples
+      : [];
+
+  if (direct.length) return direct;
+
+  return Array.isArray(part?.examples) ? part.examples : [];
 }
 
 function getWordExampleSource(example) {
@@ -1527,7 +1656,7 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
   const parts = getWordCardParts(card);
   const safeIndex = Math.max(0, Math.min(Number(partIndex) || 0, Math.max(parts.length - 1, 0)));
   const activePart = parts[safeIndex] || parts[0] || {};
-  const word = String(card?.word || lastWordTranslateSource || "").trim();
+  const word = getWordCardQuery(card);
   const transcription = getWordCardTranscription(card);
 
   const tabsHtml = parts.length
@@ -1541,9 +1670,9 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
     : "";
 
   const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
-  const examples = Array.isArray(activePart.examples) ? activePart.examples : [];
-  const visibleExamples = wordExamplesExpanded ? examples : examples.slice(0, 2);
-  const hiddenExamplesCount = Math.max(0, examples.length - visibleExamples.length);
+  const extraExamples = getWordPartExtraExamples(activePart);
+  const visibleExamples = wordExamplesExpanded ? extraExamples : extraExamples.slice(0, 2);
+  const hiddenExamplesCount = Math.max(0, extraExamples.length - visibleExamples.length);
 
   const meaningsHtml = meanings.length
     ? `<div class="word-section-title">Значения</div>
@@ -1552,6 +1681,9 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
           const translation = getWordMeaningTranslation(meaning);
           const explanation = getWordMeaningExplanation(meaning);
           const usage = getWordMeaningUsage(meaning);
+          const example = getWordMeaningExample(meaning);
+          const exampleSource = getWordExampleSource(example);
+          const exampleTranslation = getWordExampleTranslation(example);
 
           return `
             <li class="word-meaning-item">
@@ -1560,6 +1692,12 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
                 ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
                 ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
                 ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
+                ${(exampleSource || exampleTranslation) ? `
+                  <div class="word-meaning-example">
+                    ${exampleSource ? `<div class="word-meaning-example-source">${escapeHTML(exampleSource)}</div>` : ""}
+                    ${exampleTranslation ? `<div class="word-meaning-example-translation">${escapeHTML(exampleTranslation)}</div>` : ""}
+                  </div>
+                ` : ""}
               </div>
             </li>
           `;
@@ -1567,9 +1705,9 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
        </ol>`
     : `<div class="word-empty-note">Значения не пришли в ответе.</div>`;
 
-  const examplesHtml = examples.length
+  const examplesHtml = extraExamples.length
     ? `<div class="word-examples-block">
-        <div class="word-section-title">Примеры</div>
+        <div class="word-section-title">Дополнительные примеры</div>
         <ol class="word-examples-list">
           ${visibleExamples.map((example) => {
             const source = getWordExampleSource(example);
@@ -1583,14 +1721,14 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
             `;
           }).join("")}
         </ol>
-        ${examples.length > 2 ? `
+        ${extraExamples.length > 2 ? `
           <button class="word-more-examples-btn" type="button" data-word-more-examples="1">
             ${wordExamplesExpanded ? "Скрыть примеры" : `Показать ещё примеры${hiddenExamplesCount ? ` (${hiddenExamplesCount})` : ""}`}
             <span>${wordExamplesExpanded ? "⌃" : "⌄"}</span>
           </button>
         ` : ""}
       </div>`
-    : `<div class="word-empty-note">Примеры не пришли в ответе.</div>`;
+    : "";
 
   return `
     <div class="word-card-view">
