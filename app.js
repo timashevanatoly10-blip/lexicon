@@ -488,16 +488,17 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-hero {
-      margin: 9px 9px 0;
-      padding: 12px 15px 11px;
-      border-radius: 23px;
-      background: rgba(250,251,248,0.94);
-      border: 1px solid rgba(238,241,235,0.82);
+      margin: 5px 5px 0;
+      padding: 10px 12px 9px;
+      border-radius: 25px 25px 18px 18px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.78) 0%, rgba(248,249,246,0.90) 58%, rgba(255,255,255,0.98) 100%);
+      border: 2px solid rgba(255,255,255,0.92);
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.58),
-        inset 2px 2px 5px rgba(255,255,255,0.58),
-        inset -2px -2px 6px rgba(197,207,196,0.08),
-        0 1px 4px rgba(180,186,176,0.05);
+        inset 0 0 0 2px rgba(255,255,255,0.46),
+        inset 2px 2px 5px rgba(255,255,255,0.76),
+        inset -3px -3px 7px rgba(205,214,204,0.12),
+        0 2px 6px rgba(186,193,184,0.08);
     }
 
     .word-card-mainline {
@@ -505,22 +506,22 @@ function ensureDictionaryPickerStyles() {
       align-items: center;
       gap: 8px;
       min-width: 0;
-      min-height: 28px;
+      min-height: 24px;
     }
 
     .word-card-title {
-      color: #111512;
-      font-size: clamp(16.5px, 4vw, 25px);
+      color: #1f6f56;
+      font-size: clamp(16px, 3.8vw, 23px);
       font-weight: 650;
       line-height: 1.05;
-      letter-spacing: -0.045em;
+      letter-spacing: -0.04em;
       min-width: 0;
       overflow-wrap: anywhere;
     }
 
     .word-card-transcription {
-      color: rgba(31,33,31,0.62);
-      font-size: clamp(12px, 2.75vw, 16px);
+      color: rgba(31,33,31,0.64);
+      font-size: clamp(11.5px, 2.65vw, 15px);
       font-weight: 430;
       line-height: 1.05;
       letter-spacing: -0.01em;
@@ -528,23 +529,23 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-sound-btn {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border: 0;
       background: transparent;
       color: #2f7d59;
       padding: 0;
-      margin-left: 1px;
+      margin-left: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.92;
+      opacity: 0.90;
       flex: 0 0 auto;
     }
 
     .word-sound-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 16.5px;
+      height: 16.5px;
       stroke: currentColor;
       stroke-width: 2.05;
       fill: none;
@@ -556,34 +557,36 @@ function ensureDictionaryPickerStyles() {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .word-pos-tab {
-      border: 1px solid rgba(225,231,224,0.80);
-      border-radius: 10px;
-      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(225,231,224,0.76);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
       color: #4d5250;
-      padding: 5px 9px;
-      min-width: 43px;
-      min-height: 25px;
-      font-size: clamp(10px, 2.25vw, 12.5px);
+      padding: 4px 8px;
+      min-width: 38px;
+      min-height: 22px;
+      font-size: clamp(9.5px, 2.1vw, 11.5px);
       font-weight: 620;
       line-height: 1;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.58), 0 1px 3px rgba(180,188,178,0.04);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.52),
+        0 1px 3px rgba(180,188,178,0.035);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
 
     .word-pos-tab.active {
       color: #ffffff;
-      background: #168346;
-      border-color: rgba(22,131,70,0.18);
-      box-shadow: 0 2px 6px rgba(22,131,70,0.08);
+      background: #1f6f56;
+      border-color: rgba(31,111,86,0.18);
+      box-shadow: 0 2px 5px rgba(31,111,86,0.07);
     }
 
     .word-card-body {
-      padding: 18px 21px 18px;
+      padding: 14px 21px 18px;
       background: rgba(255,255,255,0.54);
     }
 
