@@ -1089,7 +1089,12 @@ function ensureAddCurrentWordButton() {
 }
 
 async function addCurrentWordTranslationToDictionary() {
-  const word = (lastWordTranslateSource || document.getElementById("wordInput")?.value || "").trim();
+  const word = (
+    (currentWordTranslationCard ? getWordCardHeadword(currentWordTranslationCard) : "") ||
+    lastWordTranslateSource ||
+    document.getElementById("wordInput")?.value ||
+    ""
+  ).trim();
 
   if (!word) {
     alert("Нет слова для добавления.");
@@ -1469,17 +1474,19 @@ function parseJsonObject(value) {
 }
 
 function getStructuredWordCardFromAiData(data) {
-  const rawCard = parseJsonObject(data?.raw);
+  const serverCard = normalizeIncomingStructuredWordCard(data?.card);
+
+  if (serverCard && Array.isArray(serverCard.parts) && serverCard.parts.length) {
+    return serverCard;
+  }
+
+  const rawCard = normalizeIncomingStructuredWordCard(parseJsonObject(data?.raw));
 
   if (rawCard && Array.isArray(rawCard.parts) && rawCard.parts.length) {
     return rawCard;
   }
 
-  if (data?.card && Array.isArray(data.card.parts) && data.card.parts.length) {
-    return data.card;
-  }
-
-  const resultCard = parseJsonObject(data?.result);
+  const resultCard = normalizeIncomingStructuredWordCard(parseJsonObject(data?.result));
 
   if (resultCard && Array.isArray(resultCard.parts) && resultCard.parts.length) {
     return resultCard;
@@ -1488,13 +1495,96 @@ function getStructuredWordCardFromAiData(data) {
   return null;
 }
 
+function normalizeIncomingStructuredWordCard(value) {
+  if (!value || typeof value !== "object") return null;
+
+  const spellcheck = value.spellcheck && typeof value.spellcheck === "object" ? value.spellcheck : {};
+  const payload = value.card && typeof value.card === "object" ? value.card : value;
+
+  const query = String(
+    spellcheck.query ||
+    value.query ||
+    value.source_query ||
+    value.sourceQuery ||
+    payload.query ||
+    payload.source_query ||
+    payload.sourceQuery ||
+    lastWordTranslateSource ||
+    ""
+  ).trim();
+
+  const headword = String(
+    spellcheck.corrected_headword ||
+    spellcheck.correctedHeadword ||
+    spellcheck.headword ||
+    payload.headword ||
+    payload.head_word ||
+    payload.word ||
+    value.headword ||
+    value.head_word ||
+    value.word ||
+    query ||
+    lastWordTranslateSource ||
+    ""
+  ).trim();
+
+  const correctionNote = String(
+    spellcheck.correction_note ||
+    spellcheck.correctionNote ||
+    value.correction_note ||
+    value.correctionNote ||
+    payload.correction_note ||
+    payload.correctionNote ||
+    ""
+  ).trim();
+
+  const detectedLanguage = String(
+    spellcheck.detected_language ||
+    spellcheck.detectedLanguage ||
+    value.detected_language ||
+    value.detectedLanguage ||
+    payload.detected_language ||
+    payload.detectedLanguage ||
+    ""
+  ).trim();
+
+  return {
+    ...payload,
+    query,
+    headword,
+    word: headword,
+    correctionNote,
+    correction_note: correctionNote,
+    detectedLanguage: detectedLanguage || payload.detectedLanguage || payload.detected_language || value.detectedLanguage || value.detected_language || "",
+    detected_language: detectedLanguage || payload.detected_language || payload.detectedLanguage || value.detected_language || value.detectedLanguage || ""
+  };
+}
+
+function getWordCardHeadword(card) {
+  return String(
+    card?.headword ||
+    card?.head_word ||
+    card?.corrected_headword ||
+    card?.correctedHeadword ||
+    card?.word ||
+    card?.card?.headword ||
+    card?.card?.word ||
+    card?.spellcheck?.corrected_headword ||
+    card?.spellcheck?.correctedHeadword ||
+    card?.query ||
+    lastWordTranslateSource ||
+    ""
+  ).trim();
+}
+
 function getWordCardQuery(card) {
   return String(
     card?.query ||
     card?.source_query ||
     card?.sourceQuery ||
-    card?.word ||
+    card?.spellcheck?.query ||
     lastWordTranslateSource ||
+    getWordCardHeadword(card) ||
     ""
   ).trim();
 }
@@ -1546,7 +1636,7 @@ function getWordCardTranscription(card) {
 
   if (direct) return direct;
 
-  const query = getWordCardQuery(card).toLowerCase();
+  const query = getWordCardHeadword(card).toLowerCase();
 
   if (!isLikelyEnglishText(query)) return "";
 
@@ -1656,7 +1746,7 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
   const parts = getWordCardParts(card);
   const safeIndex = Math.max(0, Math.min(Number(partIndex) || 0, Math.max(parts.length - 1, 0)));
   const activePart = parts[safeIndex] || parts[0] || {};
-  const word = getWordCardQuery(card);
+  const word = getWordCardHeadword(card);
   const transcription = getWordCardTranscription(card);
 
   const tabsHtml = parts.length
