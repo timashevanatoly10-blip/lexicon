@@ -612,7 +612,7 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-body {
-      padding: 14px 8px 18px;
+      padding: 14px 13px 18px;
       background: rgba(255,255,255,0.54);
     }
 
@@ -638,8 +638,8 @@ function ensureDictionaryPickerStyles() {
     .word-meaning-item {
       position: relative;
       display: grid;
-      grid-template-columns: 18px minmax(0, 1fr);
-      gap: 2px;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 5px;
       padding: 0 0 12px;
       margin-bottom: 12px;
       border-bottom: 1px solid rgba(224,228,222,0.72);
@@ -656,7 +656,6 @@ function ensureDictionaryPickerStyles() {
       line-height: 1.25;
       padding-top: 1px;
       text-align: left;
-      letter-spacing: -0.02em;
     }
 
     .word-meaning-content { min-width: 0; }
@@ -693,11 +692,11 @@ function ensureDictionaryPickerStyles() {
 
     .word-meaning-example {
       margin-top: 7px;
-      padding: 6px 0 1px 6px;
+      padding: 6px 0 1px 8px;
       border-radius: 0;
       background: transparent;
       border: 0;
-      border-left: 2px solid rgba(95,153,98,0.14);
+      border-left: 3px solid rgba(95,153,98,0.16);
     }
 
     .word-meaning-example-source {
@@ -732,7 +731,7 @@ function ensureDictionaryPickerStyles() {
       background: transparent;
       border: 0;
       border-bottom: 1px solid rgba(224,228,222,0.58);
-      padding: 8px 0 9px;
+      padding: 8px 4px 9px;
       box-shadow: none;
     }
 
