@@ -482,6 +482,16 @@ function ensureDictionaryPickerStyles() {
       white-space: pre-wrap;
     }
 
+    .word-loading-note {
+      color: rgba(31,33,31,0.84);
+      font-size: clamp(16px, 3.7vw, 22px);
+      font-weight: 520;
+      line-height: 1.28;
+      letter-spacing: -0.015em;
+      padding: 20px 18px 76px;
+      white-space: normal;
+    }
+
     .word-card-view {
       min-height: 100%;
       display: flex;
@@ -493,6 +503,10 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-hero {
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      flex: 0 0 auto;
       margin: -2px -2px 0 -2px;
       width: calc(100% + 4px);
       box-sizing: border-box;
@@ -829,7 +843,7 @@ async function handleWordTranslate() {
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
-  setWordResult("Перевожу через GPT...", false);
+  setWordResultHtml(`<div class="word-loading-note">Думаю над переводом...</div>`, false);
   updateWordModeButtons();
 
   if (translateBtn) translateBtn.disabled = true;
@@ -2116,7 +2130,7 @@ async function handleTextTranslate() {
   textActivePanel = "translation";
 
   const output = document.getElementById("textTranslationOutput");
-  if (output) output.textContent = "Перевожу через GPT...";
+  if (output) output.textContent = "Думаю над переводом...";
 
   const tabs = document.getElementById("textPanelTabs");
   if (tabs) tabs.classList.remove("hidden");
