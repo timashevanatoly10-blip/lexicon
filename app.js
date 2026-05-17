@@ -784,26 +784,6 @@ function ensureDictionaryPickerStyles() {
       line-height: 1.4;
     }
 
-    /* Force meaning details and examples to start on the same vertical line as the meaning title */
-    .word-meaning-content .word-meaning-explanation,
-    .word-meaning-content .word-meaning-usage,
-    .word-meaning-content .word-meaning-example,
-    .word-meaning-content .word-meaning-example-source,
-    .word-meaning-content .word-meaning-example-translation {
-      margin-left: 0 !important;
-      padding-left: 0 !important;
-    }
-
-    .word-meaning-content .word-meaning-example {
-      border-left: 0 !important;
-      border-right: 0 !important;
-      border-top: 0 !important;
-      border-bottom: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-    }
-
     .word-mode-hint { display: none !important; }
 
     .text-mode-hint { display: none !important; }
