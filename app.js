@@ -488,9 +488,9 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-hero {
-      margin: 5px 5px 0;
-      padding: 10px 12px 9px;
-      border-radius: 25px 25px 18px 18px;
+      margin: 0;
+      padding: 12px 14px 10px;
+      border-radius: 27px 27px 18px 18px;
       background:
         radial-gradient(circle at 50% 52%, rgba(241,244,240,0.78) 0%, rgba(248,249,246,0.90) 58%, rgba(255,255,255,0.98) 100%);
       border: 2px solid rgba(255,255,255,0.92);
@@ -506,26 +506,31 @@ function ensureDictionaryPickerStyles() {
       align-items: center;
       gap: 8px;
       min-width: 0;
-      min-height: 24px;
+      min-height: 23px;
+      flex-wrap: nowrap;
     }
 
     .word-card-title {
       color: #1f6f56;
-      font-size: clamp(16px, 3.8vw, 23px);
+      font-size: clamp(16px, 3.75vw, 22px);
       font-weight: 650;
       line-height: 1.05;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.035em;
       min-width: 0;
-      overflow-wrap: anywhere;
+      max-width: 58%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .word-card-transcription {
       color: rgba(31,33,31,0.64);
-      font-size: clamp(11.5px, 2.65vw, 15px);
+      font-size: clamp(11.5px, 2.6vw, 15px);
       font-weight: 430;
       line-height: 1.05;
       letter-spacing: -0.01em;
       white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .word-sound-btn {
