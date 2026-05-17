@@ -464,13 +464,15 @@ function ensureDictionaryPickerStyles() {
       color: rgba(119,122,119,0.42);
     }
 
-    .word-result-output {
+    .word-result-output,
+    .word-result-output.text-translation-output {
       line-height: 1.34;
       white-space: normal;
       word-break: normal;
       padding: 0 0 82px !important;
       font-size: clamp(13px, 3.05vw, 18px);
       overflow-x: hidden;
+      box-sizing: border-box;
     }
 
     .word-result-output.empty {
@@ -485,10 +487,15 @@ function ensureDictionaryPickerStyles() {
       display: flex;
       flex-direction: column;
       background: rgba(250,251,248,0.94);
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
     .word-card-hero {
-      margin: 0;
+      margin: -2px -2px 0 -2px;
+      width: calc(100% + 4px);
+      box-sizing: border-box;
       padding: 12px 14px 10px;
       border-radius: 27px 27px 18px 18px;
       background:
