@@ -612,7 +612,7 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-card-body {
-      padding: 14px 21px 18px;
+      padding: 14px 13px 18px;
       background: rgba(255,255,255,0.54);
     }
 
@@ -622,7 +622,8 @@ function ensureDictionaryPickerStyles() {
       font-weight: 650;
       line-height: 1.2;
       letter-spacing: 0.04em;
-      margin: 2px 0 13px;
+      margin: 2px 0 12px;
+      padding: 0 4px;
     }
 
     .word-meanings-list {
@@ -637,11 +638,11 @@ function ensureDictionaryPickerStyles() {
     .word-meaning-item {
       position: relative;
       display: grid;
-      grid-template-columns: 27px minmax(0, 1fr);
-      gap: 8px;
-      padding: 0 0 13px;
-      margin-bottom: 13px;
-      border-bottom: 1px solid rgba(224,228,222,0.78);
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 5px;
+      padding: 0 0 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(224,228,222,0.72);
       background: transparent;
       border-radius: 0;
     }
@@ -650,55 +651,57 @@ function ensureDictionaryPickerStyles() {
 
     .word-meaning-number {
       color: #168346;
-      font-size: clamp(13px, 3vw, 17px);
+      font-size: clamp(12.5px, 2.85vw, 16px);
       font-weight: 700;
       line-height: 1.25;
       padding-top: 1px;
+      text-align: left;
     }
 
     .word-meaning-content { min-width: 0; }
 
     .word-meaning-translation {
       color: #1f211f;
-      font-size: clamp(15px, 3.45vw, 20px);
+      font-size: clamp(14.5px, 3.2vw, 18.5px);
       font-weight: 650;
-      line-height: 1.23;
+      line-height: 1.22;
       letter-spacing: -0.015em;
     }
 
     .word-meaning-explanation {
-      margin-top: 5px;
+      margin-top: 4px;
       color: rgba(31,33,31,0.68);
-      font-size: clamp(12px, 2.85vw, 15.5px);
+      font-size: clamp(12px, 2.75vw, 15px);
       font-weight: 430;
-      line-height: 1.32;
+      line-height: 1.30;
     }
 
     .word-meaning-usage {
-      margin-top: 7px;
+      margin-top: 6px;
       display: inline-flex;
       width: fit-content;
       max-width: 100%;
       border-radius: 999px;
       background: rgba(95,153,98,0.11);
       color: #1f6f56;
-      padding: 4px 9px;
-      font-size: clamp(10px, 2.35vw, 12.5px);
+      padding: 3px 8px;
+      font-size: clamp(9.5px, 2.25vw, 12px);
       font-weight: 600;
       line-height: 1.15;
     }
 
     .word-meaning-example {
-      margin-top: 9px;
-      padding: 9px 10px 8px;
-      border-radius: 13px;
-      background: rgba(253,253,252,0.54);
-      border: 1px solid rgba(226,231,224,0.70);
+      margin-top: 7px;
+      padding: 6px 0 1px 8px;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      border-left: 3px solid rgba(95,153,98,0.16);
     }
 
     .word-meaning-example-source {
-      color: #1f211f;
-      font-size: clamp(12px, 2.85vw, 15px);
+      color: rgba(31,33,31,0.82);
+      font-size: clamp(12px, 2.75vw, 14.8px);
       font-weight: 520;
       line-height: 1.28;
       letter-spacing: -0.01em;
@@ -706,43 +709,48 @@ function ensureDictionaryPickerStyles() {
 
     .word-meaning-example-translation {
       margin-top: 4px;
-      color: rgba(31,33,31,0.60);
-      font-size: clamp(11px, 2.55vw, 13.8px);
+      color: rgba(31,33,31,0.56);
+      font-size: clamp(11px, 2.5vw, 13.5px);
       font-style: italic;
       line-height: 1.28;
     }
 
-    .word-examples-block { margin-top: 13px; padding-top: 0; }
+    .word-examples-block { margin-top: 12px; padding-top: 0; }
 
     .word-examples-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 0;
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
     .word-example-item {
-      border-radius: 13px;
-      background: rgba(253,253,252,0.68);
-      border: 1px solid rgba(226,231,224,0.84);
-      padding: 10px 12px 9px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.54);
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(224,228,222,0.58);
+      padding: 8px 4px 9px;
+      box-shadow: none;
+    }
+
+    .word-example-item:last-child {
+      border-bottom: 0;
     }
 
     .word-example-source {
-      color: #1f211f;
-      font-size: clamp(13px, 3.05vw, 17px);
+      color: rgba(31,33,31,0.84);
+      font-size: clamp(12.5px, 2.9vw, 16px);
       font-weight: 520;
       line-height: 1.28;
       letter-spacing: -0.01em;
     }
 
     .word-example-translation {
-      margin-top: 5px;
-      color: rgba(31,33,31,0.62);
-      font-size: clamp(11.5px, 2.7vw, 14.5px);
+      margin-top: 4px;
+      color: rgba(31,33,31,0.56);
+      font-size: clamp(11.2px, 2.6vw, 14px);
       font-style: italic;
       line-height: 1.28;
     }
