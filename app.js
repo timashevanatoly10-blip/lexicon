@@ -691,6 +691,7 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-meaning-example {
+      grid-column: 1 / -1;
       margin-top: 7px;
       padding: 6px 0 1px 8px;
       border-radius: 0;
@@ -1816,13 +1817,13 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
                 ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
                 ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
                 ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
-                ${(exampleSource || exampleTranslation) ? `
-                  <div class="word-meaning-example">
-                    ${exampleSource ? `<div class="word-meaning-example-source">${escapeHTML(exampleSource)}</div>` : ""}
-                    ${exampleTranslation ? `<div class="word-meaning-example-translation">${escapeHTML(exampleTranslation)}</div>` : ""}
-                  </div>
-                ` : ""}
               </div>
+              ${(exampleSource || exampleTranslation) ? `
+                <div class="word-meaning-example">
+                  ${exampleSource ? `<div class="word-meaning-example-source">${escapeHTML(exampleSource)}</div>` : ""}
+                  ${exampleTranslation ? `<div class="word-meaning-example-translation">${escapeHTML(exampleTranslation)}</div>` : ""}
+                </div>
+              ` : ""}
             </li>
           `;
         }).join("")}
