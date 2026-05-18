@@ -669,11 +669,17 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-meaning-explanation {
-      margin-top: 4px;
+      grid-column: 1 / -1;
+      margin-top: 5px;
       color: rgba(31,33,31,0.68);
       font-size: clamp(12px, 2.75vw, 15px);
       font-weight: 430;
       line-height: 1.30;
+    }
+
+    .word-meaning-usage-row {
+      grid-column: 2 / -1;
+      min-width: 0;
     }
 
     .word-meaning-usage {
@@ -1815,9 +1821,9 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
               <div class="word-meaning-number">${index + 1}.</div>
               <div class="word-meaning-content">
                 ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
-                ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
-                ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
               </div>
+              ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
+              ${usage ? `<div class="word-meaning-usage-row"><div class="word-meaning-usage">${escapeHTML(usage)}</div></div>` : ""}
               ${(exampleSource || exampleTranslation) ? `
                 <div class="word-meaning-example">
                   ${exampleSource ? `<div class="word-meaning-example-source">${escapeHTML(exampleSource)}</div>` : ""}
