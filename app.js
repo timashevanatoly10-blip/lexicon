@@ -22,6 +22,7 @@ let wordCopiedValue = "";
 let currentWordTranslationCard = null;
 let currentWordPartIndex = 0;
 let wordExamplesExpanded = false;
+let wordActivePanel = "center";
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -616,6 +617,51 @@ function ensureDictionaryPickerStyles() {
       background: rgba(255,255,255,0.54);
     }
 
+    .word-detail-swipe-frame {
+      width: 100%;
+      overflow: hidden;
+      background: rgba(255,255,255,0.54);
+      touch-action: pan-y;
+    }
+
+    .word-detail-swipe-track {
+      width: 300%;
+      display: flex;
+      align-items: stretch;
+      transform: translateX(-33.333333%);
+      transition: transform 0.24s ease;
+      will-change: transform;
+    }
+
+    .word-detail-panel {
+      width: 33.333333%;
+      flex: 0 0 33.333333%;
+      min-width: 0;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.54);
+    }
+
+    .word-side-placeholder {
+      padding: 22px 18px 96px;
+      min-height: 310px;
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(14px, 3vw, 17px);
+      line-height: 1.38;
+    }
+
+    .word-side-placeholder-title {
+      color: #1f6f56;
+      font-size: clamp(16px, 3.45vw, 20px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .word-side-placeholder-text {
+      max-width: 86%;
+    }
+
     .word-section-title {
       color: rgba(31,33,31,0.70);
       font-size: clamp(12px, 2.75vw, 15px);
@@ -849,6 +895,7 @@ async function handleWordTranslate() {
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
+  wordActivePanel = "center";
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -1429,6 +1476,7 @@ function bindWordModeEvents() {
       currentWordTranslationCard = null;
       currentWordPartIndex = 0;
       wordExamplesExpanded = false;
+      wordActivePanel = "center";
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -1440,6 +1488,8 @@ function bindWordModeEvents() {
       }
     };
   }
+
+  bindWordSwipe();
 
   updateWordModeButtons();
   updateWordCopyFeedback();
@@ -1455,6 +1505,12 @@ function getWordModeResultValue() {
 
   if (!resultOutput || resultOutput.classList.contains("empty")) {
     return "";
+  }
+
+  const activePanel = resultOutput.querySelector(`[data-word-swipe-panel="${wordActivePanel}"]`);
+
+  if (activePanel) {
+    return String(activePanel.innerText || "").trim();
   }
 
   return String(resultOutput.innerText || "").trim();
@@ -1773,6 +1829,7 @@ function renderStructuredWordCard(card, partIndex = 0) {
 
   setWordResultHtml(buildStructuredWordCardHtml(card, currentWordPartIndex), false);
   bindWordPartTabs();
+  updateWordSwipeUI();
   updateWordModeButtons();
   updateWordCopyFeedback();
 }
@@ -1866,12 +1923,96 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
         ${tabsHtml}
       </div>
 
-      <div class="word-card-body">
-        ${meaningsHtml}
-        ${examplesHtml}
+      <div class="word-detail-swipe-frame" id="wordDetailSwipeFrame">
+        <div class="word-detail-swipe-track" id="wordDetailSwipeTrack">
+          <section class="word-detail-panel word-detail-panel-left" data-word-swipe-panel="left">
+            ${buildWordSidePlaceholderHtml("Мемосхемы", "Здесь появятся ассоциации, образы и способы запоминания слова.")}
+          </section>
+
+          <section class="word-detail-panel word-detail-panel-center" data-word-swipe-panel="center">
+            <div class="word-card-body">
+              ${meaningsHtml}
+              ${examplesHtml}
+            </div>
+          </section>
+
+          <section class="word-detail-panel word-detail-panel-right" data-word-swipe-panel="right">
+            ${buildWordSidePlaceholderHtml("Подробный разбор", "Здесь появятся нюансы употребления, синонимы, фразы и похожие слова.")}
+          </section>
+        </div>
       </div>
     </div>
   `;
+}
+
+function buildWordSidePlaceholderHtml(title, text) {
+  return `
+    <div class="word-side-placeholder">
+      <div class="word-side-placeholder-title">${escapeHTML(title)}</div>
+      <div class="word-side-placeholder-text">${escapeHTML(text)}</div>
+    </div>
+  `;
+}
+
+function switchWordPanel(panelName) {
+  if (!["left", "center", "right"].includes(panelName)) return;
+
+  wordActivePanel = panelName;
+  updateWordSwipeUI();
+  updateWordCopyFeedback();
+}
+
+function updateWordSwipeUI() {
+  const track = document.getElementById("wordDetailSwipeTrack");
+
+  if (!track) return;
+
+  const offsets = {
+    left: "0%",
+    center: "-33.333333%",
+    right: "-66.666666%"
+  };
+
+  track.style.transform = `translateX(${offsets[wordActivePanel] || offsets.center})`;
+}
+
+function bindWordSwipe() {
+  const frame = document.getElementById("wordSwipeFrame");
+
+  if (!frame || frame.dataset.wordSwipeBound === "1") return;
+
+  frame.dataset.wordSwipeBound = "1";
+
+  let startX = 0;
+  let startY = 0;
+  let started = false;
+
+  frame.addEventListener("touchstart", (event) => {
+    if (!currentWordTranslationCard || !event.touches || !event.touches.length) return;
+
+    started = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  frame.addEventListener("touchend", (event) => {
+    if (!started || !currentWordTranslationCard || !event.changedTouches || !event.changedTouches.length) return;
+
+    started = false;
+
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0) {
+      if (wordActivePanel === "left") switchWordPanel("center");
+      else if (wordActivePanel === "center") switchWordPanel("right");
+    } else {
+      if (wordActivePanel === "right") switchWordPanel("center");
+      else if (wordActivePanel === "center") switchWordPanel("left");
+    }
+  }, { passive: true });
 }
 
 function bindWordPartTabs() {
@@ -1883,6 +2024,7 @@ function bindWordPartTabs() {
 
       wordCopiedValue = "";
       wordExamplesExpanded = false;
+      wordActivePanel = "center";
       renderStructuredWordCard(currentWordTranslationCard, index);
     };
   });
@@ -1911,6 +2053,7 @@ function clearWordMode() {
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
+  wordActivePanel = "center";
 
   if (wordInput) {
     wordInput.value = "";
@@ -2592,6 +2735,7 @@ function openSelectedTextWordInWordMode() {
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
+  wordActivePanel = "center";
 
   if (wordInput) {
     wordInput.value = word;
@@ -3267,6 +3411,7 @@ function openWordFromDictionary(word) {
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
+  wordActivePanel = "center";
 
   if (wordInput) {
     wordInput.value = lastWordTranslateSource;
@@ -3556,4 +3701,3 @@ function cssEscape(value) {
   }
   return (value || "").toString().replace(/[^a-zA-Z0-9_-]/g, "\\$&");
 }
-
