@@ -23,6 +23,9 @@ let currentWordTranslationCard = null;
 let currentWordPartIndex = 0;
 let wordExamplesExpanded = false;
 let wordActivePanel = "center";
+let wordSideRequestId = 0;
+let wordLeftPanelHtml = "";
+let wordRightPanelHtml = "";
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -662,6 +665,17 @@ function ensureDictionaryPickerStyles() {
       max-width: 86%;
     }
 
+
+    .word-side-result {
+      padding: 18px 14px 96px;
+      min-height: 310px;
+      color: rgba(31,33,31,0.82);
+      font-size: clamp(13px, 3.05vw, 17px);
+      line-height: 1.38;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .word-section-title {
       color: rgba(31,33,31,0.70);
       font-size: clamp(12px, 2.75vw, 15px);
@@ -896,6 +910,9 @@ async function handleWordTranslate() {
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
   wordActivePanel = "center";
+  wordSideRequestId += 1;
+  wordLeftPanelHtml = "";
+  wordRightPanelHtml = "";
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -910,6 +927,7 @@ async function handleWordTranslate() {
 
     if (card && Array.isArray(card.parts) && card.parts.length) {
       renderStructuredWordCard(card, 0);
+      startWordSideRequests(card);
     } else {
       currentWordTranslationCard = null;
       currentWordPartIndex = 0;
@@ -1477,6 +1495,9 @@ function bindWordModeEvents() {
       currentWordPartIndex = 0;
       wordExamplesExpanded = false;
       wordActivePanel = "center";
+      wordSideRequestId += 1;
+      wordLeftPanelHtml = "";
+      wordRightPanelHtml = "";
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -1926,7 +1947,7 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
       <div class="word-detail-swipe-frame" id="wordDetailSwipeFrame">
         <div class="word-detail-swipe-track" id="wordDetailSwipeTrack">
           <section class="word-detail-panel word-detail-panel-left" data-word-swipe-panel="left">
-            ${buildWordSidePlaceholderHtml("Мемосхемы", "Здесь появятся ассоциации, образы и способы запоминания слова.")}
+            ${buildWordSidePanelHtml("left")}
           </section>
 
           <section class="word-detail-panel word-detail-panel-center" data-word-swipe-panel="center">
@@ -1937,7 +1958,7 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
           </section>
 
           <section class="word-detail-panel word-detail-panel-right" data-word-swipe-panel="right">
-            ${buildWordSidePlaceholderHtml("Подробный разбор", "Здесь появятся нюансы употребления, синонимы, фразы и похожие слова.")}
+            ${buildWordSidePanelHtml("right")}
           </section>
         </div>
       </div>
@@ -1945,13 +1966,78 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
   `;
 }
 
-function buildWordSidePlaceholderHtml(title, text) {
+function buildWordSidePanelHtml(side) {
+  const html = side === "left" ? wordLeftPanelHtml : wordRightPanelHtml;
+
+  if (html) return html;
+
+  return buildWordSidePlaceholderHtml("Думаю...");
+}
+
+function buildWordSidePlaceholderHtml(text) {
   return `
     <div class="word-side-placeholder">
-      <div class="word-side-placeholder-title">${escapeHTML(title)}</div>
       <div class="word-side-placeholder-text">${escapeHTML(text)}</div>
     </div>
   `;
+}
+
+function buildWordSideResultHtml(text) {
+  const value = String(text || "").trim() || "Пустой ответ.";
+
+  return `
+    <div class="word-side-result">
+      ${escapeHTML(value)}
+    </div>
+  `;
+}
+
+function setWordSidePanelHtml(side, html) {
+  if (side !== "left" && side !== "right") return;
+
+  if (side === "left") {
+    wordLeftPanelHtml = html || "";
+  } else {
+    wordRightPanelHtml = html || "";
+  }
+
+  const panel = document.querySelector(`[data-word-swipe-panel="${side}"]`);
+
+  if (panel) {
+    panel.innerHTML = side === "left" ? wordLeftPanelHtml : wordRightPanelHtml;
+  }
+
+  updateWordCopyFeedback();
+}
+
+async function startWordSideRequests(card) {
+  const headword = getWordCardHeadword(card);
+
+  if (!headword) return;
+
+  const requestId = ++wordSideRequestId;
+
+  setWordSidePanelHtml("left", buildWordSidePlaceholderHtml("Думаю..."));
+  setWordSidePanelHtml("right", buildWordSidePlaceholderHtml("Думаю..."));
+
+  loadWordSidePanel("left", "word_left", headword, requestId);
+  loadWordSidePanel("right", "word_right", headword, requestId);
+}
+
+async function loadWordSidePanel(side, mode, headword, requestId) {
+  try {
+    const data = await callAi(mode, headword);
+
+    if (requestId !== wordSideRequestId) return;
+
+    const result = String(data.result || data.raw || "").trim() || "Пустой ответ.";
+
+    setWordSidePanelHtml(side, buildWordSideResultHtml(result));
+  } catch (err) {
+    if (requestId !== wordSideRequestId) return;
+
+    setWordSidePanelHtml(side, buildWordSideResultHtml("Ошибка:\n" + err.message));
+  }
 }
 
 function switchWordPanel(panelName) {
@@ -2054,6 +2140,9 @@ function clearWordMode() {
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
   wordActivePanel = "center";
+  wordSideRequestId += 1;
+  wordLeftPanelHtml = "";
+  wordRightPanelHtml = "";
 
   if (wordInput) {
     wordInput.value = "";
@@ -2736,6 +2825,9 @@ function openSelectedTextWordInWordMode() {
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
   wordActivePanel = "center";
+  wordSideRequestId += 1;
+  wordLeftPanelHtml = "";
+  wordRightPanelHtml = "";
 
   if (wordInput) {
     wordInput.value = word;
@@ -3412,6 +3504,9 @@ function openWordFromDictionary(word) {
   currentWordPartIndex = 0;
   wordExamplesExpanded = false;
   wordActivePanel = "center";
+  wordSideRequestId += 1;
+  wordLeftPanelHtml = "";
+  wordRightPanelHtml = "";
 
   if (wordInput) {
     wordInput.value = lastWordTranslateSource;
