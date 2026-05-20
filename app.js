@@ -677,6 +677,175 @@ function ensureDictionaryPickerStyles() {
     }
 
 
+
+    .word-left-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding: 11px 9px 96px;
+      min-height: 310px;
+      color: #1f211f;
+    }
+
+    .word-left-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,252,0.96) 0%, rgba(248,247,241,0.94) 100%);
+      border: 1px solid rgba(226,224,214,0.78);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.52),
+        inset 2px 2px 6px rgba(255,255,255,0.64),
+        0 2px 8px rgba(180,170,140,0.045);
+      padding: 12px 12px 12px;
+    }
+
+    .word-left-card.hero {
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.0) 34%),
+        linear-gradient(180deg, rgba(255,255,251,0.98) 0%, rgba(247,246,238,0.95) 100%);
+      border-color: rgba(222,220,207,0.82);
+      padding: 14px 13px 13px;
+    }
+
+    .word-left-card.visual {
+      background:
+        radial-gradient(circle at 18% 10%, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0) 36%),
+        linear-gradient(180deg, rgba(246,249,244,0.96) 0%, rgba(239,245,238,0.92) 100%);
+      border-color: rgba(95,153,98,0.14);
+    }
+
+    .word-left-topline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .word-left-icon {
+      width: 26px;
+      height: 26px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.08);
+      border: 1px solid rgba(95,153,98,0.14);
+      color: #1f6f56;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1;
+    }
+
+    .word-left-label {
+      color: rgba(31,33,31,0.58);
+      font-size: clamp(9.5px, 2.15vw, 12px);
+      font-weight: 720;
+      line-height: 1;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .word-left-main {
+      color: #1f211f;
+      font-size: clamp(15.5px, 3.45vw, 20px);
+      font-weight: 690;
+      line-height: 1.22;
+      letter-spacing: -0.028em;
+    }
+
+    .word-left-text {
+      color: rgba(31,33,31,0.76);
+      font-size: clamp(12.2px, 2.8vw, 15.3px);
+      font-weight: 440;
+      line-height: 1.36;
+      letter-spacing: -0.006em;
+    }
+
+    .word-left-scene {
+      position: relative;
+      margin-top: 2px;
+      padding: 1px 0 1px 10px;
+      border-left: 3px solid rgba(95,153,98,0.15);
+      color: rgba(31,33,31,0.80);
+      font-size: clamp(12.4px, 2.85vw, 15.6px);
+      font-weight: 470;
+      line-height: 1.37;
+      letter-spacing: -0.008em;
+    }
+
+    .word-left-hook {
+      color: #1f6f56;
+      font-size: clamp(13px, 3vw, 16.5px);
+      font-weight: 720;
+      line-height: 1.28;
+      letter-spacing: -0.014em;
+    }
+
+    .word-left-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .word-left-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.09);
+      color: #1f6f56;
+      padding: 4px 8px;
+      font-size: clamp(9.7px, 2.2vw, 12.2px);
+      font-weight: 650;
+      line-height: 1.12;
+      white-space: nowrap;
+    }
+
+    .word-left-visual-copy {
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(11.2px, 2.55vw, 13.8px);
+      line-height: 1.32;
+      margin: 2px 0 10px;
+    }
+
+    .word-left-visual-btn {
+      width: 100%;
+      min-height: 39px;
+      border: 2px solid rgba(255,255,255,0.94);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
+      color: #5f9962;
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 720;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.15),
+        0 2px 5px rgba(186,193,184,0.08);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    .word-left-visual-btn:active {
+      transform: scale(0.98);
+    }
+
+    .word-left-visual-note {
+      margin-top: 8px;
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(10.5px, 2.35vw, 12.8px);
+      line-height: 1.28;
+      text-align: center;
+    }
+
+
     .word-right-dashboard {
       display: flex;
       flex-direction: column;
@@ -1998,6 +2167,7 @@ function renderStructuredWordCard(card, partIndex = 0) {
 
   setWordResultHtml(buildStructuredWordCardHtml(card, currentWordPartIndex), false);
   bindWordPartTabs();
+  bindWordLeftVisualButtons();
   updateWordSwipeUI();
   updateWordModeButtons();
   updateWordCopyFeedback();
@@ -2155,6 +2325,10 @@ function setWordSidePanelHtml(side, html) {
     panel.innerHTML = side === "left" ? wordLeftPanelHtml : wordRightPanelHtml;
   }
 
+  if (side === "left") {
+    bindWordLeftVisualButtons();
+  }
+
   updateWordCopyFeedback();
 }
 
@@ -2178,6 +2352,16 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
 
     if (requestId !== wordSideRequestId) return;
 
+    if (side === "left") {
+      const leftPayload = getWordLeftPayloadFromAiData(data);
+
+      if (leftPayload) {
+        setWordSidePanelHtml(side, buildWordLeftDashboardHtml(leftPayload));
+        bindWordLeftVisualButtons();
+        return;
+      }
+    }
+
     if (side === "right") {
       const rightPayload = getWordRightPayloadFromAiData(data);
 
@@ -2196,6 +2380,184 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
     setWordSidePanelHtml(side, buildWordSideResultHtml("Ошибка:\n" + err.message));
   }
 }
+
+
+
+function getWordLeftPayloadFromAiData(data) {
+  const candidates = [
+    data?.card,
+    data?.payload,
+    data?.left,
+    data?.memory,
+    parseJsonObject(data?.result),
+    parseJsonObject(data?.raw)
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === "object") {
+      return normalizeWordLeftPayload(candidate);
+    }
+  }
+
+  return null;
+}
+
+function normalizeWordLeftPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const source = payload.card && typeof payload.card === "object" ? payload.card : payload;
+
+  const mnemonic = String(source.mnemonic || source.memory_hook || source.memoryHook || "").trim();
+  const association = String(source.association || source.visual_association || source.visualAssociation || "").trim();
+  const scene = String(source.scene || source.mini_scene || source.miniScene || source.visual_scene || source.visualScene || "").trim();
+  const emotionalHook = String(source.emotional_hook || source.emotionalHook || source.hook || "").trim();
+  const visualPlaceholder = String(source.visual_placeholder || source.visualPlaceholder || source.visual || "").trim() || "Создать образ";
+
+  const chips = normalizeStringArray(
+    source.chips ||
+    source.key_images ||
+    source.keyImages ||
+    source.sensory_tags ||
+    source.sensoryTags ||
+    source.memory_chips ||
+    source.memoryChips
+  );
+
+  if (!mnemonic && !association && !scene && !emotionalHook && !chips.length) {
+    return null;
+  }
+
+  return {
+    mnemonic,
+    association,
+    scene,
+    emotional_hook: emotionalHook,
+    visual_placeholder: visualPlaceholder,
+    chips
+  };
+}
+
+function buildWordLeftDashboardHtml(payload) {
+  const blocks = [];
+
+  blocks.push(buildWordLeftHeroCard("🧠", "Мнемоника", payload.mnemonic));
+  blocks.push(buildWordLeftTextCard("◎", "Ассоциация", payload.association));
+  blocks.push(buildWordLeftSceneCard("◐", "Мини-сцена", payload.scene));
+  blocks.push(buildWordLeftHookCard("✦", "Крючок памяти", payload.emotional_hook));
+
+  if (Array.isArray(payload.chips) && payload.chips.length) {
+    blocks.push(buildWordLeftChipsCard("⋯", "Образы", payload.chips));
+  }
+
+  blocks.push(buildWordLeftVisualCard(payload.visual_placeholder));
+
+  const html = blocks.filter(Boolean).join("");
+
+  return `
+    <div class="word-left-dashboard">
+      ${html || `<div class="word-side-result">Пустой ответ.</div>`}
+    </div>
+  `;
+}
+
+function buildWordLeftCard(icon, label, contentHtml, options = {}) {
+  if (!contentHtml) return "";
+
+  return `
+    <section class="word-left-card ${options.hero ? "hero" : ""} ${options.visual ? "visual" : ""}">
+      <div class="word-left-topline">
+        <div class="word-left-icon">${escapeHTML(icon)}</div>
+        <div class="word-left-label">${escapeHTML(label)}</div>
+      </div>
+      ${contentHtml}
+    </section>
+  `;
+}
+
+function buildWordLeftHeroCard(icon, label, text) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+
+  return buildWordLeftCard(
+    icon,
+    label,
+    `<div class="word-left-main">${escapeHTML(value)}</div>`,
+    { hero: true }
+  );
+}
+
+function buildWordLeftTextCard(icon, label, text) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+
+  return buildWordLeftCard(
+    icon,
+    label,
+    `<div class="word-left-text">${escapeHTML(value)}</div>`
+  );
+}
+
+function buildWordLeftSceneCard(icon, label, text) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+
+  return buildWordLeftCard(
+    icon,
+    label,
+    `<div class="word-left-scene">${escapeHTML(value)}</div>`
+  );
+}
+
+function buildWordLeftHookCard(icon, label, text) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+
+  return buildWordLeftCard(
+    icon,
+    label,
+    `<div class="word-left-hook">${escapeHTML(value)}</div>`
+  );
+}
+
+function buildWordLeftChipsCard(icon, label, items) {
+  const values = compactList(normalizeStringArray(items), 8);
+  if (!values.length) return "";
+
+  return buildWordLeftCard(
+    icon,
+    label,
+    `<div class="word-left-chip-row">${values.map((item) => `<span class="word-left-chip">${escapeHTML(item)}</span>`).join("")}</div>`
+  );
+}
+
+function buildWordLeftVisualCard(label) {
+  const buttonText = String(label || "").trim() || "Создать образ";
+
+  return buildWordLeftCard(
+    "▧",
+    "Визуал",
+    `
+      <div class="word-left-visual-copy">Здесь позже можно будет создать ассоциативную картинку для запоминания слова.</div>
+      <button class="word-left-visual-btn" type="button" data-word-left-visual="1">${escapeHTML(buttonText)}</button>
+      <div class="word-left-visual-note">Пока это заготовка под будущую генерацию образа.</div>
+    `,
+    { visual: true }
+  );
+}
+
+function bindWordLeftVisualButtons() {
+  document.querySelectorAll("[data-word-left-visual]").forEach((btn) => {
+    if (btn.dataset.bound === "1") return;
+
+    btn.dataset.bound = "1";
+    btn.onclick = () => {
+      btn.textContent = "Скоро добавим";
+      btn.disabled = true;
+      btn.style.opacity = "0.68";
+    };
+  });
+}
+
 
 
 function getWordRightPayloadFromAiData(data) {
