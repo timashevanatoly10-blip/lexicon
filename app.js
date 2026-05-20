@@ -676,6 +676,154 @@ function ensureDictionaryPickerStyles() {
       word-break: break-word;
     }
 
+
+    .word-right-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      padding: 10px 8px 96px;
+      min-height: 310px;
+      color: #1f211f;
+    }
+
+    .word-right-card {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: start;
+      padding: 10px 10px 10px 8px;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(226,231,224,0.74);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.46),
+        0 1px 4px rgba(180,188,178,0.035);
+    }
+
+    .word-right-card.soft {
+      background: rgba(95,153,98,0.07);
+      border-color: rgba(95,153,98,0.12);
+    }
+
+    .word-right-icon {
+      width: 25px;
+      height: 25px;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.08);
+      border: 1px solid rgba(95,153,98,0.14);
+      color: #1f6f56;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .word-right-main { min-width: 0; }
+
+    .word-right-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .word-right-title {
+      color: #1f211f;
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 720;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+
+    .word-right-more {
+      color: #1f6f56;
+      font-size: clamp(9.5px, 2.1vw, 11.5px);
+      font-weight: 650;
+      white-space: nowrap;
+      opacity: 0.82;
+    }
+
+    .word-right-content {
+      color: rgba(31,33,31,0.74);
+      font-size: clamp(11.2px, 2.55vw, 13.8px);
+      font-weight: 430;
+      line-height: 1.32;
+      letter-spacing: -0.006em;
+      word-break: normal;
+    }
+
+    .word-right-content.english {
+      color: rgba(31,33,31,0.78);
+      font-size: clamp(11.6px, 2.65vw, 14.2px);
+    }
+
+    .word-right-chevron {
+      color: #1f6f56;
+      opacity: 0.75;
+      font-size: 16px;
+      line-height: 1;
+      padding-top: 2px;
+    }
+
+    .word-right-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 1px;
+    }
+
+    .word-right-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.10);
+      color: #1f6f56;
+      padding: 3px 7px;
+      font-size: clamp(9.5px, 2.15vw, 12px);
+      font-weight: 650;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .word-right-line-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .word-right-line strong {
+      color: rgba(31,33,31,0.88);
+      font-weight: 650;
+    }
+
+    .word-right-line .ru {
+      color: rgba(31,33,31,0.56);
+      font-style: italic;
+    }
+
+    .word-right-mistake {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .word-right-wrong {
+      color: rgba(150,48,45,0.90);
+      font-weight: 600;
+    }
+
+    .word-right-correct {
+      color: #1f6f56;
+      font-weight: 650;
+    }
+
+    .word-right-muted { color: rgba(31,33,31,0.56); }
+
     .word-section-title {
       color: rgba(31,33,31,0.70);
       font-size: clamp(12px, 2.75vw, 15px);
@@ -2029,6 +2177,15 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
     const data = await callAi(mode, headword);
 
     if (requestId !== wordSideRequestId) return;
+
+    if (side === "right") {
+      const rightPayload = getWordRightPayloadFromAiData(data);
+
+      if (rightPayload) {
+        setWordSidePanelHtml(side, buildWordRightDashboardHtml(rightPayload));
+        return;
+      }
+    }
 
     const result = String(data.result || data.raw || "").trim() || "Пустой ответ.";
 
