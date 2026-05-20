@@ -2197,6 +2197,272 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
   }
 }
 
+
+function getWordRightPayloadFromAiData(data) {
+  const candidates = [
+    data?.card,
+    data?.payload,
+    data?.right,
+    parseJsonObject(data?.result),
+    parseJsonObject(data?.raw)
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === "object") {
+      return normalizeWordRightPayload(candidate);
+    }
+  }
+
+  return null;
+}
+
+function normalizeWordRightPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const source = payload.card && typeof payload.card === "object" ? payload.card : payload;
+
+  return {
+    headword: String(source.headword || source.word || source.query || "").trim(),
+    detected_language: String(source.detected_language || source.detectedLanguage || "").trim(),
+    pos_focus: String(source.pos_focus || source.posFocus || source.pos || "").trim(),
+    english_definition: String(source.english_definition || source.englishDefinition || source.definition || "").trim(),
+    semantic_core: normalizeStringArray(source.semantic_core || source.semanticCore || source.core),
+    synonyms: normalizeStringArray(source.synonyms),
+    antonyms: normalizeStringArray(source.antonyms),
+    collocations: normalizeObjectArray(source.collocations),
+    grammar_patterns: normalizeObjectArray(source.grammar_patterns || source.grammarPatterns),
+    usage_notes: normalizeStringArray(source.usage_notes || source.usageNotes),
+    common_mistakes: normalizeObjectArray(source.common_mistakes || source.commonMistakes),
+    phrases: normalizeObjectArray(source.phrases || source.expressions || source.idioms),
+    word_family: normalizeObjectArray(source.word_family || source.wordFamily),
+    etymology: String(source.etymology || "").trim(),
+    level_frequency: source.level_frequency && typeof source.level_frequency === "object"
+      ? source.level_frequency
+      : source.levelFrequency && typeof source.levelFrequency === "object"
+        ? source.levelFrequency
+        : {},
+    advice_ru: String(source.advice_ru || source.adviceRu || source.advice || "").trim()
+  };
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    const text = String(value || "").trim();
+    return text ? [text] : [];
+  }
+
+  return value
+    .map((item) => {
+      if (item && typeof item === "object") {
+        return String(item.word || item.phrase || item.value || item.text || item.note || "").trim();
+      }
+      return String(item || "").trim();
+    })
+    .filter(Boolean);
+}
+
+function normalizeObjectArray(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (item && typeof item === "object") return item;
+
+      const text = String(item || "").trim();
+      return text ? { value: text } : null;
+    })
+    .filter(Boolean);
+}
+
+function compactList(items, limit = 6) {
+  return (Array.isArray(items) ? items : []).slice(0, limit);
+}
+
+function buildWordRightDashboardHtml(payload) {
+  const blocks = [];
+
+  blocks.push(buildWordRightTextCard("📖", "Английское объяснение", payload.english_definition, { english: true }));
+  blocks.push(buildWordRightChipCard("◎", "Смысловое ядро", payload.semantic_core));
+  blocks.push(buildWordRightChipCard("↔", "Синонимы", payload.synonyms, { more: payload.synonyms.length > 6 }));
+  blocks.push(buildWordRightChipCard("⇄", "Антонимы", payload.antonyms, { more: payload.antonyms.length > 6 }));
+  blocks.push(buildWordRightCollocationsCard(payload.collocations));
+  blocks.push(buildWordRightGrammarCard(payload.grammar_patterns));
+  blocks.push(buildWordRightListCard("☞", "Примечания по употреблению", payload.usage_notes));
+  blocks.push(buildWordRightMistakesCard(payload.common_mistakes));
+  blocks.push(buildWordRightPhrasesCard(payload.phrases));
+  blocks.push(buildWordRightWordFamilyCard(payload.word_family));
+  blocks.push(buildWordRightTextCard("◌", "Этимология", payload.etymology));
+  blocks.push(buildWordRightLevelCard(payload.level_frequency));
+  blocks.push(buildWordRightTextCard("✦", "Совет", payload.advice_ru, { soft: true }));
+
+  const html = blocks.filter(Boolean).join("");
+
+  return `
+    <div class="word-right-dashboard">
+      ${html || `<div class="word-side-result">Пустой ответ.</div>`}
+    </div>
+  `;
+}
+
+function buildWordRightCard(icon, title, contentHtml, options = {}) {
+  if (!contentHtml) return "";
+
+  return `
+    <section class="word-right-card ${options.soft ? "soft" : ""}">
+      <div class="word-right-icon">${escapeHTML(icon)}</div>
+      <div class="word-right-main">
+        <div class="word-right-title-row">
+          <div class="word-right-title">${escapeHTML(title)}</div>
+          ${options.more ? `<div class="word-right-more">Показать все</div>` : ""}
+        </div>
+        ${contentHtml}
+      </div>
+      <div class="word-right-chevron">⌄</div>
+    </section>
+  `;
+}
+
+function buildWordRightTextCard(icon, title, text, options = {}) {
+  const value = String(text || "").trim();
+  if (!value) return "";
+
+  return buildWordRightCard(
+    icon,
+    title,
+    `<div class="word-right-content ${options.english ? "english" : ""}">${escapeHTML(value)}</div>`,
+    options
+  );
+}
+
+function buildWordRightChipCard(icon, title, items, options = {}) {
+  const values = compactList(normalizeStringArray(items), 6);
+  if (!values.length) return "";
+
+  return buildWordRightCard(
+    icon,
+    title,
+    `<div class="word-right-chip-row">${values.map((item) => `<span class="word-right-chip">${escapeHTML(item)}</span>`).join("")}</div>`,
+    options
+  );
+}
+
+function buildWordRightListCard(icon, title, items, options = {}) {
+  const values = compactList(normalizeStringArray(items), 4);
+  if (!values.length) return "";
+
+  return buildWordRightCard(
+    icon,
+    title,
+    `<div class="word-right-line-list">${values.map((item) => `<div class="word-right-line">${escapeHTML(item)}</div>`).join("")}</div>`,
+    options
+  );
+}
+
+function buildWordRightCollocationsCard(items) {
+  const values = compactList(normalizeObjectArray(items), 5);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const phrase = String(item.phrase || item.value || item.text || "").trim();
+    const translation = String(item.translation_ru || item.translationRu || item.ru || "").trim();
+
+    if (!phrase && !translation) return "";
+
+    return `<div class="word-right-line"><strong>${escapeHTML(phrase)}</strong>${translation ? ` <span class="ru">— ${escapeHTML(translation)}</span>` : ""}</div>`;
+  }).filter(Boolean).join("");
+
+  return buildWordRightCard("⛓", "Типичные сочетания", `<div class="word-right-line-list">${content}</div>`, { more: items.length > 5 });
+}
+
+function buildWordRightGrammarCard(items) {
+  const values = compactList(normalizeObjectArray(items), 4);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const pattern = String(item.pattern || item.value || item.text || "").trim();
+    const example = String(item.example || item.source || "").trim();
+    const translation = String(item.translation_ru || item.translationRu || item.ru || "").trim();
+
+    if (!pattern && !example && !translation) return "";
+
+    return `<div class="word-right-line"><strong>${escapeHTML(pattern)}</strong>${example ? `<br>${escapeHTML(example)}` : ""}${translation ? `<br><span class="ru">${escapeHTML(translation)}</span>` : ""}</div>`;
+  }).filter(Boolean).join("");
+
+  return buildWordRightCard("▣", "Грамматические конструкции", `<div class="word-right-line-list">${content}</div>`, { more: items.length > 4 });
+}
+
+function buildWordRightMistakesCard(items) {
+  const values = compactList(normalizeObjectArray(items), 3);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const wrong = String(item.wrong || item.incorrect || "").trim();
+    const correct = String(item.correct || item.right || "").trim();
+    const note = String(item.note_ru || item.noteRu || item.note || "").trim();
+
+    if (!wrong && !correct && !note) return "";
+
+    return `
+      <div class="word-right-mistake">
+        ${wrong ? `<div class="word-right-wrong">✕ ${escapeHTML(wrong)}</div>` : ""}
+        ${correct ? `<div class="word-right-correct">✓ ${escapeHTML(correct)}</div>` : ""}
+        ${note ? `<div class="word-right-muted">${escapeHTML(note)}</div>` : ""}
+      </div>
+    `;
+  }).filter(Boolean).join("");
+
+  return buildWordRightCard("!", "Типичные ошибки", `<div class="word-right-line-list">${content}</div>`, { more: items.length > 3 });
+}
+
+function buildWordRightPhrasesCard(items) {
+  const values = compactList(normalizeObjectArray(items), 5);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const phrase = String(item.phrase || item.value || item.text || "").trim();
+    const translation = String(item.translation_ru || item.translationRu || item.ru || "").trim();
+    const example = String(item.example || item.source || "").trim();
+
+    if (!phrase && !translation && !example) return "";
+
+    return `<div class="word-right-line"><strong>${escapeHTML(phrase)}</strong>${translation ? ` <span class="ru">— ${escapeHTML(translation)}</span>` : ""}${example ? `<br>${escapeHTML(example)}` : ""}</div>`;
+  }).filter(Boolean).join("");
+
+  return buildWordRightCard("◇", "Фразовые глаголы и выражения", `<div class="word-right-line-list">${content}</div>`, { more: items.length > 5 });
+}
+
+function buildWordRightWordFamilyCard(items) {
+  const values = compactList(normalizeObjectArray(items), 6);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const word = String(item.word || item.value || item.text || "").trim();
+    const translation = String(item.translation_ru || item.translationRu || item.ru || "").trim();
+
+    if (!word && !translation) return "";
+
+    return `<div class="word-right-line"><strong>${escapeHTML(word)}</strong>${translation ? ` <span class="ru">— ${escapeHTML(translation)}</span>` : ""}</div>`;
+  }).filter(Boolean).join("");
+
+  return buildWordRightCard("☷", "Родственные слова", `<div class="word-right-line-list">${content}</div>`, { more: items.length > 6 });
+}
+
+function buildWordRightLevelCard(levelFrequency) {
+  const source = levelFrequency && typeof levelFrequency === "object" ? levelFrequency : {};
+  const cefr = String(source.cefr || "").trim();
+  const frequency = String(source.frequency || "").trim();
+
+  if (!cefr && !frequency) return "";
+
+  const chips = [frequency, cefr].filter(Boolean);
+
+  return buildWordRightCard(
+    "▥",
+    "Частотность и уровень",
+    `<div class="word-right-chip-row">${chips.map((item) => `<span class="word-right-chip">${escapeHTML(item)}</span>`).join("")}</div>`
+  );
+}
+
 function switchWordPanel(panelName) {
   if (!["left", "center", "right"].includes(panelName)) return;
 
