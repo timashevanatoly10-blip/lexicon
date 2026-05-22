@@ -291,6 +291,14 @@ function ensureDictionaryPickerStyles() {
       display: none !important;
     }
 
+    .word-panel-tabs {
+      grid-template-columns: 1fr 1fr 1fr !important;
+    }
+
+    .word-panel-tab {
+      font-size: clamp(11px, 2.55vw, 15.5px);
+    }
+
     .text-panel-tab {
       width: 100%;
       min-height: 35px;
@@ -615,57 +623,6 @@ function ensureDictionaryPickerStyles() {
       background: #1f6f56;
       border-color: rgba(31,111,86,0.18);
       box-shadow: 0 2px 5px rgba(31,111,86,0.07);
-    }
-
-    .word-panel-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      align-items: stretch;
-      gap: 0;
-      margin-top: 8px;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
-      padding: 2px;
-      border: 2px solid rgba(255,255,255,0.90);
-      border-radius: 18px;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.40),
-        inset 2px 2px 5px rgba(255,255,255,0.72),
-        inset -3px -3px 7px rgba(205,214,204,0.10),
-        0 2px 6px rgba(186,193,184,0.08);
-    }
-
-    .word-panel-tab {
-      width: 100%;
-      min-height: 32px;
-      height: 32px;
-      margin: 0;
-      padding: 0 6px;
-      border: 2px solid transparent;
-      border-radius: 17px;
-      background: transparent;
-      color: #777a77;
-      font-size: clamp(10.8px, 2.45vw, 14px);
-      font-weight: 430;
-      letter-spacing: 0.01em;
-      cursor: pointer;
-      box-shadow: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .word-panel-tab.active {
-      background:
-        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
-      border-color: rgba(255,255,255,0.94);
-      color: #5f9962;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.42),
-        inset 2px 2px 5px rgba(255,255,255,0.78),
-        inset -3px -3px 6px rgba(205,214,204,0.12),
-        0 2px 5px rgba(186,193,184,0.07);
     }
 
     .word-card-body {
@@ -1285,6 +1242,7 @@ async function handleWordTranslate() {
   wordRightPanelHtml = "";
   wordLeftPanelPayload = null;
   wordRightPanelPayload = null;
+  updateWordSwipeUI();
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -1304,11 +1262,13 @@ async function handleWordTranslate() {
       currentWordTranslationCard = null;
       currentWordPartIndex = 0;
       setWordResult(data.result || data.raw || "Пустой ответ.", false);
+      updateWordSwipeUI();
     }
   } catch (err) {
     currentWordTranslationCard = null;
     currentWordPartIndex = 0;
     setWordResult("Ошибка перевода:\n" + err.message, false);
+    updateWordSwipeUI();
   } finally {
     if (translateBtn) translateBtn.disabled = false;
     updateWordModeButtons();
@@ -1813,6 +1773,12 @@ function ensureWordModeMarkup() {
         <button id="wordTranslateBtn" class="text-action-primary text-translate-compact-btn" type="button" title="Перевести">→</button>
       </div>
 
+      <div id="wordPanelTabs" class="text-panel-tabs word-panel-tabs hidden">
+        <button id="wordMemoTab" class="text-panel-tab word-panel-tab" type="button" data-word-panel-tab="left">Мнемо</button>
+        <button id="wordTranslateTab" class="text-panel-tab word-panel-tab active" type="button" data-word-panel-tab="center">Перевод</button>
+        <button id="wordAnalyzeTab" class="text-panel-tab word-panel-tab" type="button" data-word-panel-tab="right">Разбор</button>
+      </div>
+
       <div id="wordSwipeFrame" class="text-swipe-frame word-swipe-frame">
         <section class="text-panel word-panel">
           <div id="wordResultOutput" class="text-translation-output word-result-output empty">Перевод появится здесь.</div>
@@ -1872,6 +1838,7 @@ function bindWordModeEvents() {
       wordRightPanelHtml = "";
       wordLeftPanelPayload = null;
       wordRightPanelPayload = null;
+      updateWordSwipeUI();
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -1885,6 +1852,7 @@ function bindWordModeEvents() {
   }
 
   bindWordSwipe();
+  bindWordPanelTabs();
 
   updateWordModeButtons();
   updateWordCopyFeedback();
@@ -2248,14 +2216,6 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
       </div>`
     : "";
 
-  const panelTabsHtml = `
-    <div class="word-panel-tabs">
-      <button class="word-panel-tab ${wordActivePanel === "left" ? "active" : ""}" type="button" data-word-panel-tab="left">Мнемо</button>
-      <button class="word-panel-tab ${wordActivePanel === "center" ? "active" : ""}" type="button" data-word-panel-tab="center">Перевод</button>
-      <button class="word-panel-tab ${wordActivePanel === "right" ? "active" : ""}" type="button" data-word-panel-tab="right">Разбор</button>
-    </div>
-  `;
-
   const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
   const extraExamples = getWordPartExtraExamples(activePart);
   const visibleExamples = wordExamplesExpanded ? extraExamples : extraExamples.slice(0, 2);
@@ -2326,7 +2286,6 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
           <button class="word-sound-btn" type="button" title="Озвучить">${iconSpeaker()}</button>
         </div>
         ${tabsHtml}
-        ${panelTabsHtml}
       </div>
 
       <div class="word-detail-swipe-frame" id="wordDetailSwipeFrame">
@@ -3081,6 +3040,29 @@ function buildWordRightLevelCard(levelFrequency) {
   );
 }
 
+function bindWordPanelTabs() {
+  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
+    if (btn.dataset.bound === "1") return;
+
+    btn.dataset.bound = "1";
+    btn.onclick = () => switchWordPanel(btn.dataset.wordPanelTab || "center");
+  });
+}
+
+function updateWordPanelTabsVisibility() {
+  const tabs = document.getElementById("wordPanelTabs");
+
+  if (!tabs) return;
+
+  tabs.classList.toggle("hidden", !currentWordTranslationCard);
+}
+
+function updateWordPanelTabsUI() {
+  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.wordPanelTab === wordActivePanel);
+  });
+}
+
 function switchWordPanel(panelName) {
   if (!["left", "center", "right"].includes(panelName)) return;
 
@@ -3090,6 +3072,9 @@ function switchWordPanel(panelName) {
 }
 
 function updateWordSwipeUI() {
+  updateWordPanelTabsVisibility();
+  updateWordPanelTabsUI();
+
   const track = document.getElementById("wordDetailSwipeTrack");
 
   if (!track) return;
@@ -3101,10 +3086,6 @@ function updateWordSwipeUI() {
   };
 
   track.style.transform = `translateX(${offsets[wordActivePanel] || offsets.center})`;
-
-  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.wordPanelTab === wordActivePanel);
-  });
 }
 
 function bindWordSwipe() {
@@ -3144,14 +3125,6 @@ function bindWordSwipe() {
       else if (wordActivePanel === "center") switchWordPanel("left");
     }
   }, { passive: true });
-}
-
-function bindWordPanelTabs() {
-  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
-    btn.onclick = () => {
-      switchWordPanel(btn.dataset.wordPanelTab || "center");
-    };
-  });
 }
 
 function bindWordPartTabs() {
@@ -3205,6 +3178,7 @@ function clearWordMode() {
 
   setWordResult("Перевод появится здесь.", true);
   hideAddCurrentWordButton();
+  updateWordSwipeUI();
   updateWordModeButtons();
   updateWordCopyFeedback();
 
@@ -3892,6 +3866,7 @@ function openSelectedTextWordInWordMode() {
 
   hideAddCurrentWordButton();
   setWordResult("Перевод появится здесь.", true);
+  updateWordSwipeUI();
   updateWordModeButtons();
   updateWordCopyFeedback();
 
@@ -4572,6 +4547,7 @@ function openWordFromDictionary(word) {
   }
 
   setWordResult("Перевод появится здесь.", true);
+  updateWordSwipeUI();
   updateWordModeButtons();
   updateWordCopyFeedback();
 
