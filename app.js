@@ -29,6 +29,7 @@ let wordRightPanelHtml = "";
 let wordLeftPanelPayload = null;
 let wordRightPanelPayload = null;
 const textPanelScroll = {
+  reading: 0,
   source: 0,
   translation: 0
 };
@@ -272,19 +273,20 @@ function ensureDictionaryPickerStyles() {
 
     .text-panel-tabs {
       display: grid !important;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       align-items: stretch;
       gap: 0;
       background:
         radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%) !important;
-      padding: 2px !important;
+      padding: 1px !important;
       border: 2px solid rgba(255,255,255,0.90) !important;
-      border-radius: 18px !important;
+      border-radius: 15px !important;
+      min-height: 30px !important;
       box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.40),
-        inset 2px 2px 5px rgba(255,255,255,0.72),
-        inset -3px -3px 7px rgba(205,214,204,0.10),
-        0 2px 6px rgba(186,193,184,0.08);
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06);
     }
 
     .text-panel-tabs.hidden {
@@ -323,17 +325,18 @@ function ensureDictionaryPickerStyles() {
 
     .text-panel-tab {
       width: 100%;
-      min-height: 35px;
-      height: 35px;
+      min-height: 26px;
+      height: 26px;
       margin: 0 !important;
-      padding: 0 8px !important;
+      padding: 0 6px !important;
       border: 2px solid transparent !important;
-      border-radius: 17px !important;
+      border-radius: 14px !important;
       background: transparent !important;
       color: #777a77 !important;
-      font-size: clamp(11.5px, 2.75vw, 16px);
+      font-size: clamp(10.8px, 2.45vw, 15px);
       font-weight: 430 !important;
       letter-spacing: 0.01em;
+      line-height: 1 !important;
       cursor: pointer;
       box-shadow: none !important;
       display: flex;
@@ -346,11 +349,12 @@ function ensureDictionaryPickerStyles() {
         radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
       border-color: rgba(255,255,255,0.94) !important;
       color: #5f9962 !important;
+      border-radius: 14px !important;
       box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.42),
-        inset 2px 2px 5px rgba(255,255,255,0.78),
-        inset -3px -3px 6px rgba(205,214,204,0.12),
-        0 2px 5px rgba(186,193,184,0.07) !important;
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 2px 2px 4px rgba(255,255,255,0.70),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055) !important;
     }
 
     .text-swipe-frame {
@@ -368,11 +372,11 @@ function ensureDictionaryPickerStyles() {
         0 1px 5px rgba(180,186,176,0.06) !important;
     }
 
-    .text-swipe-track { width: 200%; height: 100%; display: flex; transition: transform 0.24s ease; }
+    .text-swipe-track { width: 300%; height: 100%; display: flex; transition: transform 0.24s ease; transform: translateX(-33.333333%); }
 
     .text-panel {
       position: relative;
-      width: 50%;
+      width: 33.333333%;
       height: 100%;
       overflow: hidden;
       -webkit-overflow-scrolling: touch;
@@ -1192,6 +1196,25 @@ function ensureDictionaryPickerStyles() {
 
     .word-mode-hint { display: none !important; }
 
+    .text-reading-placeholder {
+      color: rgba(31,33,31,0.72);
+      font-size: clamp(16px, 3.7vw, 22px);
+      font-weight: 520;
+      line-height: 1.34;
+      letter-spacing: -0.015em;
+      padding: 22px 13px 79px !important;
+      white-space: pre-wrap;
+    }
+
+    .text-reading-placeholder small {
+      display: block;
+      margin-top: 10px;
+      color: rgba(31,33,31,0.48);
+      font-size: 0.72em;
+      font-weight: 430;
+      line-height: 1.35;
+    }
+
     .text-mode-hint { display: none !important; }
 
     @media (max-width: 520px) {
@@ -1199,7 +1222,7 @@ function ensureDictionaryPickerStyles() {
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
       .text-add-lex-btn, .text-translate-compact-btn { width: 38px; min-width: 38px; height: 38px; font-size: 24px; }
       .text-translate-compact-btn { font-size: 26px; }
-      .text-panel-tab { min-height: 34px; height: 34px; }
+      .text-panel-tab { min-height: 26px; height: 26px; }
       .text-swipe-frame { height: min(62dvh, 620px) !important; min-height: 455px !important; border-radius: 27px !important; }
       .text-big-input, .text-clickable-output, .text-translation-output { padding: 20px 11px 76px !important; font-size: clamp(15.8px, 3.8vw, 23px); }
       .text-bottom-toolbar { padding: 13px 22px 17px; }
@@ -1210,7 +1233,7 @@ function ensureDictionaryPickerStyles() {
       .text-mode-actions-compact { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 6px; min-height: 43px; padding-top: 2px; padding-bottom: 2px; }
       .text-add-lex-btn, .text-translate-compact-btn { width: 35px; min-width: 35px; height: 35px; font-size: 22px; }
       .text-translate-compact-btn { font-size: 24px; }
-      .text-panel-tab { min-height: 32px; height: 32px; font-size: clamp(11px, 2.6vw, 15px); }
+      .text-panel-tab { min-height: 25px; height: 25px; font-size: clamp(10.4px, 2.45vw, 14.5px); }
       .text-swipe-frame { height: min(61dvh, 590px) !important; min-height: 430px !important; }
       .text-bottom-toolbar { gap: 6px; padding-left: 17px; padding-right: 17px; }
       .text-bottom-icon-btn { width: 35px; height: 35px; }
@@ -3298,12 +3321,21 @@ function ensureTextModeMarkup() {
       </div>
 
       <div id="textPanelTabs" class="text-panel-tabs hidden">
+        <button id="textReadingTab" class="text-panel-tab" type="button">Чтение</button>
         <button id="textSourceTab" class="text-panel-tab active" type="button">Оригинал</button>
         <button id="textTranslationTab" class="text-panel-tab" type="button">Перевод</button>
       </div>
 
       <div id="textSwipeFrame" class="text-swipe-frame">
         <div id="textSwipeTrack" class="text-swipe-track">
+          <section class="text-panel" data-text-panel="reading">
+            <div id="textReadingOutput" class="text-reading-placeholder">
+              Здесь появится текст для чтения с транскрипцией.
+              <small>Позже добавим автоматическую IPA-транскрипцию английского текста.</small>
+            </div>
+            ${renderTextBottomToolbar("textInlineClearBtnReading", "reading")}
+          </section>
+
           <section class="text-panel" data-text-panel="source">
             <textarea id="textInput" class="text-big-input" placeholder="Вставьте текст для перевода"></textarea>
             ${renderTextBottomToolbar("textInlineClearBtn", "source")}
@@ -3319,7 +3351,7 @@ function ensureTextModeMarkup() {
       </div>
 
       <div id="textModeHint" class="text-mode-hint">
-        После перевода появятся две панели: оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.
+        После перевода появятся три панели: чтение, оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.
       </div>
     </div>
   `;
@@ -3332,8 +3364,10 @@ function bindTextModeEvents() {
   const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
   const addLexBtn = document.getElementById("textAddLexBtn");
   const miniDisplay = document.getElementById("textWordMiniDisplay");
+  const readingTab = document.getElementById("textReadingTab");
   const sourceTab = document.getElementById("textSourceTab");
   const translationTab = document.getElementById("textTranslationTab");
+  const readingPanel = document.querySelector('[data-text-panel="reading"]');
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
   const translationPanel = document.querySelector('[data-text-panel="translation"]');
   const textInput = document.getElementById("textInput");
@@ -3344,8 +3378,13 @@ function bindTextModeEvents() {
   on(clearBtn, "click", clearTextMode);
   on(inlineClearBtn, "click", clearTextMode);
   on(inlineClearBtnTranslation, "click", clearTextMode);
+  on(readingTab, "click", () => switchTextPanel("reading"));
   on(sourceTab, "click", () => switchTextPanel("source"));
   on(translationTab, "click", () => switchTextPanel("translation"));
+
+  on(readingPanel, "scroll", () => {
+    textPanelScroll.reading = readingPanel.scrollTop;
+  });
 
   on(sourcePanel, "scroll", () => {
     textPanelScroll.source = sourcePanel.scrollTop;
@@ -3398,8 +3437,13 @@ function bindTextSwipe() {
 
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
 
-    if (dx < 0) switchTextPanel("translation");
-    else switchTextPanel("source");
+    if (dx < 0) {
+      if (textActivePanel === "reading") switchTextPanel("source");
+      else if (textActivePanel === "source") switchTextPanel("translation");
+    } else {
+      if (textActivePanel === "translation") switchTextPanel("source");
+      else if (textActivePanel === "source") switchTextPanel("reading");
+    }
   }, { passive: true });
 }
 
@@ -3464,9 +3508,13 @@ function buildTextTranslationStub(source) {
 }
 
 function bindTextInlineClearButtons() {
+  const inlineClearBtnReading = document.getElementById("textInlineClearBtnReading");
   const inlineClearBtn = document.getElementById("textInlineClearBtn");
   const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
 
+  if (inlineClearBtnReading) inlineClearBtnReading.onclick = () => {
+    if (!inlineClearBtnReading.classList.contains("inactive")) clearTextMode();
+  };
   if (inlineClearBtn) inlineClearBtn.onclick = () => {
     if (!inlineClearBtn.classList.contains("inactive")) clearTextMode();
   };
@@ -3489,7 +3537,7 @@ function bindTextInlineClearButtons() {
 async function copyActiveTextPanel(event) {
   const panelName = event?.currentTarget?.dataset?.copyPanel || textActivePanel;
 
-  if (panelName !== "source" && panelName !== "translation") return;
+  if (!isValidTextPanel(panelName)) return;
 
   const panelValue = getTextPanelCopyValue(panelName).trim();
 
@@ -3527,8 +3575,13 @@ async function copyActiveTextPanel(event) {
 
 function getTextPanelCopyValue(panelName) {
   const textInput = document.getElementById("textInput");
+  const readingOutput = document.getElementById("textReadingOutput");
   const sourceClickable = document.getElementById("textSourceClickableOutput");
   const translationOutput = document.getElementById("textTranslationOutput");
+
+  if (panelName === "reading") {
+    return String(readingOutput?.innerText || "");
+  }
 
   if (panelName === "translation") {
     return String(translationOutput?.innerText || textTranslatedValue || "");
@@ -3540,10 +3593,11 @@ function getTextPanelCopyValue(panelName) {
 function normalizeCopyPanelOrder(panels) {
   const unique = Array.from(new Set((panels || []).filter(Boolean)));
 
-  return ["source", "translation"].filter((panelName) => unique.includes(panelName));
+  return ["reading", "source", "translation"].filter((panelName) => unique.includes(panelName));
 }
 
 function getTextPanelCopyLabel(panelName) {
+  if (panelName === "reading") return "Чтение";
   return panelName === "translation" ? "Перевод" : "Оригинал";
 }
 
@@ -3656,6 +3710,7 @@ function bindTextInputAfterReset() {
 }
 
 function updateTextInlineClearVisibility() {
+  const inlineClearBtnReading = document.getElementById("textInlineClearBtnReading");
   const inlineClearBtn = document.getElementById("textInlineClearBtn");
   const inlineClearBtnTranslation = document.getElementById("textInlineClearBtnTranslation");
   const textInput = document.getElementById("textInput");
@@ -3667,15 +3722,27 @@ function updateTextInlineClearVisibility() {
     (textInput && textInput.value.trim())
   );
 
+  if (inlineClearBtnReading) inlineClearBtnReading.classList.toggle("inactive", !hasText);
   if (inlineClearBtn) inlineClearBtn.classList.toggle("inactive", !hasText);
   if (inlineClearBtnTranslation) inlineClearBtnTranslation.classList.toggle("inactive", !hasText);
 }
 
 function renderClickableTextPanels(sourceText, translatedText) {
+  const readingPanel = document.querySelector('[data-text-panel="reading"]');
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
   const translationPanel = document.querySelector('[data-text-panel="translation"]');
 
   clearSelectedTextWord();
+
+  if (readingPanel) {
+    readingPanel.innerHTML = `
+      <div id="textReadingOutput" class="text-reading-placeholder">
+        Здесь появится текст для чтения с транскрипцией.
+        <small>Следующий этап: отдельный AI-запрос подготовит английский текст с IPA под каждое важное слово.</small>
+      </div>
+      ${renderTextBottomToolbar("textInlineClearBtnReading", "reading")}
+    `;
+  }
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
@@ -3926,12 +3993,18 @@ async function addSelectedTextWordToDictionary() {
 }
 
 
-function switchTextPanel(panelName) {
-  if (panelName !== "source" && panelName !== "translation") return;
+function isValidTextPanel(panelName) {
+  return panelName === "reading" || panelName === "source" || panelName === "translation";
+}
 
+function switchTextPanel(panelName) {
+  if (!isValidTextPanel(panelName)) return;
+
+  const readingPanel = document.querySelector('[data-text-panel="reading"]');
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
   const translationPanel = document.querySelector('[data-text-panel="translation"]');
 
+  if (readingPanel) textPanelScroll.reading = readingPanel.scrollTop;
   if (sourcePanel) textPanelScroll.source = sourcePanel.scrollTop;
   if (translationPanel) textPanelScroll.translation = translationPanel.scrollTop;
 
@@ -3939,6 +4012,7 @@ function switchTextPanel(panelName) {
   updateTextPanelUI();
 
   requestAnimationFrame(() => {
+    if (readingPanel) readingPanel.scrollTop = textPanelScroll.reading;
     if (sourcePanel) sourcePanel.scrollTop = textPanelScroll.source;
     if (translationPanel) translationPanel.scrollTop = textPanelScroll.translation;
   });
@@ -3946,20 +4020,27 @@ function switchTextPanel(panelName) {
 
 function updateTextPanelUI() {
   const track = document.getElementById("textSwipeTrack");
+  const readingTab = document.getElementById("textReadingTab");
   const sourceTab = document.getElementById("textSourceTab");
   const translationTab = document.getElementById("textTranslationTab");
 
   if (track) {
-    track.style.transform = textActivePanel === "translation"
-      ? "translateX(-50%)"
-      : "translateX(0)";
+    const offsets = {
+      reading: "0%",
+      source: "-33.333333%",
+      translation: "-66.666666%"
+    };
+
+    track.style.transform = `translateX(${offsets[textActivePanel] || offsets.source})`;
   }
 
+  if (readingTab) readingTab.classList.toggle("active", textActivePanel === "reading");
   if (sourceTab) sourceTab.classList.toggle("active", textActivePanel === "source");
   if (translationTab) translationTab.classList.toggle("active", textActivePanel === "translation");
 }
 
 function clearTextMode() {
+  const readingPanel = document.querySelector('[data-text-panel="reading"]');
   const sourcePanel = document.querySelector('[data-text-panel="source"]');
   const translationPanel = document.querySelector('[data-text-panel="translation"]');
   const tabs = document.getElementById("textPanelTabs");
@@ -3969,10 +4050,21 @@ function clearTextMode() {
   textActivePanel = "source";
   textSourceValue = "";
   textTranslatedValue = "";
+  textPanelScroll.reading = 0;
   textPanelScroll.source = 0;
   textPanelScroll.translation = 0;
   resetTextCopyState();
   clearSelectedTextWord();
+
+  if (readingPanel) {
+    readingPanel.innerHTML = `
+      <div id="textReadingOutput" class="text-reading-placeholder">
+        Здесь появится текст для чтения с транскрипцией.
+        <small>Позже добавим автоматическую IPA-транскрипцию английского текста.</small>
+      </div>
+      ${renderTextBottomToolbar("textInlineClearBtnReading", "reading")}
+    `;
+  }
 
   if (sourcePanel) {
     sourcePanel.innerHTML = `
@@ -3996,16 +4088,18 @@ function clearTextMode() {
   if (tabs) tabs.classList.add("hidden");
 
   if (hint) {
-    hint.textContent = "После перевода появятся две панели: оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.";
+    hint.textContent = "После перевода появятся три панели: чтение, оригинал и перевод. Каждая панель запоминает свою позицию прокрутки.";
   }
 
   updateTextPanelUI();
 
   requestAnimationFrame(() => {
+    const nextReadingPanel = document.querySelector('[data-text-panel="reading"]');
     const nextSourcePanel = document.querySelector('[data-text-panel="source"]');
     const nextTranslationPanel = document.querySelector('[data-text-panel="translation"]');
     const textInput = document.getElementById("textInput");
 
+    if (nextReadingPanel) nextReadingPanel.scrollTop = 0;
     if (nextSourcePanel) nextSourcePanel.scrollTop = 0;
     if (nextTranslationPanel) nextTranslationPanel.scrollTop = 0;
 
