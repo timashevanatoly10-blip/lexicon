@@ -1819,6 +1819,8 @@ function bindWordModeEvents() {
       wordSideRequestId += 1;
       wordLeftPanelHtml = "";
       wordRightPanelHtml = "";
+      wordLeftPanelPayload = null;
+      wordRightPanelPayload = null;
       updateWordModeButtons();
       updateWordCopyFeedback();
     };
@@ -2448,49 +2450,105 @@ function normalizeWordLeftPayload(payload) {
 
   const source = payload.card && typeof payload.card === "object" ? payload.card : payload;
 
-  const mnemonic = String(source.mnemonic || source.memory_hook || source.memoryHook || "").trim();
-  const association = String(source.association || source.visual_association || source.visualAssociation || "").trim();
-  const scene = String(source.scene || source.mini_scene || source.miniScene || source.visual_scene || source.visualScene || "").trim();
-  const emotionalHook = String(source.emotional_hook || source.emotionalHook || source.hook || "").trim();
-  const visualPlaceholder = String(source.visual_placeholder || source.visualPlaceholder || source.visual || "").trim() || "Создать образ";
+  const normalizeOnePart = (partSource) => {
+    const part = partSource && typeof partSource === "object" ? partSource : {};
 
-  const chips = normalizeStringArray(
-    source.chips ||
-    source.key_images ||
-    source.keyImages ||
-    source.sensory_tags ||
-    source.sensoryTags ||
-    source.memory_chips ||
-    source.memoryChips
-  );
+    const mnemonic = String(part.mnemonic || part.memory_hook || part.memoryHook || "").trim();
+    const association = String(part.association || part.visual_association || part.visualAssociation || "").trim();
+    const scene = String(part.mini_scene || part.miniScene || part.scene || part.visual_scene || part.visualScene || "").trim();
+    const memoryHook = String(part.memory_hook || part.memoryHook || part.emotional_hook || part.emotionalHook || part.hook || "").trim();
+    const targetMeaning = String(part.target_meaning_ru || part.targetMeaningRu || part.meaning_ru || part.meaningRu || "").trim();
+    const soundHint = String(part.sound_hint_ru || part.soundHintRu || part.sound_hint || part.soundHint || "").trim();
+    const contrast = String(part.contrast_ru || part.contrastRu || part.contrast || "").trim();
+    const microStory = String(part.micro_story_ru || part.microStoryRu || part.micro_story || part.microStory || "").trim();
+    const visualPlaceholder = String(part.visual_prompt_ru || part.visualPromptRu || part.visual_placeholder || part.visualPlaceholder || part.visual || "").trim() || "Создать образ";
 
-  if (!mnemonic && !association && !scene && !emotionalHook && !chips.length) {
-    return null;
+    const chips = normalizeStringArray(
+      part.chips ||
+      part.key_images ||
+      part.keyImages ||
+      part.sensory_tags ||
+      part.sensoryTags ||
+      part.memory_chips ||
+      part.memoryChips
+    );
+
+    const englishAnchorExamples = normalizeObjectArray(
+      part.english_anchor_examples ||
+      part.englishAnchorExamples ||
+      part.anchor_examples ||
+      part.anchorExamples ||
+      part.examples
+    );
+
+    return {
+      headword: String(part.headword || source.headword || source.word || source.query || "").trim(),
+      detected_language: String(part.detected_language || part.detectedLanguage || source.detected_language || source.detectedLanguage || "").trim(),
+      pos: String(part.pos || "").trim(),
+      label: String(part.label || part.pos || "").trim(),
+      target_meaning_ru: targetMeaning,
+      mnemonic,
+      association,
+      scene,
+      mini_scene: scene,
+      memory_hook: memoryHook,
+      emotional_hook: memoryHook,
+      sound_hint_ru: soundHint,
+      contrast_ru: contrast,
+      micro_story_ru: microStory,
+      visual_placeholder: visualPlaceholder,
+      visual_prompt_ru: visualPlaceholder,
+      chips,
+      english_anchor_examples: englishAnchorExamples
+    };
+  };
+
+  const rawParts = Array.isArray(source.parts) ? source.parts.filter(Boolean) : [];
+
+  if (rawParts.length) {
+    return {
+      headword: String(source.headword || source.word || source.query || "").trim(),
+      detected_language: String(source.detected_language || source.detectedLanguage || "").trim(),
+      parts: rawParts.map(normalizeOnePart)
+    };
   }
 
-  return {
-    mnemonic,
-    association,
-    scene,
-    emotional_hook: emotionalHook,
-    visual_placeholder: visualPlaceholder,
-    chips
-  };
+  const single = normalizeOnePart(source);
+  const hasContent = Boolean(
+    single.target_meaning_ru ||
+    single.mnemonic ||
+    single.association ||
+    single.scene ||
+    single.memory_hook ||
+    single.sound_hint_ru ||
+    single.contrast_ru ||
+    single.micro_story_ru ||
+    single.chips.length ||
+    single.english_anchor_examples.length
+  );
+
+  return hasContent ? single : null;
 }
 
 function buildWordLeftDashboardHtml(payload) {
+  const activePayload = getActiveSidePayloadPart(payload) || {};
   const blocks = [];
 
-  blocks.push(buildWordLeftHeroCard("🧠", "Мнемоника", payload.mnemonic));
-  blocks.push(buildWordLeftTextCard("◎", "Ассоциация", payload.association));
-  blocks.push(buildWordLeftSceneCard("◐", "Мини-сцена", payload.scene));
-  blocks.push(buildWordLeftHookCard("✦", "Крючок памяти", payload.emotional_hook));
+  blocks.push(buildWordLeftHeroCard("🧠", "Мнемоника", activePayload.mnemonic));
+  blocks.push(buildWordLeftTextCard("≈", "Значение", activePayload.target_meaning_ru));
+  blocks.push(buildWordLeftTextCard("◎", "Ассоциация", activePayload.association));
+  blocks.push(buildWordLeftSceneCard("◐", "Мини-сцена", activePayload.mini_scene || activePayload.scene));
+  blocks.push(buildWordLeftHookCard("✦", "Крючок памяти", activePayload.memory_hook || activePayload.emotional_hook));
+  blocks.push(buildWordLeftTextCard("♪", "Звучание", activePayload.sound_hint_ru));
+  blocks.push(buildWordLeftTextCard("⇄", "Не путать", activePayload.contrast_ru));
+  blocks.push(buildWordLeftSceneCard("✎", "Мини-история", activePayload.micro_story_ru));
 
-  if (Array.isArray(payload.chips) && payload.chips.length) {
-    blocks.push(buildWordLeftChipsCard("⋯", "Образы", payload.chips));
+  if (Array.isArray(activePayload.chips) && activePayload.chips.length) {
+    blocks.push(buildWordLeftChipsCard("⋯", "Образы", activePayload.chips));
   }
 
-  blocks.push(buildWordLeftVisualCard(payload.visual_placeholder));
+  blocks.push(buildWordLeftExamplesCard(activePayload.english_anchor_examples));
+  blocks.push(buildWordLeftVisualCard(activePayload.visual_prompt_ru || activePayload.visual_placeholder));
 
   const html = blocks.filter(Boolean).join("");
 
@@ -2571,6 +2629,33 @@ function buildWordLeftChipsCard(icon, label, items) {
   );
 }
 
+function buildWordLeftExamplesCard(items) {
+  const values = compactList(normalizeObjectArray(items), 2);
+  if (!values.length) return "";
+
+  const content = values.map((item) => {
+    const source = String(item.source || item.example || item.en || item.value || item.text || "").trim();
+    const translation = String(item.translation_ru || item.translationRu || item.ru || "").trim();
+
+    if (!source && !translation) return "";
+
+    return `
+      <div class="word-right-line">
+        ${source ? `<strong>${escapeHTML(source)}</strong>` : ""}
+        ${translation ? `<br><span class="ru">${escapeHTML(translation)}</span>` : ""}
+      </div>
+    `;
+  }).filter(Boolean).join("");
+
+  if (!content) return "";
+
+  return buildWordLeftCard(
+    "A",
+    "Примеры-якоря",
+    `<div class="word-right-line-list">${content}</div>`
+  );
+}
+
 function buildWordLeftVisualCard(label) {
   const buttonText = String(label || "").trim() || "Создать образ";
 
@@ -2578,13 +2663,15 @@ function buildWordLeftVisualCard(label) {
     "▧",
     "Визуал",
     `
-      <div class="word-left-visual-copy">Здесь позже можно будет создать ассоциативную картинку для запоминания слова.</div>
-      <button class="word-left-visual-btn" type="button" data-word-left-visual="1">${escapeHTML(buttonText)}</button>
+      <div class="word-left-visual-copy">${escapeHTML(buttonText)}</div>
+      <button class="word-left-visual-btn" type="button" data-word-left-visual="1">Создать образ</button>
       <div class="word-left-visual-note">Пока это заготовка под будущую генерацию образа.</div>
     `,
     { visual: true }
   );
 }
+
+
 
 function bindWordLeftVisualButtons() {
   document.querySelectorAll("[data-word-left-visual]").forEach((btn) => {
