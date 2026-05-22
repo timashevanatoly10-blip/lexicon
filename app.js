@@ -1231,18 +1231,18 @@ function ensureDictionaryPickerStyles() {
       flex-wrap: wrap;
       align-items: flex-end;
       column-gap: 7px;
-      row-gap: 8px;
-      line-height: 1.15;
+      row-gap: 7px;
+      line-height: 1.08;
     }
 
     .text-reading-token {
       display: inline-flex;
       flex-direction: column;
       align-items: flex-start;
-      justify-content: flex-start;
+      justify-content: flex-end;
       min-width: 0;
       max-width: 100%;
-      padding: 1px 2px 2px;
+      padding: 0 2px 1px;
       border-radius: 9px;
     }
 
@@ -1254,17 +1254,17 @@ function ensureDictionaryPickerStyles() {
       color: rgba(31,33,31,0.90);
       font-size: clamp(15px, 3.5vw, 21px);
       font-weight: 540;
-      line-height: 1.05;
+      line-height: 1.02;
       letter-spacing: -0.012em;
       white-space: nowrap;
     }
 
     .text-reading-ipa {
-      margin-top: 3px;
+      margin: 0 0 2px;
       color: #1f6f56;
       font-size: clamp(10px, 2.25vw, 13.2px);
       font-weight: 520;
-      line-height: 1.05;
+      line-height: 1.02;
       white-space: nowrap;
       opacity: 0.84;
     }
@@ -3849,8 +3849,8 @@ function buildTextReadingItemHtml(item) {
 
   return `
     <span class="text-reading-token ${escapeHTML(type)}">
-      <span class="text-reading-word">${escapeHTML(word)}</span>
       ${showIpa ? `<span class="text-reading-ipa">${escapeHTML(ipa)}</span>` : ""}
+      <span class="text-reading-word">${escapeHTML(word)}</span>
     </span>
   `;
 }
