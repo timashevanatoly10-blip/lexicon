@@ -26,6 +26,8 @@ let wordActivePanel = "center";
 let wordSideRequestId = 0;
 let wordLeftPanelHtml = "";
 let wordRightPanelHtml = "";
+let wordLeftPanelPayload = null;
+let wordRightPanelPayload = null;
 const textPanelScroll = {
   source: 0,
   translation: 0
@@ -1230,6 +1232,8 @@ async function handleWordTranslate() {
   wordSideRequestId += 1;
   wordLeftPanelHtml = "";
   wordRightPanelHtml = "";
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
 
   if (homeResultCard) homeResultCard.classList.add("hidden");
   hideAddCurrentWordButton();
@@ -2285,6 +2289,14 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
 }
 
 function buildWordSidePanelHtml(side) {
+  if (side === "left" && wordLeftPanelPayload) {
+    return buildWordLeftDashboardHtml(wordLeftPanelPayload);
+  }
+
+  if (side === "right" && wordRightPanelPayload) {
+    return buildWordRightDashboardHtml(wordRightPanelPayload);
+  }
+
   const html = side === "left" ? wordLeftPanelHtml : wordRightPanelHtml;
 
   if (html) return html;
@@ -2314,8 +2326,10 @@ function setWordSidePanelHtml(side, html) {
   if (side !== "left" && side !== "right") return;
 
   if (side === "left") {
+    wordLeftPanelPayload = null;
     wordLeftPanelHtml = html || "";
   } else {
+    wordRightPanelPayload = null;
     wordRightPanelHtml = html || "";
   }
 
@@ -2332,12 +2346,39 @@ function setWordSidePanelHtml(side, html) {
   updateWordCopyFeedback();
 }
 
+function setWordSidePanelPayload(side, payload) {
+  if (side !== "left" && side !== "right") return;
+
+  if (side === "left") {
+    wordLeftPanelPayload = payload || null;
+    wordLeftPanelHtml = "";
+  } else {
+    wordRightPanelPayload = payload || null;
+    wordRightPanelHtml = "";
+  }
+
+  const panel = document.querySelector(`[data-word-swipe-panel="${side}"]`);
+
+  if (panel) {
+    panel.innerHTML = buildWordSidePanelHtml(side);
+  }
+
+  if (side === "left") {
+    bindWordLeftVisualButtons();
+  }
+
+  updateWordCopyFeedback();
+}
+
 async function startWordSideRequests(card) {
   const headword = getWordCardHeadword(card);
 
   if (!headword) return;
 
   const requestId = ++wordSideRequestId;
+
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
 
   setWordSidePanelHtml("left", buildWordSidePlaceholderHtml("Думаю..."));
   setWordSidePanelHtml("right", buildWordSidePlaceholderHtml("Думаю..."));
@@ -2356,7 +2397,7 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
       const leftPayload = getWordLeftPayloadFromAiData(data);
 
       if (leftPayload) {
-        setWordSidePanelHtml(side, buildWordLeftDashboardHtml(leftPayload));
+        setWordSidePanelPayload(side, leftPayload);
         bindWordLeftVisualButtons();
         return;
       }
@@ -2366,7 +2407,7 @@ async function loadWordSidePanel(side, mode, headword, requestId) {
       const rightPayload = getWordRightPayloadFromAiData(data);
 
       if (rightPayload) {
-        setWordSidePanelHtml(side, buildWordRightDashboardHtml(rightPayload));
+        setWordSidePanelPayload(side, rightPayload);
         return;
       }
     }
@@ -2560,6 +2601,54 @@ function bindWordLeftVisualButtons() {
 
 
 
+function normalizeWordPartKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/\s+/g, " ");
+}
+
+function getCurrentWordPartForSidePanels() {
+  const parts = getWordCardParts(currentWordTranslationCard);
+  return parts[currentWordPartIndex] || parts[0] || null;
+}
+
+function getActiveSidePayloadPart(payload) {
+  if (!payload || typeof payload !== "object") return payload;
+
+  const sideParts = Array.isArray(payload.parts) ? payload.parts.filter(Boolean) : [];
+
+  if (!sideParts.length) return payload;
+
+  const centerPart = getCurrentWordPartForSidePanels();
+  const centerPos = normalizeWordPartKey(centerPart?.pos);
+  const centerLabel = normalizeWordPartKey(getWordPartEnglishLabel(centerPart));
+  const centerShortLabel = normalizeWordPartKey(getWordPartShortLabel(centerPart));
+  const centerRuLabel = normalizeWordPartKey(getWordPartLabel(centerPart));
+
+  const matches = (part) => {
+    const partPos = normalizeWordPartKey(part?.pos);
+    const partLabel = normalizeWordPartKey(part?.label);
+    const partShort = normalizeWordPartKey(part?.label_short || part?.labelShort || part?.labelShortRu || part?.label_short_ru);
+
+    return Boolean(
+      (centerPos && partPos && centerPos === partPos) ||
+      (centerLabel && partLabel && centerLabel === partLabel) ||
+      (centerShortLabel && partShort && centerShortLabel === partShort) ||
+      (centerRuLabel && partLabel && centerRuLabel === partLabel)
+    );
+  };
+
+  const matched = sideParts.find(matches);
+
+  if (matched) return matched;
+
+  const byIndex = sideParts[currentWordPartIndex];
+
+  return byIndex || sideParts[0] || payload;
+}
+
 function getWordRightPayloadFromAiData(data) {
   const candidates = [
     data?.card,
@@ -2583,28 +2672,46 @@ function normalizeWordRightPayload(payload) {
 
   const source = payload.card && typeof payload.card === "object" ? payload.card : payload;
 
-  return {
-    headword: String(source.headword || source.word || source.query || "").trim(),
-    detected_language: String(source.detected_language || source.detectedLanguage || "").trim(),
-    pos_focus: String(source.pos_focus || source.posFocus || source.pos || "").trim(),
-    english_definition: String(source.english_definition || source.englishDefinition || source.definition || "").trim(),
-    semantic_core: normalizeStringArray(source.semantic_core || source.semanticCore || source.core),
-    synonyms: normalizeStringArray(source.synonyms),
-    antonyms: normalizeStringArray(source.antonyms),
-    collocations: normalizeObjectArray(source.collocations),
-    grammar_patterns: normalizeObjectArray(source.grammar_patterns || source.grammarPatterns),
-    usage_notes: normalizeStringArray(source.usage_notes || source.usageNotes),
-    common_mistakes: normalizeObjectArray(source.common_mistakes || source.commonMistakes),
-    phrases: normalizeObjectArray(source.phrases || source.expressions || source.idioms),
-    word_family: normalizeObjectArray(source.word_family || source.wordFamily),
-    etymology: String(source.etymology || "").trim(),
-    level_frequency: source.level_frequency && typeof source.level_frequency === "object"
-      ? source.level_frequency
-      : source.levelFrequency && typeof source.levelFrequency === "object"
-        ? source.levelFrequency
-        : {},
-    advice_ru: String(source.advice_ru || source.adviceRu || source.advice || "").trim()
+  const normalizeOnePart = (partSource) => {
+    const part = partSource && typeof partSource === "object" ? partSource : {};
+
+    return {
+      headword: String(part.headword || source.headword || source.word || source.query || "").trim(),
+      detected_language: String(part.detected_language || part.detectedLanguage || source.detected_language || source.detectedLanguage || "").trim(),
+      pos: String(part.pos || "").trim(),
+      label: String(part.label || part.pos || "").trim(),
+      pos_focus: String(part.pos_focus || part.posFocus || part.pos || source.pos_focus || source.posFocus || "").trim(),
+      english_definition: String(part.english_definition || part.englishDefinition || part.definition || "").trim(),
+      semantic_core: normalizeStringArray(part.semantic_core || part.semanticCore || part.core),
+      synonyms: normalizeStringArray(part.synonyms),
+      antonyms: normalizeStringArray(part.antonyms),
+      collocations: normalizeObjectArray(part.collocations),
+      grammar_patterns: normalizeObjectArray(part.grammar_patterns || part.grammarPatterns),
+      usage_notes: normalizeStringArray(part.usage_notes || part.usageNotes),
+      common_mistakes: normalizeObjectArray(part.common_mistakes || part.commonMistakes),
+      phrases: normalizeObjectArray(part.phrases || part.expressions || part.idioms),
+      word_family: normalizeObjectArray(part.word_family || part.wordFamily),
+      etymology: String(part.etymology || "").trim(),
+      level_frequency: part.level_frequency && typeof part.level_frequency === "object"
+        ? part.level_frequency
+        : part.levelFrequency && typeof part.levelFrequency === "object"
+          ? part.levelFrequency
+          : {},
+      advice_ru: String(part.advice_ru || part.adviceRu || part.advice || "").trim()
+    };
   };
+
+  const rawParts = Array.isArray(source.parts) ? source.parts.filter(Boolean) : [];
+
+  if (rawParts.length) {
+    return {
+      headword: String(source.headword || source.word || source.query || "").trim(),
+      detected_language: String(source.detected_language || source.detectedLanguage || "").trim(),
+      parts: rawParts.map(normalizeOnePart)
+    };
+  }
+
+  return normalizeOnePart(source);
 }
 
 function normalizeStringArray(value) {
@@ -2641,21 +2748,22 @@ function compactList(items, limit = 6) {
 }
 
 function buildWordRightDashboardHtml(payload) {
+  const activePayload = getActiveSidePayloadPart(payload) || {};
   const blocks = [];
 
-  blocks.push(buildWordRightTextCard("📖", "Английское объяснение", payload.english_definition, { english: true }));
-  blocks.push(buildWordRightChipCard("◎", "Смысловое ядро", payload.semantic_core));
-  blocks.push(buildWordRightChipCard("↔", "Синонимы", payload.synonyms, { more: payload.synonyms.length > 6 }));
-  blocks.push(buildWordRightChipCard("⇄", "Антонимы", payload.antonyms, { more: payload.antonyms.length > 6 }));
-  blocks.push(buildWordRightCollocationsCard(payload.collocations));
-  blocks.push(buildWordRightGrammarCard(payload.grammar_patterns));
-  blocks.push(buildWordRightListCard("☞", "Примечания по употреблению", payload.usage_notes));
-  blocks.push(buildWordRightMistakesCard(payload.common_mistakes));
-  blocks.push(buildWordRightPhrasesCard(payload.phrases));
-  blocks.push(buildWordRightWordFamilyCard(payload.word_family));
-  blocks.push(buildWordRightTextCard("◌", "Этимология", payload.etymology));
-  blocks.push(buildWordRightLevelCard(payload.level_frequency));
-  blocks.push(buildWordRightTextCard("✦", "Совет", payload.advice_ru, { soft: true }));
+  blocks.push(buildWordRightTextCard("📖", "Английское объяснение", activePayload.english_definition, { english: true }));
+  blocks.push(buildWordRightCollocationsCard(activePayload.collocations));
+  blocks.push(buildWordRightGrammarCard(activePayload.grammar_patterns));
+  blocks.push(buildWordRightListCard("☞", "Примечания по употреблению", activePayload.usage_notes));
+  blocks.push(buildWordRightMistakesCard(activePayload.common_mistakes));
+  blocks.push(buildWordRightPhrasesCard(activePayload.phrases));
+  blocks.push(buildWordRightWordFamilyCard(activePayload.word_family));
+  blocks.push(buildWordRightTextCard("◌", "Этимология", activePayload.etymology));
+  blocks.push(buildWordRightLevelCard(activePayload.level_frequency));
+  blocks.push(buildWordRightTextCard("✦", "Совет", activePayload.advice_ru, { soft: true }));
+  blocks.push(buildWordRightChipCard("◎", "Смысловое ядро", activePayload.semantic_core));
+  blocks.push(buildWordRightChipCard("↔", "Синонимы", activePayload.synonyms, { more: activePayload.synonyms.length > 6 }));
+  blocks.push(buildWordRightChipCard("⇄", "Антонимы", activePayload.antonyms, { more: activePayload.antonyms.length > 6 }));
 
   const html = blocks.filter(Boolean).join("");
 
@@ -2895,7 +3003,6 @@ function bindWordPartTabs() {
 
       wordCopiedValue = "";
       wordExamplesExpanded = false;
-      wordActivePanel = "center";
       renderStructuredWordCard(currentWordTranslationCard, index);
     };
   });
@@ -2928,6 +3035,8 @@ function clearWordMode() {
   wordSideRequestId += 1;
   wordLeftPanelHtml = "";
   wordRightPanelHtml = "";
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
 
   if (wordInput) {
     wordInput.value = "";
@@ -3613,6 +3722,8 @@ function openSelectedTextWordInWordMode() {
   wordSideRequestId += 1;
   wordLeftPanelHtml = "";
   wordRightPanelHtml = "";
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
 
   if (wordInput) {
     wordInput.value = word;
@@ -4292,6 +4403,8 @@ function openWordFromDictionary(word) {
   wordSideRequestId += 1;
   wordLeftPanelHtml = "";
   wordRightPanelHtml = "";
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
 
   if (wordInput) {
     wordInput.value = lastWordTranslateSource;
