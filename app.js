@@ -617,6 +617,57 @@ function ensureDictionaryPickerStyles() {
       box-shadow: 0 2px 5px rgba(31,111,86,0.07);
     }
 
+    .word-panel-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: stretch;
+      gap: 0;
+      margin-top: 8px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
+      padding: 2px;
+      border: 2px solid rgba(255,255,255,0.90);
+      border-radius: 18px;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.72),
+        inset -3px -3px 7px rgba(205,214,204,0.10),
+        0 2px 6px rgba(186,193,184,0.08);
+    }
+
+    .word-panel-tab {
+      width: 100%;
+      min-height: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0 6px;
+      border: 2px solid transparent;
+      border-radius: 17px;
+      background: transparent;
+      color: #777a77;
+      font-size: clamp(10.8px, 2.45vw, 14px);
+      font-weight: 430;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .word-panel-tab.active {
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
+      border-color: rgba(255,255,255,0.94);
+      color: #5f9962;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 6px rgba(205,214,204,0.12),
+        0 2px 5px rgba(186,193,184,0.07);
+    }
+
     .word-card-body {
       padding: 14px 13px 18px;
       background: rgba(255,255,255,0.54);
@@ -2173,6 +2224,7 @@ function renderStructuredWordCard(card, partIndex = 0) {
 
   setWordResultHtml(buildStructuredWordCardHtml(card, currentWordPartIndex), false);
   bindWordPartTabs();
+  bindWordPanelTabs();
   bindWordLeftVisualButtons();
   updateWordSwipeUI();
   updateWordModeButtons();
@@ -2195,6 +2247,14 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
         `).join("")}
       </div>`
     : "";
+
+  const panelTabsHtml = `
+    <div class="word-panel-tabs">
+      <button class="word-panel-tab ${wordActivePanel === "left" ? "active" : ""}" type="button" data-word-panel-tab="left">Мнемо</button>
+      <button class="word-panel-tab ${wordActivePanel === "center" ? "active" : ""}" type="button" data-word-panel-tab="center">Перевод</button>
+      <button class="word-panel-tab ${wordActivePanel === "right" ? "active" : ""}" type="button" data-word-panel-tab="right">Разбор</button>
+    </div>
+  `;
 
   const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
   const extraExamples = getWordPartExtraExamples(activePart);
@@ -2266,6 +2326,7 @@ function buildStructuredWordCardHtml(card, partIndex = 0) {
           <button class="word-sound-btn" type="button" title="Озвучить">${iconSpeaker()}</button>
         </div>
         ${tabsHtml}
+        ${panelTabsHtml}
       </div>
 
       <div class="word-detail-swipe-frame" id="wordDetailSwipeFrame">
@@ -3040,6 +3101,10 @@ function updateWordSwipeUI() {
   };
 
   track.style.transform = `translateX(${offsets[wordActivePanel] || offsets.center})`;
+
+  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.wordPanelTab === wordActivePanel);
+  });
 }
 
 function bindWordSwipe() {
@@ -3079,6 +3144,14 @@ function bindWordSwipe() {
       else if (wordActivePanel === "center") switchWordPanel("left");
     }
   }, { passive: true });
+}
+
+function bindWordPanelTabs() {
+  document.querySelectorAll("[data-word-panel-tab]").forEach((btn) => {
+    btn.onclick = () => {
+      switchWordPanel(btn.dataset.wordPanelTab || "center");
+    };
+  });
 }
 
 function bindWordPartTabs() {
