@@ -293,10 +293,32 @@ function ensureDictionaryPickerStyles() {
 
     .word-panel-tabs {
       grid-template-columns: 1fr 1fr 1fr !important;
+      padding: 1px !important;
+      border-radius: 15px !important;
+      min-height: 30px !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06) !important;
     }
 
     .word-panel-tab {
-      font-size: clamp(11px, 2.55vw, 15.5px);
+      min-height: 26px !important;
+      height: 26px !important;
+      padding: 0 6px !important;
+      border-radius: 14px !important;
+      font-size: clamp(10.8px, 2.45vw, 15px);
+      line-height: 1 !important;
+    }
+
+    .word-panel-tab.active {
+      border-radius: 14px !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 2px 2px 4px rgba(255,255,255,0.70),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055) !important;
     }
 
     .text-panel-tab {
