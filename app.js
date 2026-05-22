@@ -12,6 +12,9 @@ let textTranslationReady = false;
 let textActivePanel = "source";
 let textSourceValue = "";
 let textTranslatedValue = "";
+let textReadingRequestId = 0;
+let textReadingHtml = "";
+let textReadingRawValue = "";
 let selectedTextWord = "";
 let selectedTextWordElement = null;
 let textQuickTranslateRequestId = 0;
@@ -1195,6 +1198,124 @@ function ensureDictionaryPickerStyles() {
     }
 
     .word-mode-hint { display: none !important; }
+
+    .text-reading-output {
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 19px 13px 79px !important;
+      color: #1f211f;
+      background: transparent;
+      box-sizing: border-box;
+    }
+
+    .text-reading-title {
+      color: rgba(31,33,31,0.70);
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 650;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+      margin: 0 0 12px;
+    }
+
+    .text-reading-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .text-reading-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      column-gap: 7px;
+      row-gap: 8px;
+      line-height: 1.15;
+    }
+
+    .text-reading-token {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      min-width: 0;
+      max-width: 100%;
+      padding: 1px 2px 2px;
+      border-radius: 9px;
+    }
+
+    .text-reading-token.function {
+      opacity: 0.88;
+    }
+
+    .text-reading-word {
+      color: rgba(31,33,31,0.90);
+      font-size: clamp(15px, 3.5vw, 21px);
+      font-weight: 540;
+      line-height: 1.05;
+      letter-spacing: -0.012em;
+      white-space: nowrap;
+    }
+
+    .text-reading-ipa {
+      margin-top: 3px;
+      color: #1f6f56;
+      font-size: clamp(10px, 2.25vw, 13.2px);
+      font-weight: 520;
+      line-height: 1.05;
+      white-space: nowrap;
+      opacity: 0.84;
+    }
+
+    .text-reading-punctuation {
+      display: inline-flex;
+      align-items: flex-end;
+      color: rgba(31,33,31,0.86);
+      font-size: clamp(15px, 3.5vw, 21px);
+      font-weight: 540;
+      line-height: 1.05;
+      padding: 0 0 2px;
+    }
+
+    .text-reading-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(224,228,222,0.64);
+    }
+
+    .text-reading-section-title {
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(11px, 2.5vw, 13.5px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .text-reading-difficult-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .text-reading-difficult-item,
+    .text-reading-note-item {
+      color: rgba(31,33,31,0.70);
+      font-size: clamp(11.5px, 2.65vw, 14.2px);
+      line-height: 1.34;
+    }
+
+    .text-reading-difficult-item strong {
+      color: rgba(31,33,31,0.88);
+      font-weight: 700;
+    }
+
+    .text-reading-difficult-item .ipa {
+      color: #1f6f56;
+      font-weight: 650;
+    }
 
     .text-reading-placeholder {
       color: rgba(31,33,31,0.72);
@@ -3458,6 +3579,9 @@ async function handleTextTranslate() {
   }
 
   textSourceValue = source;
+  textReadingRequestId += 1;
+  textReadingRawValue = "";
+  textReadingHtml = buildTextReadingLoadingHtml();
   resetTextCopyState();
   updateTextInlineClearVisibility();
   clearSelectedTextWord();
@@ -3465,7 +3589,9 @@ async function handleTextTranslate() {
   textActivePanel = "translation";
 
   const output = document.getElementById("textTranslationOutput");
+  const readingOutput = document.getElementById("textReadingOutput");
   if (output) output.textContent = "Думаю над переводом...";
+  if (readingOutput) readingOutput.outerHTML = textReadingHtml;
 
   const tabs = document.getElementById("textPanelTabs");
   if (tabs) tabs.classList.remove("hidden");
@@ -3476,6 +3602,8 @@ async function handleTextTranslate() {
   if (translateBtn) translateBtn.disabled = true;
 
   switchTextPanel("translation");
+
+  startTextLeftReadingRequest(source, textReadingRequestId);
 
   try {
     const data = await callAi("text_translate", source);
@@ -3505,6 +3633,253 @@ function buildTextTranslationStub(source) {
     "",
     source
   ].join("\\n");
+}
+
+function buildTextReadingLoadingHtml() {
+  return `
+    <div id="textReadingOutput" class="text-reading-placeholder">
+      Готовлю чтение с транскрипцией...
+      <small>Английский текст будет разложен на слова и IPA.</small>
+    </div>
+  `;
+}
+
+function buildTextReadingDefaultHtml() {
+  return `
+    <div id="textReadingOutput" class="text-reading-placeholder">
+      Здесь появится текст для чтения с транскрипцией.
+      <small>После перевода здесь будет английский текст с IPA для важных слов.</small>
+    </div>
+  `;
+}
+
+function renderTextReadingPanelContentHtml() {
+  return textReadingHtml || buildTextReadingDefaultHtml();
+}
+
+function setTextReadingHtml(html, rawValue = "") {
+  textReadingHtml = html || buildTextReadingDefaultHtml();
+  textReadingRawValue = rawValue || "";
+
+  const readingOutput = document.getElementById("textReadingOutput");
+
+  if (readingOutput) {
+    readingOutput.outerHTML = textReadingHtml;
+  }
+
+  updateTextCopyFeedback();
+}
+
+async function startTextLeftReadingRequest(source, requestId) {
+  try {
+    const data = await callAi("text_left", source);
+
+    if (requestId !== textReadingRequestId) return;
+
+    const payload = getTextReadingPayloadFromAiData(data);
+
+    if (payload) {
+      setTextReadingHtml(buildTextReadingHtml(payload), buildTextReadingPlainText(payload));
+      return;
+    }
+
+    const result = String(data.result || data.raw || "").trim();
+
+    if (result) {
+      setTextReadingHtml(buildTextReadingFallbackHtml(result), result);
+    } else {
+      setTextReadingHtml(buildTextReadingFallbackHtml("Пустой ответ."), "Пустой ответ.");
+    }
+  } catch (err) {
+    if (requestId !== textReadingRequestId) return;
+
+    setTextReadingHtml(
+      buildTextReadingFallbackHtml("Ошибка чтения:\n" + err.message),
+      "Ошибка чтения:\n" + err.message
+    );
+  }
+}
+
+function getTextReadingPayloadFromAiData(data) {
+  const candidates = [
+    data?.payload,
+    data?.card,
+    data?.reading,
+    parseJsonObject(data?.result),
+    parseJsonObject(data?.raw)
+  ];
+
+  for (const candidate of candidates) {
+    const payload = normalizeTextReadingPayload(candidate);
+
+    if (payload) return payload;
+  }
+
+  return null;
+}
+
+function normalizeTextReadingPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const lines = Array.isArray(payload.lines)
+    ? payload.lines.map(normalizeTextReadingLine).filter(line => line.items.length)
+    : [];
+
+  const difficultWords = normalizeObjectArray(payload.difficult_words || payload.difficultWords)
+    .map((item) => ({
+      word: String(item.word || item.value || item.text || "").trim(),
+      ipa: String(item.ipa || item.transcription || "").trim(),
+      hint_ru: String(item.hint_ru || item.hintRu || item.hint || "").trim()
+    }))
+    .filter(item => item.word || item.ipa || item.hint_ru)
+    .slice(0, 8);
+
+  const notes = normalizeStringArray(payload.reading_notes_ru || payload.readingNotesRu || payload.notes || payload.notes_ru).slice(0, 5);
+  const englishText = String(payload.english_text || payload.englishText || payload.text || "").trim();
+
+  if (!lines.length && !englishText) return null;
+
+  return {
+    detected_language: String(payload.detected_language || payload.detectedLanguage || "").trim(),
+    english_text: englishText,
+    reading_title_ru: String(payload.reading_title_ru || payload.readingTitleRu || "Чтение").trim() || "Чтение",
+    lines,
+    difficult_words: difficultWords,
+    reading_notes_ru: notes
+  };
+}
+
+function normalizeTextReadingLine(line) {
+  const sourceItems = Array.isArray(line?.items)
+    ? line.items
+    : Array.isArray(line)
+      ? line
+      : [];
+
+  const items = sourceItems
+    .map(normalizeTextReadingItem)
+    .filter(item => item.word || item.type === "punctuation");
+
+  return { items };
+}
+
+function normalizeTextReadingItem(item) {
+  if (!item || typeof item !== "object") {
+    const text = String(item || "").trim();
+    return {
+      word: text,
+      ipa: "",
+      show_ipa: false,
+      type: /\w/.test(text) ? "content" : "punctuation"
+    };
+  }
+
+  const type = String(item.type || "content").trim().toLowerCase();
+  const word = String(item.word || item.text || item.value || item.token || "").trim();
+  const ipa = String(item.ipa || item.transcription || item.pronunciation || "").trim();
+  const showIpa = item.show_ipa === false || item.showIpa === false ? false : Boolean(ipa);
+
+  return {
+    word,
+    ipa,
+    show_ipa: showIpa,
+    type: type === "function" || type === "punctuation" ? type : "content"
+  };
+}
+
+function buildTextReadingHtml(payload) {
+  const title = String(payload.reading_title_ru || "Чтение").trim();
+  const lines = Array.isArray(payload.lines) ? payload.lines : [];
+  const difficultWords = Array.isArray(payload.difficult_words) ? payload.difficult_words : [];
+  const notes = Array.isArray(payload.reading_notes_ru) ? payload.reading_notes_ru : [];
+
+  const linesHtml = lines.length
+    ? `<div class="text-reading-lines">
+        ${lines.map((line) => `
+          <div class="text-reading-line">
+            ${(line.items || []).map(buildTextReadingItemHtml).join("")}
+          </div>
+        `).join("")}
+      </div>`
+    : `<div class="text-reading-lines"><div class="text-reading-line">${escapeHTML(payload.english_text || "")}</div></div>`;
+
+  const difficultHtml = difficultWords.length
+    ? `<section class="text-reading-section">
+        <div class="text-reading-section-title">Сложные слова</div>
+        <div class="text-reading-difficult-list">
+          ${difficultWords.map((item) => `
+            <div class="text-reading-difficult-item">
+              ${item.word ? `<strong>${escapeHTML(item.word)}</strong>` : ""}
+              ${item.ipa ? ` <span class="ipa">${escapeHTML(item.ipa)}</span>` : ""}
+              ${item.hint_ru ? ` — ${escapeHTML(item.hint_ru)}` : ""}
+            </div>
+          `).join("")}
+        </div>
+      </section>`
+    : "";
+
+  const notesHtml = notes.length
+    ? `<section class="text-reading-section">
+        <div class="text-reading-section-title">Заметки</div>
+        <div class="text-reading-difficult-list">
+          ${notes.map((note) => `<div class="text-reading-note-item">${escapeHTML(note)}</div>`).join("")}
+        </div>
+      </section>`
+    : "";
+
+  return `
+    <div id="textReadingOutput" class="text-reading-output">
+      ${title ? `<div class="text-reading-title">${escapeHTML(title)}</div>` : ""}
+      ${linesHtml}
+      ${difficultHtml}
+      ${notesHtml}
+    </div>
+  `;
+}
+
+function buildTextReadingItemHtml(item) {
+  const word = String(item?.word || "").trim();
+  const ipa = String(item?.ipa || "").trim();
+  const type = String(item?.type || "content").trim().toLowerCase();
+  const showIpa = Boolean(item?.show_ipa !== false && ipa && type !== "punctuation");
+
+  if (type === "punctuation") {
+    return `<span class="text-reading-punctuation">${escapeHTML(word)}</span>`;
+  }
+
+  return `
+    <span class="text-reading-token ${escapeHTML(type)}">
+      <span class="text-reading-word">${escapeHTML(word)}</span>
+      ${showIpa ? `<span class="text-reading-ipa">${escapeHTML(ipa)}</span>` : ""}
+    </span>
+  `;
+}
+
+function buildTextReadingPlainText(payload) {
+  const lines = Array.isArray(payload?.lines) ? payload.lines : [];
+
+  if (!lines.length) return String(payload?.english_text || "").trim();
+
+  const text = lines.map((line) => {
+    return (line.items || []).map((item) => {
+      if (item.type === "punctuation") return item.word || "";
+      return item.show_ipa && item.ipa ? `${item.word} ${item.ipa}` : item.word;
+    }).join(" ")
+      .replace(/\s+([,.!?;:])/g, "$1")
+      .trim();
+  }).join("\n").trim();
+
+  return text || String(payload?.english_text || "").trim();
+}
+
+function buildTextReadingFallbackHtml(text) {
+  const value = String(text || "").trim() || "Пустой ответ.";
+
+  return `
+    <div id="textReadingOutput" class="text-reading-placeholder">
+      ${escapeHTML(value)}
+    </div>
+  `;
 }
 
 function bindTextInlineClearButtons() {
@@ -3580,7 +3955,7 @@ function getTextPanelCopyValue(panelName) {
   const translationOutput = document.getElementById("textTranslationOutput");
 
   if (panelName === "reading") {
-    return String(readingOutput?.innerText || "");
+    return String(textReadingRawValue || readingOutput?.innerText || "");
   }
 
   if (panelName === "translation") {
@@ -3736,10 +4111,7 @@ function renderClickableTextPanels(sourceText, translatedText) {
 
   if (readingPanel) {
     readingPanel.innerHTML = `
-      <div id="textReadingOutput" class="text-reading-placeholder">
-        Здесь появится текст для чтения с транскрипцией.
-        <small>Следующий этап: отдельный AI-запрос подготовит английский текст с IPA под каждое важное слово.</small>
-      </div>
+      ${renderTextReadingPanelContentHtml()}
       ${renderTextBottomToolbar("textInlineClearBtnReading", "reading")}
     `;
   }
@@ -4050,6 +4422,9 @@ function clearTextMode() {
   textActivePanel = "source";
   textSourceValue = "";
   textTranslatedValue = "";
+  textReadingRequestId += 1;
+  textReadingHtml = "";
+  textReadingRawValue = "";
   textPanelScroll.reading = 0;
   textPanelScroll.source = 0;
   textPanelScroll.translation = 0;
