@@ -1338,6 +1338,151 @@ function ensureDictionaryPickerStyles() {
 
     .text-mode-hint { display: none !important; }
 
+
+    .dictionary-panel .word-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .dictionary-panel .word-row.dictionary-word-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) 28px;
+      align-items: start;
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 9px 10px 8px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(226,231,224,0.74);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.46),
+        0 1px 4px rgba(180,188,178,0.035);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dictionary-panel .word-row.dictionary-word-card:active {
+      transform: scale(0.995);
+    }
+
+    .dictionary-panel .word-row.dictionary-word-card.selected {
+      background: rgba(95,153,98,0.08);
+      border-color: rgba(95,153,98,0.22);
+    }
+
+    .dictionary-panel .word-number-badge {
+      width: 25px;
+      height: 25px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      background: rgba(95,153,98,0.09);
+      border: 1px solid rgba(95,153,98,0.15);
+      color: #1f6f56;
+      font-size: clamp(10.5px, 2.35vw, 13px);
+      font-weight: 760;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        0 1px 3px rgba(180,188,178,0.035);
+      user-select: none;
+    }
+
+    .dictionary-panel .word-row.dictionary-word-card.selected .word-number-badge {
+      background: #1f6f56;
+      border-color: rgba(31,111,86,0.22);
+      color: #ffffff;
+    }
+
+    .dictionary-panel .dictionary-word-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .dictionary-panel .dictionary-word-line {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
+      line-height: 1.15;
+    }
+
+    .dictionary-panel .dictionary-word-text {
+      color: #1f211f;
+      font-size: clamp(14px, 3.2vw, 18px);
+      font-weight: 720;
+      line-height: 1.16;
+      letter-spacing: -0.016em;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .dictionary-panel .dictionary-word-transcription {
+      color: #1f6f56;
+      font-size: clamp(10.5px, 2.4vw, 13.5px);
+      font-weight: 560;
+      line-height: 1.12;
+      white-space: nowrap;
+      opacity: 0.82;
+    }
+
+    .dictionary-panel .dictionary-word-pos {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.09);
+      color: #1f6f56;
+      padding: 2px 6px;
+      font-size: clamp(9px, 2.05vw, 11.5px);
+      font-weight: 650;
+      line-height: 1.12;
+      white-space: nowrap;
+    }
+
+    .dictionary-panel .dictionary-word-translation {
+      color: rgba(31,33,31,0.66);
+      font-size: clamp(12.2px, 2.8vw, 15.5px);
+      font-weight: 450;
+      line-height: 1.28;
+      letter-spacing: -0.006em;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .dictionary-panel .dictionary-word-delete-btn {
+      width: 26px;
+      height: 26px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0;
+      background: rgba(255,255,255,0.58);
+      color: rgba(31,33,31,0.38);
+      font-size: 18px;
+      font-weight: 450;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dictionary-panel .dictionary-word-delete-btn:active {
+      background: rgba(150,48,45,0.08);
+      color: rgba(150,48,45,0.82);
+    }
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -4833,19 +4978,42 @@ function renderWordsHtml(dict) {
     return `<div class="empty-word-list">Слов пока нет. Введите первое слово сверху.</div>`;
   }
 
-  return words.map((item) => `
-    <div class="word-row" data-word-open="${escapeHTML(item.word)}">
-      <div class="word-main">
-        <div class="word-line">
-          <span class="word-text">${escapeHTML(item.word)}</span>
-          ${item.partOfSpeech ? `<span class="word-pos">${escapeHTML(item.partOfSpeech)}</span>` : ""}
+  return words.map((item, index) => {
+    const word = String(item.word || "").trim();
+    const transcription = String(item.transcription || "").trim();
+    const translation = String(item.translation || "перевод позже").trim();
+    const partOfSpeech = String(item.partOfSpeech || "").trim();
+    const showTranscription = shouldShowDictionaryItemTranscription(word, transcription);
+
+    return `
+      <div class="word-row dictionary-word-card" data-word-open="${escapeHTML(word)}">
+        <span class="word-number-badge" title="Номер слова">${index + 1}</span>
+
+        <div class="word-main dictionary-word-main">
+          <div class="word-line dictionary-word-line">
+            <span class="word-text dictionary-word-text">${escapeHTML(word)}</span>
+            ${showTranscription ? `<span class="word-transcription dictionary-word-transcription">${escapeHTML(transcription)}</span>` : ""}
+            ${partOfSpeech ? `<span class="word-pos dictionary-word-pos">${escapeHTML(partOfSpeech)}</span>` : ""}
+          </div>
+          <div class="word-translation dictionary-word-translation">${escapeHTML(translation || "перевод позже")}</div>
         </div>
-        <div class="word-transcription">${escapeHTML(item.transcription || "—")}</div>
+
+        <button class="word-delete-btn dictionary-word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>
       </div>
-      <div class="word-translation">${escapeHTML(item.translation || "перевод позже")}</div>
-      <button class="word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>
-    </div>
-  `).join("");
+    `;
+  }).join("");
+}
+
+function shouldShowDictionaryItemTranscription(word, transcription) {
+  const cleanWord = String(word || "").trim();
+  const cleanTranscription = String(transcription || "").trim();
+
+  if (!cleanWord || !cleanTranscription) return false;
+  if (cleanTranscription === "—" || cleanTranscription === "..." || cleanTranscription === "…") return false;
+  if (cleanWord.split(/\s+/).filter(Boolean).length !== 1) return false;
+  if (!/[A-Za-z]/.test(cleanWord) || /[А-Яа-яЁё]/.test(cleanWord)) return false;
+
+  return true;
 }
 
 async function addDictionary() {
