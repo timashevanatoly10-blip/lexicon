@@ -1728,6 +1728,212 @@ function ensureDictionaryPickerStyles() {
         0 2px 5px rgba(95,153,98,0.09) !important;
     }
 
+
+
+    .lexicon-topline {
+      position: relative !important;
+      display: grid !important;
+      grid-template-columns: 44px minmax(0, 1fr) auto !important;
+      align-items: center !important;
+      gap: 10px !important;
+      min-height: 54px !important;
+      padding: 4px 8px 6px !important;
+    }
+
+    .lexicon-topline .back-btn,
+    .lexicon-back-icon-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--lexi-green) !important;
+      font-size: 27px !important;
+      font-weight: 500 !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transform: translateY(-5px) !important;
+    }
+
+    .lexicon-title-block {
+      min-width: 0 !important;
+      text-align: left !important;
+      transform: translateY(1px) !important;
+    }
+
+    .lexicon-title-block h1 {
+      display: none !important;
+    }
+
+    .lexicon-subtitle {
+      color: rgba(31,33,31,0.56) !important;
+      font-size: clamp(13px, 3vw, 16.5px) !important;
+      font-weight: 560 !important;
+      line-height: 1.18 !important;
+      letter-spacing: -0.01em !important;
+      white-space: normal !important;
+    }
+
+    .lexicon-actions {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 8px !important;
+    }
+
+    .lexicon-icon-btn,
+    .lexicon-add-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 2px solid rgba(255,255,255,0.92) !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%) !important;
+      color: var(--lexi-green) !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.68),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1 !important;
+    }
+
+    .lexicon-icon-btn {
+      font-size: 21px !important;
+      font-weight: 520 !important;
+    }
+
+    .lexicon-add-btn {
+      font-size: 30px !important;
+      font-weight: 430 !important;
+      padding-bottom: 3px !important;
+    }
+
+    .lexicon-search-card,
+    .lexicon-search {
+      display: none !important;
+    }
+
+    .dictionary-panel {
+      padding: 0 8px 12px !important;
+    }
+
+    .dictionary-panel-head {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto auto !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 8px 10px !important;
+      min-height: 52px !important;
+    }
+
+    .dictionary-panel-title,
+    .dictionary-panel-subtitle {
+      display: none !important;
+    }
+
+    .dictionary-panel-actions {
+      display: contents !important;
+    }
+
+    .dictionary-panel-menu-wrap {
+      position: relative !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .dictionary-panel-menu-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 2px solid rgba(255,255,255,0.92) !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%) !important;
+      color: var(--lexi-green) !important;
+      font-size: 22px !important;
+      font-weight: 650 !important;
+      line-height: 1 !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.68),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055) !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dictionary-add-row {
+      display: contents !important;
+      margin: 0 !important;
+    }
+
+    .dictionary-word-input {
+      height: 38px !important;
+      border-radius: 18px !important;
+      padding: 0 13px !important;
+      font-size: clamp(12.5px, 2.85vw, 16px) !important;
+      background: rgba(255,255,255,0.58) !important;
+    }
+
+    .dictionary-add-word-btn {
+      height: 38px !important;
+      min-width: 64px !important;
+      border-radius: 18px !important;
+      padding: 0 12px !important;
+      font-size: clamp(11.5px, 2.6vw, 14px) !important;
+      background: rgba(95,153,98,0.78) !important;
+    }
+
+    .dictionary-menu-popover {
+      position: fixed;
+      z-index: 9998;
+      min-width: 154px;
+      border-radius: 18px;
+      padding: 6px;
+      background: rgba(255,255,252,0.98);
+      border: 1px solid rgba(226,231,224,0.84);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 12px 32px rgba(20,40,30,0.16);
+      animation: dictionaryPickerRise 0.14s ease-out;
+    }
+
+    .dictionary-menu-popover button {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 13px;
+      background: transparent;
+      color: rgba(31,33,31,0.82);
+      padding: 0 11px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dictionary-menu-popover button:active {
+      background: rgba(95,153,98,0.08);
+    }
+
+    .dictionary-menu-popover button.danger {
+      color: rgba(150,48,45,0.92);
+    }
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -5067,10 +5273,9 @@ function renderLexiconPage() {
   lexiconPage.innerHTML = `
     <section class="lexicon-shell">
       <div class="lexicon-topline">
-        <button id="backHomeFromLexiconBtn" class="back-btn" type="button">← Назад</button>
+        <button id="backHomeFromLexiconBtn" class="back-btn lexicon-back-icon-btn" type="button" title="Назад">←</button>
 
         <div class="lexicon-title-block">
-          <h1>Лексикон</h1>
           <div class="lexicon-subtitle">${dictionaries.length} словарей • ${totalWords} слов</div>
         </div>
 
@@ -5078,10 +5283,6 @@ function renderLexiconPage() {
           <button id="lexiconMenuBtn" class="lexicon-icon-btn" type="button" title="Меню">☰</button>
           <button id="addDictionaryBtn" class="lexicon-add-btn" type="button" title="Добавить словарь">+</button>
         </div>
-      </div>
-
-      <div class="lexicon-search-card">
-        <input id="dictionarySearchInput" class="lexicon-search" type="search" placeholder="Поиск словаря или слова" />
       </div>
 
       <div id="dictionaryList" class="dictionary-list"></div>
@@ -5093,11 +5294,8 @@ function renderLexiconPage() {
 
   const addDictionaryBtn = document.getElementById("addDictionaryBtn");
   const lexiconMenuBtn = document.getElementById("lexiconMenuBtn");
-  const dictionarySearchInput = document.getElementById("dictionarySearchInput");
-
   on(addDictionaryBtn, "click", addDictionary);
   on(lexiconMenuBtn, "click", () => alert("Меню пока заглушка. Потом здесь будут импорт, экспорт, настройки и режимы."));
-  on(dictionarySearchInput, "input", () => renderDictionaryList(dictionarySearchInput.value));
 
   renderDictionaryList("");
 }
@@ -5148,19 +5346,16 @@ function renderDictionaryList(filterText = "") {
 
       <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
         <div class="dictionary-panel-head">
-          <div>
-            <div class="dictionary-panel-title">${escapeHTML(dict.title || "Без названия")}</div>
-            <div class="dictionary-panel-subtitle">${wordCount} слов</div>
+          <div class="dictionary-add-row">
+            <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
+            <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}">Ввод</button>
           </div>
-          <div class="dictionary-panel-actions">
-            <button class="small-action-btn" type="button" data-dict-rename="${dict.id}">Rename</button>
-            <button class="small-action-btn danger" type="button" data-dict-delete="${dict.id}">Delete</button>
-          </div>
-        </div>
 
-        <div class="dictionary-add-row">
-          <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
-          <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}">Ввод</button>
+          <div class="dictionary-panel-actions">
+            <div class="dictionary-panel-menu-wrap">
+              <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
+            </div>
+          </div>
         </div>
 
         <div class="word-list" data-word-list="${dict.id}">
@@ -5174,6 +5369,14 @@ function renderDictionaryList(filterText = "") {
 
   list.querySelectorAll("[data-dict-toggle]").forEach((btn) => {
     on(btn, "click", () => toggleDictionary(btn.dataset.dictToggle));
+  });
+
+
+  list.querySelectorAll("[data-dict-menu]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.stopPropagation();
+      openDictionaryMenu(btn.dataset.dictMenu, btn);
+    });
   });
 
   list.querySelectorAll("[data-dict-rename]").forEach((btn) => {
@@ -5312,6 +5515,62 @@ function toggleDictionary(dictionaryId) {
 
   const searchInput = document.getElementById("dictionarySearchInput");
   renderDictionaryList(searchInput ? searchInput.value : "");
+}
+
+
+function closeDictionaryMenu() {
+  const existing = document.getElementById("dictionaryMenuPopover");
+  if (existing) existing.remove();
+}
+
+function openDictionaryMenu(dictionaryId, anchor) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict || !anchor) return;
+
+  closeDictionaryMenu();
+
+  const popover = document.createElement("div");
+  popover.id = "dictionaryMenuPopover";
+  popover.className = "dictionary-menu-popover";
+  popover.innerHTML = `
+    <button type="button" data-menu-action="rename">Rename</button>
+    <button type="button" class="danger" data-menu-action="delete">Delete</button>
+  `;
+
+  document.body.appendChild(popover);
+
+  const rect = anchor.getBoundingClientRect();
+  const popoverWidth = 154;
+  const left = Math.max(10, Math.min(window.innerWidth - popoverWidth - 10, rect.right - popoverWidth));
+  const top = Math.min(window.innerHeight - 96, rect.bottom + 8);
+
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+
+  const handleOutside = (event) => {
+    if (!popover.contains(event.target) && event.target !== anchor) {
+      closeDictionaryMenu();
+      document.removeEventListener("click", handleOutside, true);
+    }
+  };
+
+  requestAnimationFrame(() => {
+    document.addEventListener("click", handleOutside, true);
+  });
+
+  popover.querySelector('[data-menu-action="rename"]')?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeDictionaryMenu();
+    document.removeEventListener("click", handleOutside, true);
+    renameDictionary(dictionaryId);
+  });
+
+  popover.querySelector('[data-menu-action="delete"]')?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeDictionaryMenu();
+    document.removeEventListener("click", handleOutside, true);
+    deleteDictionary(dictionaryId);
+  });
 }
 
 async function renameDictionary(dictionaryId) {
