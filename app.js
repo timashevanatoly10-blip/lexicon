@@ -1919,6 +1919,28 @@ function ensureDictionaryPickerStyles() {
       background: rgba(95,153,98,0.78) !important;
     }
 
+
+    .dictionary-block.open {
+      --dictionary-sticky-top: 10px;
+      --dictionary-sticky-head-offset: 46px;
+    }
+
+    .dictionary-block.open .dictionary-line {
+      position: sticky !important;
+      top: var(--dictionary-sticky-top) !important;
+      z-index: 90 !important;
+    }
+
+    .dictionary-block.open .dictionary-panel {
+      overflow: visible !important;
+    }
+
+    .dictionary-block.open .dictionary-panel-head {
+      position: sticky !important;
+      top: calc(var(--dictionary-sticky-top) + var(--dictionary-sticky-head-offset)) !important;
+      z-index: 89 !important;
+    }
+
     .dictionary-menu-popover {
       position: fixed;
       z-index: 9998;
@@ -1954,32 +1976,6 @@ function ensureDictionaryPickerStyles() {
 
     .dictionary-menu-popover button.danger {
       color: rgba(150,48,45,0.92);
-    }
-
-
-
-    /* Dictionary sticky header from stable v77: keep the old visual design, only add sticking behavior. */
-    .dictionary-block.open {
-      position: relative !important;
-      isolation: isolate !important;
-    }
-
-    .dictionary-block.open .dictionary-line {
-      position: sticky !important;
-      top: max(10px, env(safe-area-inset-top)) !important;
-      z-index: 48 !important;
-      transform: translateZ(0) !important;
-    }
-
-    .dictionary-block.open .dictionary-panel-head {
-      position: sticky !important;
-      top: calc(max(10px, env(safe-area-inset-top)) + 44px) !important;
-      z-index: 47 !important;
-      transform: translateZ(0) !important;
-    }
-
-    .dictionary-block.open .dictionary-line:active {
-      transform: translateZ(0) scale(0.997) !important;
     }
 
     @media (max-width: 520px) {
