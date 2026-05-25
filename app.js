@@ -1352,12 +1352,12 @@ function ensureDictionaryPickerStyles() {
     .dictionary-panel .word-row.dictionary-word-card {
       position: relative;
       display: grid;
-      grid-template-columns: 30px minmax(0, 1fr) !important;
+      grid-template-columns: 24px minmax(0, 1fr) !important;
       align-items: start;
-      gap: 8px;
+      gap: 7px;
       width: 100%;
       box-sizing: border-box;
-      padding: 12px 8px 13px 6px;
+      padding: 12px 8px 13px 2px;
       border-radius: 0;
       background: transparent;
       border: 0;
@@ -1377,7 +1377,7 @@ function ensureDictionaryPickerStyles() {
     }
 
     .dictionary-panel .word-row.dictionary-word-card.editing {
-      grid-template-columns: 30px minmax(0, 1fr) 28px !important;
+      grid-template-columns: 24px minmax(0, 1fr) 28px !important;
     }
 
     .dictionary-panel .word-row.dictionary-word-card.selected {
@@ -1387,8 +1387,8 @@ function ensureDictionaryPickerStyles() {
     }
 
     .dictionary-panel .word-number-badge {
-      width: 25px;
-      height: 25px;
+      width: 20px;
+      height: 20px;
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
@@ -1397,7 +1397,7 @@ function ensureDictionaryPickerStyles() {
       background: rgba(95,153,98,0.09);
       border: 1px solid rgba(95,153,98,0.15);
       color: #1f6f56;
-      font-size: clamp(10.5px, 2.35vw, 13px);
+      font-size: clamp(9px, 2.05vw, 11px);
       font-weight: 760;
       line-height: 1;
       box-shadow:
@@ -1909,14 +1909,33 @@ function ensureDictionaryPickerStyles() {
     }
 
     .dictionary-add-word-btn {
+      width: 38px !important;
+      min-width: 38px !important;
       height: 38px !important;
-      min-width: 42px !important;
-      width: 42px !important;
-      border-radius: 999px !important;
       padding: 0 0 3px !important;
-      font-size: 25px !important;
+      border-radius: 999px !important;
+      border: 2px solid rgba(255,255,255,0.94) !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%) !important;
+      color: #5f9962 !important;
+      font-size: 26px !important;
       font-weight: 520 !important;
-      background: rgba(95,153,98,0.78) !important;
+      line-height: 1 !important;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.80),
+        inset -3px -3px 7px rgba(205,214,204,0.16),
+        0 2px 5px rgba(186,193,184,0.08) !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .dictionary-add-word-btn:active {
+      transform: scale(0.96);
+      box-shadow:
+        inset 2px 2px 6px rgba(186,193,184,0.12),
+        0 1px 4px rgba(186,193,184,0.10) !important;
     }
 
 
@@ -1944,27 +1963,27 @@ function ensureDictionaryPickerStyles() {
     .dictionary-menu-popover {
       position: fixed;
       z-index: 9998;
-      min-width: 154px;
-      border-radius: 18px;
-      padding: 6px;
+      min-width: 118px;
+      border-radius: 15px;
+      padding: 5px;
       background: rgba(255,255,252,0.98);
       border: 1px solid rgba(226,231,224,0.84);
       box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.50),
-        0 12px 32px rgba(20,40,30,0.16);
+        0 10px 26px rgba(20,40,30,0.14);
       animation: dictionaryPickerRise 0.14s ease-out;
     }
 
     .dictionary-menu-popover button {
       width: 100%;
-      min-height: 36px;
+      min-height: 30px;
       border: 0;
-      border-radius: 13px;
+      border-radius: 11px;
       background: transparent;
       color: rgba(31,33,31,0.82);
-      padding: 0 11px;
+      padding: 0 9px;
       text-align: left;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 650;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
@@ -5602,11 +5621,19 @@ function openDictionaryMenu(dictionaryId, anchor) {
   const dict = dictionaries.find((item) => item.id === dictionaryId);
   if (!dict || !anchor) return;
 
+  const existing = document.getElementById("dictionaryMenuPopover");
+
+  if (existing && existing.dataset.dictionaryId === String(dictionaryId)) {
+    existing.remove();
+    return;
+  }
+
   closeDictionaryMenu();
 
   const popover = document.createElement("div");
   popover.id = "dictionaryMenuPopover";
   popover.className = "dictionary-menu-popover";
+  popover.dataset.dictionaryId = String(dictionaryId);
   const isEditMode = dictionaryEditModeId === dictionaryId;
 
   popover.innerHTML = `
@@ -5618,19 +5645,37 @@ function openDictionaryMenu(dictionaryId, anchor) {
   document.body.appendChild(popover);
 
   const rect = anchor.getBoundingClientRect();
-  const popoverWidth = 154;
+  const popoverWidth = 118;
   const left = Math.max(10, Math.min(window.innerWidth - popoverWidth - 10, rect.right - popoverWidth));
-  const top = Math.min(window.innerHeight - 96, rect.bottom + 8);
+  const top = Math.min(window.innerHeight - 90, rect.bottom + 7);
 
   popover.style.left = `${left}px`;
   popover.style.top = `${top}px`;
 
-  const handleOutside = (event) => {
-    if (!popover.contains(event.target) && event.target !== anchor) {
-      closeDictionaryMenu();
-      document.removeEventListener("click", handleOutside, true);
+  const stopEvent = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (typeof event.stopImmediatePropagation === "function") {
+      event.stopImmediatePropagation();
     }
   };
+
+  const cleanupOutside = () => {
+    document.removeEventListener("click", handleOutside, true);
+  };
+
+  const handleOutside = (event) => {
+    if (popover.contains(event.target)) return;
+
+    stopEvent(event);
+    closeDictionaryMenu();
+    cleanupOutside();
+  };
+
+  popover.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
 
   requestAnimationFrame(() => {
     document.addEventListener("click", handleOutside, true);
@@ -5639,7 +5684,7 @@ function openDictionaryMenu(dictionaryId, anchor) {
   popover.querySelector('[data-menu-action="edit"]')?.addEventListener("click", (event) => {
     event.stopPropagation();
     closeDictionaryMenu();
-    document.removeEventListener("click", handleOutside, true);
+    cleanupOutside();
     dictionaryEditModeId = dictionaryEditModeId === dictionaryId ? null : dictionaryId;
     renderDictionaryList(getDictionarySearchValue());
   });
@@ -5647,14 +5692,14 @@ function openDictionaryMenu(dictionaryId, anchor) {
   popover.querySelector('[data-menu-action="rename"]')?.addEventListener("click", (event) => {
     event.stopPropagation();
     closeDictionaryMenu();
-    document.removeEventListener("click", handleOutside, true);
+    cleanupOutside();
     renameDictionary(dictionaryId);
   });
 
   popover.querySelector('[data-menu-action="delete"]')?.addEventListener("click", (event) => {
     event.stopPropagation();
     closeDictionaryMenu();
-    document.removeEventListener("click", handleOutside, true);
+    cleanupOutside();
     deleteDictionary(dictionaryId);
   });
 }
