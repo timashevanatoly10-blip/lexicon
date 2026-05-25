@@ -1960,34 +1960,48 @@ function ensureDictionaryPickerStyles() {
 
     .dictionary-sticky-zone.open {
       position: sticky !important;
-      top: max(6px, env(safe-area-inset-top)) !important;
+      top: max(13px, calc(env(safe-area-inset-top) + 8px)) !important;
       z-index: 60 !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 8px !important;
+      gap: 0 !important;
       margin-bottom: 0 !important;
       background: transparent !important;
     }
 
     .dictionary-sticky-zone.open .dictionary-line {
       margin-bottom: 0 !important;
+      border-radius: 18px 18px 10px 10px !important;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.055) !important;
     }
 
     .dictionary-sticky-zone.open .dictionary-panel-head {
       position: relative !important;
-      margin: 0 !important;
+      margin: -2px 0 0 !important;
       width: 100% !important;
       min-height: 52px !important;
-      border-radius: 22px !important;
+      border-radius: 10px 10px 20px 20px !important;
+      border-top-color: rgba(255,255,255,0.62) !important;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.70),
+        inset -3px -3px 7px rgba(205,214,204,0.10),
+        0 2px 6px rgba(186,193,184,0.055) !important;
     }
 
     .dictionary-block.open .dictionary-panel {
-      margin-top: 8px !important;
-      padding-top: 7px !important;
+      margin-top: -2px !important;
+      padding-top: 11px !important;
+      border-radius: 0 0 27px 27px !important;
+      border-top-color: rgba(255,255,255,0.42) !important;
       overflow: visible !important;
     }
 
