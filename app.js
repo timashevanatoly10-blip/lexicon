@@ -1956,6 +1956,73 @@ function ensureDictionaryPickerStyles() {
       color: rgba(150,48,45,0.92);
     }
 
+
+
+    .dictionary-sticky-zone.open {
+      position: sticky !important;
+      top: max(6px, env(safe-area-inset-top)) !important;
+      z-index: 60 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      margin-bottom: 0 !important;
+      background: transparent !important;
+    }
+
+    .dictionary-sticky-zone.open .dictionary-line {
+      margin-bottom: 0 !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .dictionary-sticky-zone.open .dictionary-panel-head {
+      position: relative !important;
+      margin: 0 !important;
+      width: 100% !important;
+      min-height: 52px !important;
+      border-radius: 22px !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .dictionary-block.open .dictionary-panel {
+      margin-top: 8px !important;
+      padding-top: 7px !important;
+      overflow: visible !important;
+    }
+
+    .dictionary-add-word-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 0 3px !important;
+      border-radius: 999px !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%) !important;
+      border: 2px solid rgba(255,255,255,0.94) !important;
+      color: #5f9962 !important;
+      font-size: 27.5px !important;
+      font-weight: 430 !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.15),
+        0 2px 5px rgba(186,193,184,0.08) !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dictionary-add-word-btn:active {
+      transform: scale(0.96);
+      box-shadow:
+        inset 2px 2px 6px rgba(186,193,184,0.12),
+        0 1px 4px rgba(186,193,184,0.10) !important;
+    }
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -5358,28 +5425,32 @@ function renderDictionaryList(filterText = "") {
     block.dataset.dictionaryId = dict.id;
 
     block.innerHTML = `
-      <button class="dictionary-line" type="button" data-dict-toggle="${dict.id}">
-        <div class="dictionary-chevron">${isOpen ? "⌄" : "›"}</div>
-        <div class="dictionary-line-main">
-          <div class="dictionary-name">${escapeHTML(dict.title || "Без названия")}</div>
-        </div>
-        <div class="dictionary-count">${wordCount}</div>
-      </button>
-
-      <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
-        <div class="dictionary-panel-head">
-          <div class="dictionary-add-row">
-            <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
-            <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
+      <div class="dictionary-sticky-zone ${isOpen ? "open" : ""}">
+        <button class="dictionary-line" type="button" data-dict-toggle="${dict.id}">
+          <div class="dictionary-chevron">${isOpen ? "⌄" : "›"}</div>
+          <div class="dictionary-line-main">
+            <div class="dictionary-name">${escapeHTML(dict.title || "Без названия")}</div>
           </div>
+          <div class="dictionary-count">${wordCount}</div>
+        </button>
 
-          <div class="dictionary-panel-actions">
-            <div class="dictionary-panel-menu-wrap">
-              <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
+        ${isOpen ? `
+          <div class="dictionary-panel-head">
+            <div class="dictionary-add-row">
+              <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
+              <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
+            </div>
+
+            <div class="dictionary-panel-actions">
+              <div class="dictionary-panel-menu-wrap">
+                <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
+              </div>
             </div>
           </div>
-        </div>
+        ` : ""}
+      </div>
 
+      <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
         <div class="word-list" data-word-list="${dict.id}">
           ${renderWordsHtml(dict)}
         </div>
