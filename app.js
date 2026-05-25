@@ -6,6 +6,8 @@ let currentDocumentId = "";
 let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
 let expandedDictionaryId = null;
+let dictionaryEditModeId = null;
+const selectedDictionaryWordIds = new Set();
 let lastWordTranslateSource = "";
 
 let textTranslationReady = false;
@@ -1350,7 +1352,7 @@ function ensureDictionaryPickerStyles() {
     .dictionary-panel .word-row.dictionary-word-card {
       position: relative;
       display: grid;
-      grid-template-columns: 30px minmax(0, 1fr) 28px;
+      grid-template-columns: 30px minmax(0, 1fr) !important;
       align-items: start;
       gap: 8px;
       width: 100%;
@@ -1372,6 +1374,10 @@ function ensureDictionaryPickerStyles() {
     .dictionary-panel .word-row.dictionary-word-card:active {
       transform: scale(0.998);
       background: rgba(95,153,98,0.035);
+    }
+
+    .dictionary-panel .word-row.dictionary-word-card.editing {
+      grid-template-columns: 30px minmax(0, 1fr) 28px !important;
     }
 
     .dictionary-panel .word-row.dictionary-word-card.selected {
@@ -1398,6 +1404,8 @@ function ensureDictionaryPickerStyles() {
         inset 0 0 0 1px rgba(255,255,255,0.38),
         0 1px 3px rgba(180,188,178,0.035);
       user-select: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .dictionary-panel .word-row.dictionary-word-card.selected .word-number-badge {
@@ -1420,6 +1428,8 @@ function ensureDictionaryPickerStyles() {
       gap: 6px;
       min-width: 0;
       line-height: 1.15;
+      white-space: normal !important;
+      overflow: visible !important;
     }
 
     .dictionary-panel .dictionary-word-text {
@@ -1428,8 +1438,12 @@ function ensureDictionaryPickerStyles() {
       font-weight: 720;
       line-height: 1.16;
       letter-spacing: -0.016em;
-      word-break: break-word;
-      overflow-wrap: anywhere;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      max-width: none !important;
     }
 
     .dictionary-panel .dictionary-word-transcription {
@@ -1896,10 +1910,12 @@ function ensureDictionaryPickerStyles() {
 
     .dictionary-add-word-btn {
       height: 38px !important;
-      min-width: 64px !important;
-      border-radius: 18px !important;
-      padding: 0 12px !important;
-      font-size: clamp(11.5px, 2.6vw, 14px) !important;
+      min-width: 42px !important;
+      width: 42px !important;
+      border-radius: 999px !important;
+      padding: 0 0 3px !important;
+      font-size: 25px !important;
+      font-weight: 520 !important;
       background: rgba(95,153,98,0.78) !important;
     }
 
@@ -5354,7 +5370,7 @@ function renderDictionaryList(filterText = "") {
         <div class="dictionary-panel-head">
           <div class="dictionary-add-row">
             <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
-            <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}">Ввод</button>
+            <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
           </div>
 
           <div class="dictionary-panel-actions">
@@ -5416,6 +5432,13 @@ function renderDictionaryList(filterText = "") {
     on(row, "click", () => openWordFromDictionary(row.dataset.wordOpen));
   });
 
+  list.querySelectorAll("[data-word-select]").forEach((badge) => {
+    on(badge, "click", (event) => {
+      event.stopPropagation();
+      toggleDictionaryWordSelection(badge.dataset.dictionaryId, badge.dataset.wordSelect);
+    });
+  });
+
   list.querySelectorAll("[data-word-delete]").forEach((btn) => {
     on(btn, "click", (event) => {
       event.stopPropagation();
@@ -5424,8 +5447,31 @@ function renderDictionaryList(filterText = "") {
   });
 }
 
+function getDictionaryWordSelectionKey(dictionaryId, wordId) {
+  return `${dictionaryId || ""}::${wordId || ""}`;
+}
+
+function isDictionaryWordSelected(dictionaryId, wordId) {
+  return selectedDictionaryWordIds.has(getDictionaryWordSelectionKey(dictionaryId, wordId));
+}
+
+function toggleDictionaryWordSelection(dictionaryId, wordId) {
+  if (!dictionaryId || !wordId) return;
+
+  const key = getDictionaryWordSelectionKey(dictionaryId, wordId);
+
+  if (selectedDictionaryWordIds.has(key)) {
+    selectedDictionaryWordIds.delete(key);
+  } else {
+    selectedDictionaryWordIds.add(key);
+  }
+
+  renderDictionaryList(getDictionarySearchValue());
+}
+
 function renderWordsHtml(dict) {
   const words = dict.words || [];
+  const isEditMode = dictionaryEditModeId === dict.id;
 
   if (!words.length) {
     return `<div class="empty-word-list">Слов пока нет. Введите первое слово сверху.</div>`;
@@ -5437,10 +5483,11 @@ function renderWordsHtml(dict) {
     const translation = String(item.translation || "перевод позже").trim();
     const partOfSpeech = String(item.partOfSpeech || "").trim();
     const showTranscription = shouldShowDictionaryItemTranscription(word, transcription);
+    const isSelected = isDictionaryWordSelected(dict.id, item.id);
 
     return `
-      <div class="word-row dictionary-word-card" data-word-open="${escapeHTML(word)}">
-        <span class="word-number-badge" title="Номер слова">${index + 1}</span>
+      <div class="word-row dictionary-word-card ${isEditMode ? "editing" : ""} ${isSelected ? "selected" : ""}" data-word-open="${escapeHTML(word)}">
+        <span class="word-number-badge" data-word-select="${item.id}" data-dictionary-id="${dict.id}" title="Выбрать">${index + 1}</span>
 
         <div class="word-main dictionary-word-main">
           <div class="word-line dictionary-word-line">
@@ -5451,7 +5498,7 @@ function renderWordsHtml(dict) {
           <div class="word-translation dictionary-word-translation">${escapeHTML(translation || "перевод позже")}</div>
         </div>
 
-        <button class="word-delete-btn dictionary-word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>
+        ${isEditMode ? `<button class="word-delete-btn dictionary-word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>` : ""}
       </div>
     `;
   }).join("");
@@ -5538,7 +5585,10 @@ function openDictionaryMenu(dictionaryId, anchor) {
   const popover = document.createElement("div");
   popover.id = "dictionaryMenuPopover";
   popover.className = "dictionary-menu-popover";
+  const isEditMode = dictionaryEditModeId === dictionaryId;
+
   popover.innerHTML = `
+    <button type="button" data-menu-action="edit">${isEditMode ? "Done" : "Edit"}</button>
     <button type="button" data-menu-action="rename">Rename</button>
     <button type="button" class="danger" data-menu-action="delete">Delete</button>
   `;
@@ -5562,6 +5612,14 @@ function openDictionaryMenu(dictionaryId, anchor) {
 
   requestAnimationFrame(() => {
     document.addEventListener("click", handleOutside, true);
+  });
+
+  popover.querySelector('[data-menu-action="edit"]')?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeDictionaryMenu();
+    document.removeEventListener("click", handleOutside, true);
+    dictionaryEditModeId = dictionaryEditModeId === dictionaryId ? null : dictionaryId;
+    renderDictionaryList(getDictionarySearchValue());
   });
 
   popover.querySelector('[data-menu-action="rename"]')?.addEventListener("click", (event) => {
@@ -5613,7 +5671,12 @@ async function deleteDictionary(dictionaryId) {
 
   dictionaries = dictionaries.filter((item) => item.id !== dictionaryId);
 
+  Array.from(selectedDictionaryWordIds).forEach((key) => {
+    if (key.startsWith(`${dictionaryId}::`)) selectedDictionaryWordIds.delete(key);
+  });
+
   if (expandedDictionaryId === dictionaryId) expandedDictionaryId = null;
+  if (dictionaryEditModeId === dictionaryId) dictionaryEditModeId = null;
 
   saveDictionaries();
   renderLexiconPage();
@@ -5672,6 +5735,7 @@ async function deleteWord(wordId, dictionaryId) {
   const prevWords = (dict.words || []).slice();
 
   dict.words = (dict.words || []).filter((item) => item.id !== wordId);
+  selectedDictionaryWordIds.delete(getDictionaryWordSelectionKey(dictionaryId, wordId));
   dict.updatedAt = new Date().toISOString();
 
   saveDictionaries();
