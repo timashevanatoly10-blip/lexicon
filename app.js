@@ -197,6 +197,24 @@ function ensureDictionaryPickerStyles() {
     .text-attach-option:nth-child(2) { animation-delay: 0.025s; }
     .text-attach-option:nth-child(3) { animation-delay: 0.05s; }
 
+    .text-attach-option.primary {
+      width: 42px;
+      height: 42px;
+      color: #2f7d59;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.94) 0%, rgba(244,249,243,0.97) 56%, rgba(255,255,255,0.99) 100%);
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.48),
+        inset 2px 2px 5px rgba(255,255,255,0.82),
+        inset -3px -3px 7px rgba(143,177,147,0.16),
+        0 9px 20px rgba(60,80,65,0.13);
+    }
+
+    .text-attach-option.primary svg {
+      width: 18.5px;
+      height: 18.5px;
+    }
+
     .text-attach-option:active {
       transform: translate(-50%, 0) scale(0.94);
       box-shadow:
@@ -4921,29 +4939,30 @@ function openTextAttachMenu(anchorBtn) {
 
   const items = [
     {
-      title: "Камера",
-      icon: iconCamera(),
-      offset: -58,
-      action: () => handleTextImageExtractSource("camera")
+      title: "Файл",
+      icon: iconFileText(),
+      offset: -46,
+      primary: true,
+      action: () => handleTextFileExtractSource()
     },
     {
-      title: "Галерея",
+      title: "Медиатека",
       icon: iconGallery(),
-      offset: -108,
+      offset: -98,
       action: () => handleTextImageExtractSource("gallery")
     },
     {
-      title: "Файл",
-      icon: iconFileText(),
-      offset: -158,
-      action: () => handleTextFileExtractStub()
+      title: "Фото",
+      icon: iconCamera(),
+      offset: -148,
+      action: () => handleTextImageExtractSource("camera")
     }
   ];
 
   items.forEach((item) => {
     const option = document.createElement("button");
     option.type = "button";
-    option.className = "text-attach-option";
+    option.className = item.primary ? "text-attach-option primary" : "text-attach-option";
     option.title = item.title;
     option.style.top = `${item.offset}px`;
     option.style.transform = "translate(-50%, 0)";
@@ -5002,14 +5021,111 @@ function handleTextImageExtractSource(sourceType = "camera") {
   input.click();
 }
 
-function handleTextFileExtractStub() {
-  setTextWordMiniDisplay("Файлы — следующим этапом", "ready");
+function handleTextFileExtractSource() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = [
+    "text/plain",
+    ".txt",
+    ".md",
+    ".csv",
+    ".json",
+    ".html",
+    ".htm",
+    ".srt",
+    ".vtt",
+    ".pdf",
+    ".doc",
+    ".docx",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ].join(",");
 
-  window.setTimeout(() => {
-    if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Файлы — следующим этапом") {
-      setTextWordMiniDisplay("");
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  input.style.top = "0";
+
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    input.remove();
+
+    if (!file) return;
+
+    await handleTextPickedFile(file);
+  };
+
+  document.body.appendChild(input);
+  input.click();
+}
+
+async function handleTextPickedFile(file) {
+  if (!file) return;
+
+  setTextDataBusy(true);
+  setTextWordMiniDisplay("Обработка данных...", "loading");
+  resetTextCopyState();
+  clearSelectedTextWord();
+
+  try {
+    const name = String(file.name || "").toLowerCase();
+    const mime = String(file.type || "").toLowerCase();
+    const isTextLike =
+      mime.startsWith("text/") ||
+      [".txt", ".md", ".csv", ".json", ".html", ".htm", ".srt", ".vtt"].some((ext) => name.endsWith(ext));
+
+    if (isTextLike) {
+      const content = await readTextFile(file);
+      const cleanText = String(content || "").trim();
+
+      if (!cleanText) {
+        alert("Файл пустой или текст не прочитан.");
+        return;
+      }
+
+      insertExtractedTextIntoTextSource(cleanText);
+      setTextWordMiniDisplay("Текст добавлен", "ready");
+
+      window.setTimeout(() => {
+        if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
+          setTextWordMiniDisplay("");
+        }
+      }, 900);
+
+      return;
     }
-  }, 1300);
+
+    setTextWordMiniDisplay("Файл выбран", "ready");
+
+    window.setTimeout(() => {
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Файл выбран") {
+        setTextWordMiniDisplay("PDF/DOCX — через раздел «Файлы»", "ready");
+      }
+    }, 650);
+
+    window.setTimeout(() => {
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "PDF/DOCX — через раздел «Файлы»") {
+        setTextWordMiniDisplay("");
+      }
+    }, 2200);
+  } catch (err) {
+    alert("Не удалось обработать данные:\n" + err.message);
+  } finally {
+    setTextDataBusy(false);
+    updateTextCopyFeedback();
+    updateTextInlineClearVisibility();
+  }
+}
+
+function readTextFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Не удалось прочитать файл."));
+
+    reader.readAsText(file);
+  });
 }
 
 async function extractTextFromPhotoToTextMode(file) {
@@ -5023,7 +5139,7 @@ async function extractTextFromPhotoToTextMode(file) {
   }
 
   setTextDataBusy(true);
-  setTextWordMiniDisplay("Обрабатываю данные...", "loading");
+  setTextWordMiniDisplay("Обработка данных...", "loading");
   resetTextCopyState();
   clearSelectedTextWord();
 
@@ -5111,7 +5227,7 @@ function setTextDataBusy(isBusy) {
   document.querySelectorAll(".text-attach-btn").forEach((btn) => {
     btn.disabled = Boolean(isBusy);
     btn.classList.toggle("inactive", Boolean(isBusy));
-    btn.title = isBusy ? "Обрабатываю данные..." : "Добавить данные";
+    btn.title = isBusy ? "Обработка данных..." : "Добавить данные";
   });
 }
 
