@@ -143,6 +143,83 @@ function ensureDictionaryPickerStyles() {
       from { transform: translateY(18px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+    @keyframes textAttachBubbleIn {
+      from { opacity: 0; transform: translate(-50%, 10px) scale(0.54); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+
+    @keyframes textAttachBackdropIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .text-attach-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9996;
+      background: transparent;
+      animation: textAttachBackdropIn 0.12s ease-out;
+    }
+
+    .text-attach-menu {
+      position: fixed;
+      z-index: 9997;
+      pointer-events: none;
+    }
+
+    .text-attach-option {
+      position: absolute;
+      left: 0;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%);
+      border: 2px solid rgba(255,255,255,0.94);
+      color: #5f9962;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.15),
+        0 8px 18px rgba(60,80,65,0.12);
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      animation: textAttachBubbleIn 0.18s cubic-bezier(.2,.9,.2,1.12) both;
+      transform-origin: 50% 100%;
+    }
+
+    .text-attach-option:nth-child(2) { animation-delay: 0.025s; }
+    .text-attach-option:nth-child(3) { animation-delay: 0.05s; }
+
+    .text-attach-option:active {
+      transform: translate(-50%, 0) scale(0.94);
+      box-shadow:
+        inset 2px 2px 6px rgba(186,193,184,0.12),
+        0 4px 12px rgba(60,80,65,0.10);
+    }
+
+    .text-attach-option svg {
+      width: 17.5px;
+      height: 17.5px;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .text-attach-btn.open {
+      color: #2f7d59;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.92) 0%, rgba(244,249,243,0.96) 56%, rgba(255,255,255,0.99) 100%);
+    }
+
 
     .text-word-token {
       display: inline;
@@ -4315,6 +4392,18 @@ function iconCamera() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5 8.7 5.4h6.6L17 7.5h2.1c1 0 1.9.8 1.9 1.9v8.1c0 1-.8 1.9-1.9 1.9H4.9c-1 0-1.9-.8-1.9-1.9V9.4c0-1 .8-1.9 1.9-1.9H7Z"/><circle cx="12" cy="13.4" r="3.4"/></svg>`;
 }
 
+function iconPaperclip() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.4 12.4 14.9 5.9c1.8-1.8 4.6-1.8 6.2 0 1.7 1.8 1.6 4.6-.2 6.4l-8.2 8.2c-2.4 2.4-6.2 2.4-8.5 0-2.3-2.4-2.2-6.2.2-8.6l8.1-8.1"/><path d="M15.3 9.2 7.9 16.6c-.8.8-.8 2.1 0 2.9.8.8 2.1.8 2.9 0l7.8-7.8"/></svg>`;
+}
+
+function iconGallery() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="8.5" cy="9.2" r="1.4"/><path d="M5.8 16.8 10.2 12.4l3.1 3.1 2.1-2.1 3.1 3.4"/></svg>`;
+}
+
+function iconFileText() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h6.7L18 8.1v12.1H7V3.8Z"/><path d="M13.7 3.8v4.6H18"/><path d="M9.6 12h5.8"/><path d="M9.6 15h5.8"/><path d="M9.6 18h3.8"/></svg>`;
+}
+
 function iconMic() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5c2 0 3.4-1.5 3.4-3.5V6.6c0-2-1.4-3.5-3.4-3.5S8.6 4.6 8.6 6.6V11c0 2 1.4 3.5 3.4 3.5Z"/><path d="M5.7 10.8c0 3.5 2.6 6.1 6.3 6.1s6.3-2.6 6.3-6.1"/><path d="M12 16.9v4"/></svg>`;
 }
@@ -4334,7 +4423,7 @@ function iconClose() {
 function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn", panelName = "source") {
   return `
     <div class="text-bottom-toolbar">
-      <button class="text-bottom-icon-btn text-camera-btn" type="button" title="Фото">${iconCamera()}</button>
+      <button class="text-bottom-icon-btn text-attach-btn" type="button" title="Добавить данные">${iconPaperclip()}</button>
       <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
       <button class="text-bottom-icon-btn text-copy-btn" type="button" data-copy-panel="${panelName}" title="Копировать">${iconCopy()}</button>
       <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
@@ -4795,18 +4884,107 @@ function buildTextReadingFallbackHtml(text) {
 }
 
 
-function handleTextPhotoExtract(event) {
+function handleTextAttachMenu(event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
+  const btn = event?.currentTarget || event?.target?.closest?.(".text-attach-btn") || document.querySelector(".text-attach-btn");
+
+  if (!btn) return;
+
+  if (document.getElementById("textAttachMenuBackdrop")) {
+    closeTextAttachMenu();
+    return;
+  }
+
+  openTextAttachMenu(btn);
+}
+
+function openTextAttachMenu(anchorBtn) {
+  closeTextAttachMenu();
+
+  const rect = anchorBtn.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const baseY = rect.top + rect.height / 2;
+
+  const backdrop = document.createElement("div");
+  backdrop.id = "textAttachMenuBackdrop";
+  backdrop.className = "text-attach-menu-backdrop";
+
+  const menu = document.createElement("div");
+  menu.id = "textAttachMenu";
+  menu.className = "text-attach-menu";
+  menu.style.left = `${centerX}px`;
+  menu.style.top = `${baseY}px`;
+
+  const items = [
+    {
+      title: "Камера",
+      icon: iconCamera(),
+      offset: -58,
+      action: () => handleTextImageExtractSource("camera")
+    },
+    {
+      title: "Галерея",
+      icon: iconGallery(),
+      offset: -108,
+      action: () => handleTextImageExtractSource("gallery")
+    },
+    {
+      title: "Файл",
+      icon: iconFileText(),
+      offset: -158,
+      action: () => handleTextFileExtractStub()
+    }
+  ];
+
+  items.forEach((item) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "text-attach-option";
+    option.title = item.title;
+    option.style.top = `${item.offset}px`;
+    option.style.transform = "translate(-50%, 0)";
+    option.innerHTML = item.icon;
+    option.onclick = (optionEvent) => {
+      optionEvent.preventDefault();
+      optionEvent.stopPropagation();
+      closeTextAttachMenu();
+      item.action();
+    };
+    menu.appendChild(option);
+  });
+
+  backdrop.onclick = () => closeTextAttachMenu();
+  document.body.appendChild(backdrop);
+  document.body.appendChild(menu);
+
+  document.querySelectorAll(".text-attach-btn").forEach((btn) => btn.classList.add("open"));
+}
+
+function closeTextAttachMenu() {
+  const backdrop = document.getElementById("textAttachMenuBackdrop");
+  const menu = document.getElementById("textAttachMenu");
+
+  if (backdrop) backdrop.remove();
+  if (menu) menu.remove();
+
+  document.querySelectorAll(".text-attach-btn").forEach((btn) => btn.classList.remove("open"));
+}
+
+function handleTextImageExtractSource(sourceType = "camera") {
   if (!ensureAccessToken()) return;
 
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/jpeg,image/png,image/webp,image/*";
-  input.setAttribute("capture", "environment");
+
+  if (sourceType === "camera") {
+    input.setAttribute("capture", "environment");
+  }
+
   input.style.position = "fixed";
   input.style.left = "-9999px";
   input.style.top = "0";
@@ -4824,6 +5002,16 @@ function handleTextPhotoExtract(event) {
   input.click();
 }
 
+function handleTextFileExtractStub() {
+  setTextWordMiniDisplay("Файлы — следующим этапом", "ready");
+
+  window.setTimeout(() => {
+    if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Файлы — следующим этапом") {
+      setTextWordMiniDisplay("");
+    }
+  }, 1300);
+}
+
 async function extractTextFromPhotoToTextMode(file) {
   const mime = String(file?.type || "").toLowerCase();
 
@@ -4834,8 +5022,8 @@ async function extractTextFromPhotoToTextMode(file) {
     return;
   }
 
-  setTextPhotoBusy(true);
-  setTextWordMiniDisplay("Фото...", "loading");
+  setTextDataBusy(true);
+  setTextWordMiniDisplay("Обрабатываю данные...", "loading");
   resetTextCopyState();
   clearSelectedTextWord();
 
@@ -4844,16 +5032,22 @@ async function extractTextFromPhotoToTextMode(file) {
     const cleanText = String(extractedText || "").trim();
 
     if (!cleanText) {
-      alert("Текст на фото не распознан.");
+      alert("Текст не распознан.");
       return;
     }
 
     insertExtractedTextIntoTextSource(cleanText);
+    setTextWordMiniDisplay("Текст добавлен", "ready");
+
+    window.setTimeout(() => {
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
+        setTextWordMiniDisplay("");
+      }
+    }, 900);
   } catch (err) {
-    alert("Не удалось распознать текст с фото:\n" + err.message);
+    alert("Не удалось обработать данные:\n" + err.message);
   } finally {
-    setTextPhotoBusy(false);
-    setTextWordMiniDisplay("");
+    setTextDataBusy(false);
     updateTextCopyFeedback();
     updateTextInlineClearVisibility();
   }
@@ -4913,11 +5107,11 @@ function insertExtractedTextIntoTextSource(extractedText) {
   textInput.focus();
 }
 
-function setTextPhotoBusy(isBusy) {
-  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
+function setTextDataBusy(isBusy) {
+  document.querySelectorAll(".text-attach-btn").forEach((btn) => {
     btn.disabled = Boolean(isBusy);
     btn.classList.toggle("inactive", Boolean(isBusy));
-    btn.title = isBusy ? "Распознаю фото..." : "Фото";
+    btn.title = isBusy ? "Обрабатываю данные..." : "Добавить данные";
   });
 }
 
@@ -4936,8 +5130,8 @@ function bindTextInlineClearButtons() {
     if (!inlineClearBtnTranslation.classList.contains("inactive")) clearTextMode();
   };
 
-  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
-    btn.onclick = handleTextPhotoExtract;
+  document.querySelectorAll(".text-attach-btn").forEach((btn) => {
+    btn.onclick = handleTextAttachMenu;
   });
 
   document.querySelectorAll(".text-mic-btn").forEach((btn) => {
