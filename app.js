@@ -4794,6 +4794,133 @@ function buildTextReadingFallbackHtml(text) {
   `;
 }
 
+
+function handleTextPhotoExtract(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!ensureAccessToken()) return;
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/jpeg,image/png,image/webp,image/*";
+  input.setAttribute("capture", "environment");
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  input.style.top = "0";
+
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    input.remove();
+
+    if (!file) return;
+
+    await extractTextFromPhotoToTextMode(file);
+  };
+
+  document.body.appendChild(input);
+  input.click();
+}
+
+async function extractTextFromPhotoToTextMode(file) {
+  const mime = String(file?.type || "").toLowerCase();
+
+  if (!file) return;
+
+  if (mime && !mime.startsWith("image/")) {
+    alert("Нужно выбрать фото или картинку.");
+    return;
+  }
+
+  setTextPhotoBusy(true);
+  setTextWordMiniDisplay("Фото...", "loading");
+  resetTextCopyState();
+  clearSelectedTextWord();
+
+  try {
+    const extractedText = await requestImageTextExtract(file);
+    const cleanText = String(extractedText || "").trim();
+
+    if (!cleanText) {
+      alert("Текст на фото не распознан.");
+      return;
+    }
+
+    insertExtractedTextIntoTextSource(cleanText);
+  } catch (err) {
+    alert("Не удалось распознать текст с фото:\n" + err.message);
+  } finally {
+    setTextPhotoBusy(false);
+    setTextWordMiniDisplay("");
+    updateTextCopyFeedback();
+    updateTextInlineClearVisibility();
+  }
+}
+
+async function requestImageTextExtract(file) {
+  const formData = new FormData();
+  formData.append("file", file, file.name || "photo.jpg");
+
+  const res = await fetch(`${API_BASE}/api/vision/extract-text`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData
+  });
+
+  const data = await readJsonOrThrow(res);
+
+  return String(data.text || data.result || "").trim();
+}
+
+function insertExtractedTextIntoTextSource(extractedText) {
+  const cleanText = String(extractedText || "").trim();
+
+  if (!cleanText) return;
+
+  let textInput = document.getElementById("textInput");
+
+  if (!textInput) {
+    clearTextMode();
+
+    requestAnimationFrame(() => {
+      const nextInput = document.getElementById("textInput");
+
+      if (!nextInput) return;
+
+      nextInput.value = cleanText;
+      textSourceValue = cleanText;
+      resetTextCopyState();
+      updateTextInlineClearVisibility();
+      updateTextCopyFeedback();
+      switchTextPanel("source");
+      nextInput.focus();
+    });
+
+    return;
+  }
+
+  const currentValue = String(textInput.value || "").trim();
+  const nextValue = currentValue ? `${currentValue}\n\n${cleanText}` : cleanText;
+
+  textInput.value = nextValue;
+  textSourceValue = nextValue;
+  resetTextCopyState();
+  updateTextInlineClearVisibility();
+  updateTextCopyFeedback();
+  switchTextPanel("source");
+  textInput.focus();
+}
+
+function setTextPhotoBusy(isBusy) {
+  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
+    btn.disabled = Boolean(isBusy);
+    btn.classList.toggle("inactive", Boolean(isBusy));
+    btn.title = isBusy ? "Распознаю фото..." : "Фото";
+  });
+}
+
 function bindTextInlineClearButtons() {
   const inlineClearBtnReading = document.getElementById("textInlineClearBtnReading");
   const inlineClearBtn = document.getElementById("textInlineClearBtn");
@@ -4809,7 +4936,11 @@ function bindTextInlineClearButtons() {
     if (!inlineClearBtnTranslation.classList.contains("inactive")) clearTextMode();
   };
 
-  document.querySelectorAll(".text-camera-btn, .text-mic-btn").forEach((btn) => {
+  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
+    btn.onclick = handleTextPhotoExtract;
+  });
+
+  document.querySelectorAll(".text-mic-btn").forEach((btn) => {
     btn.onclick = () => {};
   });
 
