@@ -4469,7 +4469,7 @@ function iconClose() {
 function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn", panelName = "source") {
   return `
     <div class="text-bottom-toolbar">
-      <button class="text-bottom-icon-btn text-attach-btn" type="button" title="Добавить данные">${iconPaperclip()}</button>
+      <button class="text-bottom-icon-btn text-attach-btn" type="button" title="Добавить фото или файл">${iconCamera()}</button>
       <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
       <button class="text-bottom-icon-btn text-copy-btn" type="button" data-copy-panel="${panelName}" title="Копировать">${iconCopy()}</button>
       <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
@@ -4936,16 +4936,7 @@ function handleTextAttachMenu(event) {
     event.stopPropagation();
   }
 
-  const btn = event?.currentTarget || event?.target?.closest?.(".text-attach-btn") || document.querySelector(".text-attach-btn");
-
-  if (!btn) return;
-
-  if (document.getElementById("textAttachMenuBackdrop")) {
-    closeTextAttachMenu();
-    return;
-  }
-
-  openTextAttachMenu(btn);
+  handleTextImageExtractSource("gallery");
 }
 
 function openTextAttachMenu(anchorBtn) {
@@ -5023,34 +5014,6 @@ function closeTextAttachMenu() {
 
 async function handleTextImageExtractSource(sourceType = "camera") {
   if (!ensureAccessToken()) return;
-
-  if (sourceType === "gallery" && window.showOpenFilePicker) {
-    try {
-      const handles = await window.showOpenFilePicker({
-        multiple: false,
-        excludeAcceptAllOption: true,
-        types: [
-          {
-            description: "Images",
-            accept: {
-              "image/*": [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"]
-            }
-          }
-        ]
-      });
-
-      const handle = handles && handles[0];
-      const file = handle ? await handle.getFile() : null;
-
-      if (!file) return;
-
-      await extractTextFromPhotoToTextMode(file);
-      return;
-    } catch (err) {
-      if (err && (err.name === "AbortError" || err.name === "NotAllowedError")) return;
-      // If the modern picker is not available/failed, fall back to the normal input below.
-    }
-  }
 
   const input = document.createElement("input");
   input.type = "file";
