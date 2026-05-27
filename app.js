@@ -4948,67 +4948,8 @@ function handleTextAttachMenu(event) {
   openTextAttachMenu(btn);
 }
 
-function openTextAttachMenu(anchorBtn) {
-  closeTextAttachMenu();
-
-  const rect = anchorBtn.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const baseY = rect.top + rect.height / 2;
-
-  const backdrop = document.createElement("div");
-  backdrop.id = "textAttachMenuBackdrop";
-  backdrop.className = "text-attach-menu-backdrop";
-
-  const menu = document.createElement("div");
-  menu.id = "textAttachMenu";
-  menu.className = "text-attach-menu";
-  menu.style.left = `${centerX}px`;
-  menu.style.top = `${baseY}px`;
-
-  const items = [
-    {
-      title: "Файл",
-      icon: iconFileText(),
-      offset: -36,
-      primary: true,
-      action: () => handleTextFileExtractSource()
-    },
-    {
-      title: "Медиатека",
-      icon: iconGallery(),
-      offset: -88,
-      action: () => handleTextImageExtractSource("gallery")
-    },
-    {
-      title: "Фото",
-      icon: iconCamera(),
-      offset: -138,
-      action: () => handleTextImageExtractSource("camera")
-    }
-  ];
-
-  items.forEach((item) => {
-    const option = document.createElement("button");
-    option.type = "button";
-    option.className = item.primary ? "text-attach-option primary" : "text-attach-option";
-    option.title = item.title;
-    option.style.top = `${item.offset}px`;
-    option.style.transform = "translate(-50%, 0)";
-    option.innerHTML = item.icon;
-    option.onclick = (optionEvent) => {
-      optionEvent.preventDefault();
-      optionEvent.stopPropagation();
-      closeTextAttachMenu();
-      item.action();
-    };
-    menu.appendChild(option);
-  });
-
-  backdrop.onclick = () => closeTextAttachMenu();
-  document.body.appendChild(backdrop);
-  document.body.appendChild(menu);
-
-  document.querySelectorAll(".text-attach-btn").forEach((btn) => btn.classList.add("open"));
+function openTextAttachMenu() {
+  triggerUnifiedMediaPicker();
 }
 
 function closeTextAttachMenu() {
