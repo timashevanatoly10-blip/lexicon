@@ -7,6 +7,10 @@ let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
 let expandedDictionaryId = null;
 let dictionaryEditModeId = null;
+let expandedDictionaryWordKey = null;
+let dictionaryWordActivePanel = "center";
+let dictionaryWordPartIndex = 0;
+let dictionaryWordExamplesExpanded = false;
 const selectedDictionaryWordIds = new Set();
 let lastWordTranslateSource = "";
 
@@ -1995,6 +1999,104 @@ function ensureDictionaryPickerStyles() {
 
     .dictionary-menu-popover button.danger {
       color: rgba(150,48,45,0.92);
+    }
+
+
+    .dictionary-block.word-card-open .dictionary-line,
+    .dictionary-block.word-card-open .dictionary-panel-head {
+      position: static !important;
+      top: auto !important;
+      z-index: auto !important;
+    }
+
+    .dictionary-word-expanded-shell {
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 0 10px;
+    }
+
+    .dictionary-word-expanded-sticky {
+      position: sticky;
+      top: max(10px, env(safe-area-inset-top));
+      z-index: 95;
+      margin: 0 -2px 8px;
+      padding: 0 0 7px;
+      border-radius: 20px;
+      background: rgba(250,251,248,0.96);
+      box-shadow: 0 8px 18px rgba(180,186,176,0.08);
+    }
+
+    .dictionary-word-expanded-sticky .dictionary-word-card {
+      border-bottom: 0 !important;
+      border-radius: 18px !important;
+      padding: 10px 8px 9px 2px !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%) !important;
+      border: 2px solid rgba(255,255,255,0.90) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06) !important;
+    }
+
+    .dictionary-word-expanded-sticky .dictionary-word-card:active {
+      transform: scale(0.998);
+    }
+
+    .dictionary-word-panel-tabs {
+      margin: 7px 2px 0 !important;
+    }
+
+    .dictionary-word-inline-detail {
+      margin: 0 -2px 12px;
+      overflow: hidden;
+      border-radius: 24px;
+      background: rgba(250,251,248,0.94);
+      border: 2px solid rgba(255,255,255,0.76);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.62),
+        inset -2px -2px 6px rgba(197,207,196,0.12),
+        0 1px 5px rgba(180,186,176,0.06);
+    }
+
+    .dictionary-word-inline-swipe-frame {
+      width: 100%;
+      overflow: hidden;
+      background: rgba(255,255,255,0.54);
+      touch-action: pan-y;
+    }
+
+    .dictionary-word-inline-swipe-track {
+      width: 300%;
+      display: flex;
+      align-items: stretch;
+      transition: transform 0.24s ease;
+      will-change: transform;
+    }
+
+    .dictionary-word-inline-panel {
+      width: 33.333333%;
+      flex: 0 0 33.333333%;
+      min-width: 0;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.54);
+    }
+
+    .dictionary-word-inline-loading,
+    .dictionary-word-inline-error,
+    .dictionary-word-inline-empty {
+      padding: 20px 14px 86px;
+      min-height: 260px;
+      color: rgba(31,33,31,0.70);
+      font-size: clamp(13px, 3vw, 17px);
+      line-height: 1.38;
+    }
+
+    .dictionary-word-inline-error {
+      color: rgba(150,48,45,0.86);
     }
 
     @media (max-width: 520px) {
@@ -5547,7 +5649,7 @@ function renderDictionaryList(filterText = "") {
     const wordCount = (dict.words || []).length;
 
     const block = document.createElement("section");
-    block.className = `dictionary-block ${isOpen ? "open" : ""}`;
+    block.className = `dictionary-block ${isOpen ? "open" : ""} ${isOpen && hasExpandedDictionaryWord(dict.id) ? "word-card-open" : ""}`;
     block.dataset.dictionaryId = dict.id;
 
     block.innerHTML = `
@@ -5622,8 +5724,37 @@ function renderDictionaryList(filterText = "") {
   });
 
   list.querySelectorAll("[data-word-open]").forEach((row) => {
-    on(row, "click", () => openWordFromDictionary(row.dataset.wordOpen));
+    on(row, "click", () => openWordFromDictionary(row.dataset.dictionaryId, row.dataset.wordOpen));
   });
+
+  list.querySelectorAll("[data-dict-word-panel-tab]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      switchDictionaryWordPanel(btn.dataset.dictWordPanelTab || "center");
+    });
+  });
+
+  list.querySelectorAll("[data-dict-word-part-index]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dictionaryWordPartIndex = Math.max(0, Number(btn.dataset.dictWordPartIndex || "0") || 0);
+      dictionaryWordExamplesExpanded = false;
+      renderDictionaryList(getDictionarySearchValue());
+    });
+  });
+
+  list.querySelectorAll("[data-dict-word-more-examples]").forEach((btn) => {
+    on(btn, "click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dictionaryWordExamplesExpanded = !dictionaryWordExamplesExpanded;
+      renderDictionaryList(getDictionarySearchValue());
+    });
+  });
+
+  bindDictionaryWordInlineSwipe();
 
   list.querySelectorAll("[data-word-select]").forEach((badge) => {
     on(badge, "click", (event) => {
@@ -5662,6 +5793,18 @@ function toggleDictionaryWordSelection(dictionaryId, wordId) {
   renderDictionaryList(getDictionarySearchValue());
 }
 
+function hasExpandedDictionaryWord(dictionaryId) {
+  return Boolean(expandedDictionaryWordKey && expandedDictionaryWordKey.startsWith(`${dictionaryId || ""}::`));
+}
+
+function getExpandedDictionaryWordKey(dictionaryId, wordId) {
+  return getDictionaryWordSelectionKey(dictionaryId, wordId);
+}
+
+function isDictionaryWordExpanded(dictionaryId, wordId) {
+  return expandedDictionaryWordKey === getExpandedDictionaryWordKey(dictionaryId, wordId);
+}
+
 function renderWordsHtml(dict) {
   const words = dict.words || [];
   const isEditMode = dictionaryEditModeId === dict.id;
@@ -5671,30 +5814,303 @@ function renderWordsHtml(dict) {
   }
 
   return words.map((item, index) => {
-    const word = String(item.word || "").trim();
-    const transcription = String(item.transcription || "").trim();
-    const translation = String(item.translation || "перевод позже").trim();
-    const partOfSpeech = String(item.partOfSpeech || "").trim();
-    const showTranscription = shouldShowDictionaryItemTranscription(word, transcription);
-    const isSelected = isDictionaryWordSelected(dict.id, item.id);
+    const isExpanded = isDictionaryWordExpanded(dict.id, item.id);
+    const rowHtml = renderDictionaryWordRowHtml(dict, item, index, isEditMode, isExpanded);
+
+    if (!isExpanded) return rowHtml;
 
     return `
-      <div class="word-row dictionary-word-card ${isEditMode ? "editing" : ""} ${isSelected ? "selected" : ""}" data-word-open="${escapeHTML(word)}">
-        <span class="word-number-badge" data-word-select="${item.id}" data-dictionary-id="${dict.id}" title="Выбрать">${index + 1}</span>
-
-        <div class="word-main dictionary-word-main">
-          <div class="word-line dictionary-word-line">
-            <span class="word-text dictionary-word-text">${escapeHTML(word)}</span>
-            ${showTranscription ? `<span class="word-transcription dictionary-word-transcription">${escapeHTML(transcription)}</span>` : ""}
-            ${partOfSpeech ? `<span class="word-pos dictionary-word-pos">${escapeHTML(partOfSpeech)}</span>` : ""}
-          </div>
-          <div class="word-translation dictionary-word-translation">${escapeHTML(translation || "перевод позже")}</div>
+      <div class="dictionary-word-expanded-shell" data-expanded-word-key="${escapeHTML(getExpandedDictionaryWordKey(dict.id, item.id))}">
+        <div class="dictionary-word-expanded-sticky">
+          ${rowHtml}
+          ${buildDictionaryWordPanelTabsHtml()}
         </div>
-
-        ${isEditMode ? `<button class="word-delete-btn dictionary-word-delete-btn" type="button" data-dictionary-id="${dict.id}" data-word-delete="${item.id}" title="Удалить">×</button>` : ""}
+        ${buildDictionaryWordInlineDetailHtml(dict, item)}
       </div>
     `;
   }).join("");
+}
+
+function renderDictionaryWordRowHtml(dict, item, index, isEditMode, isExpanded = false) {
+  const word = String(item.word || "").trim();
+  const transcription = String(item.transcription || "").trim();
+  const translation = String(item.translation || "перевод позже").trim();
+  const partOfSpeech = String(item.partOfSpeech || "").trim();
+  const showTranscription = shouldShowDictionaryItemTranscription(word, transcription);
+  const isSelected = isDictionaryWordSelected(dict.id, item.id);
+
+  return `
+    <div class="word-row dictionary-word-card ${isEditMode ? "editing" : ""} ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}" data-dictionary-id="${escapeHTML(dict.id)}" data-word-open="${escapeHTML(item.id)}">
+      <span class="word-number-badge" data-word-select="${escapeHTML(item.id)}" data-dictionary-id="${escapeHTML(dict.id)}" title="Выбрать">${index + 1}</span>
+
+      <div class="word-main dictionary-word-main">
+        <div class="word-line dictionary-word-line">
+          <span class="word-text dictionary-word-text">${escapeHTML(word)}</span>
+          ${showTranscription ? `<span class="word-transcription dictionary-word-transcription">${escapeHTML(transcription)}</span>` : ""}
+          ${partOfSpeech ? `<span class="word-pos dictionary-word-pos">${escapeHTML(partOfSpeech)}</span>` : ""}
+        </div>
+        <div class="word-translation dictionary-word-translation">${escapeHTML(translation || "перевод позже")}</div>
+      </div>
+
+      ${isEditMode ? `<button class="word-delete-btn dictionary-word-delete-btn" type="button" data-dictionary-id="${escapeHTML(dict.id)}" data-word-delete="${escapeHTML(item.id)}" title="Удалить">×</button>` : ""}
+    </div>
+  `;
+}
+
+function buildDictionaryWordPanelTabsHtml() {
+  const tabs = [
+    ["left", "Мнемо"],
+    ["center", "Перевод"],
+    ["right", "Разбор"]
+  ];
+
+  return `
+    <div class="text-panel-tabs word-panel-tabs dictionary-word-panel-tabs">
+      ${tabs.map(([name, label]) => `
+        <button class="text-panel-tab word-panel-tab ${dictionaryWordActivePanel === name ? "active" : ""}" type="button" data-dict-word-panel-tab="${name}">${label}</button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function buildDictionaryWordInlineDetailHtml(dict, item) {
+  const fullCard = getWordFullCardMeta(item);
+
+  if (!fullCard) {
+    return `
+      <div class="dictionary-word-inline-detail">
+        <div class="dictionary-word-inline-loading">Готовлю полную карточку слова...</div>
+      </div>
+    `;
+  }
+
+  if (fullCard.status === "loading") {
+    return `
+      <div class="dictionary-word-inline-detail">
+        <div class="dictionary-word-inline-loading">Карточка догружается. Можно пока продолжать работать со словарём.</div>
+      </div>
+    `;
+  }
+
+  if (fullCard.status === "error") {
+    const errors = Array.isArray(fullCard.errors) ? fullCard.errors.map((err) => err.message).filter(Boolean).join("\n") : "";
+    return `
+      <div class="dictionary-word-inline-detail">
+        <div class="dictionary-word-inline-error">Не удалось подготовить полную карточку.${errors ? `<br>${escapeHTML(errors)}` : ""}</div>
+      </div>
+    `;
+  }
+
+  const centerCard = normalizeIncomingStructuredWordCard(fullCard.center);
+  const trackOffset = getDictionaryWordPanelOffset(dictionaryWordActivePanel);
+
+  return `
+    <div class="dictionary-word-inline-detail">
+      <div class="dictionary-word-inline-swipe-frame" data-dict-word-swipe-frame="1">
+        <div class="dictionary-word-inline-swipe-track" data-dict-word-swipe-track="1" style="transform: translateX(${trackOffset});">
+          <section class="dictionary-word-inline-panel" data-dict-word-panel="left">
+            ${buildDictionaryWordSidePanelHtml("left", fullCard, centerCard)}
+          </section>
+          <section class="dictionary-word-inline-panel" data-dict-word-panel="center">
+            ${buildDictionaryWordCenterPanelHtml(centerCard, fullCard.center)}
+          </section>
+          <section class="dictionary-word-inline-panel" data-dict-word-panel="right">
+            ${buildDictionaryWordSidePanelHtml("right", fullCard, centerCard)}
+          </section>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getDictionaryWordPanelOffset(panelName) {
+  const offsets = {
+    left: "0%",
+    center: "-33.333333%",
+    right: "-66.666666%"
+  };
+
+  return offsets[panelName] || offsets.center;
+}
+
+function switchDictionaryWordPanel(panelName) {
+  if (!["left", "center", "right"].includes(panelName)) return;
+
+  dictionaryWordActivePanel = panelName;
+
+  document.querySelectorAll("[data-dict-word-panel-tab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.dictWordPanelTab === panelName);
+  });
+
+  document.querySelectorAll("[data-dict-word-swipe-track]").forEach((track) => {
+    track.style.transform = `translateX(${getDictionaryWordPanelOffset(panelName)})`;
+  });
+}
+
+function buildDictionaryWordCenterPanelHtml(centerCard, rawCenter) {
+  const card = centerCard || normalizeIncomingStructuredWordCard(rawCenter);
+
+  if (!card || !Array.isArray(card.parts) || !card.parts.length) {
+    const raw = rawCenter && typeof rawCenter === "object" ? String(rawCenter.raw || rawCenter.result || "").trim() : String(rawCenter || "").trim();
+
+    return `<div class="word-card-body">${raw ? `<div class="word-side-result">${escapeHTML(raw)}</div>` : `<div class="dictionary-word-inline-empty">Перевод пока не готов.</div>`}</div>`;
+  }
+
+  const parts = getWordCardParts(card);
+  const safeIndex = Math.max(0, Math.min(Number(dictionaryWordPartIndex) || 0, Math.max(parts.length - 1, 0)));
+  const activePart = parts[safeIndex] || parts[0] || {};
+  const meanings = Array.isArray(activePart.meanings) ? activePart.meanings : [];
+  const extraExamples = getWordPartExtraExamples(activePart);
+  const visibleExamples = dictionaryWordExamplesExpanded ? extraExamples : extraExamples.slice(0, 2);
+  const hiddenExamplesCount = Math.max(0, extraExamples.length - visibleExamples.length);
+
+  const partTabsHtml = parts.length > 1
+    ? `<div class="word-pos-tabs">
+        ${parts.map((part, index) => `
+          <button class="word-pos-tab ${index === safeIndex ? "active" : ""}" type="button" data-dict-word-part-index="${index}">
+            ${escapeHTML(getWordPartEnglishLabel(part))}
+          </button>
+        `).join("")}
+      </div>`
+    : "";
+
+  const meaningsHtml = meanings.length
+    ? `<div class="word-section-title">Значения</div>
+       <ol class="word-meanings-list">
+        ${meanings.map((meaning, index) => {
+          const translation = getWordMeaningTranslation(meaning);
+          const explanation = getWordMeaningExplanation(meaning);
+          const usage = getWordMeaningUsage(meaning);
+          const example = getWordMeaningExample(meaning);
+          const exampleSource = getWordExampleSource(example);
+          const exampleTranslation = getWordExampleTranslation(example);
+
+          return `
+            <li class="word-meaning-item">
+              <div class="word-meaning-number">${index + 1}.</div>
+              <div class="word-meaning-content">
+                ${translation ? `<div class="word-meaning-translation">${escapeHTML(translation)}</div>` : ""}
+                ${explanation ? `<div class="word-meaning-explanation">${escapeHTML(explanation)}</div>` : ""}
+                ${usage ? `<div class="word-meaning-usage">${escapeHTML(usage)}</div>` : ""}
+              </div>
+              ${(exampleSource || exampleTranslation) ? `
+                <div class="word-meaning-example">
+                  ${exampleSource ? `<div class="word-meaning-example-source">${escapeHTML(exampleSource)}</div>` : ""}
+                  ${exampleTranslation ? `<div class="word-meaning-example-translation">${escapeHTML(exampleTranslation)}</div>` : ""}
+                </div>
+              ` : ""}
+            </li>
+          `;
+        }).join("")}
+       </ol>`
+    : `<div class="word-empty-note">Значения не пришли в ответе.</div>`;
+
+  const examplesHtml = extraExamples.length
+    ? `<div class="word-examples-block">
+        <div class="word-section-title">Дополнительные примеры</div>
+        <ol class="word-examples-list">
+          ${visibleExamples.map((example) => {
+            const source = getWordExampleSource(example);
+            const translation = getWordExampleTranslation(example);
+
+            return `
+              <li class="word-example-item">
+                ${source ? `<div class="word-example-source">${escapeHTML(source)}</div>` : ""}
+                ${translation ? `<div class="word-example-translation">${escapeHTML(translation)}</div>` : ""}
+              </li>
+            `;
+          }).join("")}
+        </ol>
+        ${extraExamples.length > 2 ? `
+          <button class="word-more-examples-btn" type="button" data-dict-word-more-examples="1">
+            ${dictionaryWordExamplesExpanded ? "Скрыть примеры" : `Показать ещё примеры${hiddenExamplesCount ? ` (${hiddenExamplesCount})` : ""}`}
+            <span>${dictionaryWordExamplesExpanded ? "⌃" : "⌄"}</span>
+          </button>
+        ` : ""}
+      </div>`
+    : "";
+
+  return `
+    <div class="word-card-body">
+      ${partTabsHtml}
+      ${meaningsHtml}
+      ${examplesHtml}
+    </div>
+  `;
+}
+
+function buildDictionaryWordSidePanelHtml(side, fullCard, centerCard) {
+  const payload = side === "left" ? fullCard.left : fullCard.right;
+
+  if (!payload) {
+    return buildWordSidePlaceholderHtml(side === "left" ? "Мнемоника пока не готова." : "Разбор пока не готов.");
+  }
+
+  if (payload.raw) {
+    return buildWordSideResultHtml(payload.raw);
+  }
+
+  const normalized = side === "left" ? normalizeWordLeftPayload(payload) : normalizeWordRightPayload(payload);
+
+  if (!normalized) {
+    return buildWordSideResultHtml("Пустой ответ.");
+  }
+
+  return withTemporaryWordCardContext(centerCard, dictionaryWordPartIndex, () => {
+    return side === "left" ? buildWordLeftDashboardHtml(normalized) : buildWordRightDashboardHtml(normalized);
+  });
+}
+
+function withTemporaryWordCardContext(card, partIndex, callback) {
+  const prevCard = currentWordTranslationCard;
+  const prevPartIndex = currentWordPartIndex;
+
+  currentWordTranslationCard = card || null;
+  currentWordPartIndex = Math.max(0, Number(partIndex) || 0);
+
+  try {
+    return callback();
+  } finally {
+    currentWordTranslationCard = prevCard;
+    currentWordPartIndex = prevPartIndex;
+  }
+}
+
+function bindDictionaryWordInlineSwipe() {
+  document.querySelectorAll("[data-dict-word-swipe-frame]").forEach((frame) => {
+    if (frame.dataset.dictSwipeBound === "1") return;
+
+    frame.dataset.dictSwipeBound = "1";
+
+    let startX = 0;
+    let startY = 0;
+    let started = false;
+
+    frame.addEventListener("touchstart", (event) => {
+      if (!event.touches || !event.touches.length) return;
+      started = true;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    }, { passive: true });
+
+    frame.addEventListener("touchend", (event) => {
+      if (!started || !event.changedTouches || !event.changedTouches.length) return;
+      started = false;
+
+      const dx = event.changedTouches[0].clientX - startX;
+      const dy = event.changedTouches[0].clientY - startY;
+
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
+
+      if (dx < 0) {
+        if (dictionaryWordActivePanel === "left") switchDictionaryWordPanel("center");
+        else if (dictionaryWordActivePanel === "center") switchDictionaryWordPanel("right");
+      } else {
+        if (dictionaryWordActivePanel === "right") switchDictionaryWordPanel("center");
+        else if (dictionaryWordActivePanel === "center") switchDictionaryWordPanel("left");
+      }
+    }, { passive: true });
+  });
 }
 
 function shouldShowDictionaryItemTranscription(word, transcription) {
@@ -5757,7 +6173,15 @@ async function createDictionary(title) {
 
 function toggleDictionary(dictionaryId) {
   if (!dictionaryId) return;
-  expandedDictionaryId = expandedDictionaryId === dictionaryId ? null : dictionaryId;
+  const willClose = expandedDictionaryId === dictionaryId;
+  expandedDictionaryId = willClose ? null : dictionaryId;
+
+  if (willClose || !hasExpandedDictionaryWord(dictionaryId)) {
+    expandedDictionaryWordKey = null;
+    dictionaryWordActivePanel = "center";
+    dictionaryWordPartIndex = 0;
+    dictionaryWordExamplesExpanded = false;
+  }
 
   const searchInput = document.getElementById("dictionarySearchInput");
   renderDictionaryList(searchInput ? searchInput.value : "");
@@ -5896,6 +6320,7 @@ async function deleteDictionary(dictionaryId) {
 
   if (expandedDictionaryId === dictionaryId) expandedDictionaryId = null;
   if (dictionaryEditModeId === dictionaryId) dictionaryEditModeId = null;
+  if (hasExpandedDictionaryWord(dictionaryId)) expandedDictionaryWordKey = null;
 
   saveDictionaries();
   renderLexiconPage();
@@ -5955,6 +6380,7 @@ async function deleteWord(wordId, dictionaryId) {
 
   dict.words = (dict.words || []).filter((item) => item.id !== wordId);
   selectedDictionaryWordIds.delete(getDictionaryWordSelectionKey(dictionaryId, wordId));
+  if (expandedDictionaryWordKey === getExpandedDictionaryWordKey(dictionaryId, wordId)) expandedDictionaryWordKey = null;
   dict.updatedAt = new Date().toISOString();
 
   saveDictionaries();
@@ -5972,37 +6398,43 @@ async function deleteWord(wordId, dictionaryId) {
   }
 }
 
-function openWordFromDictionary(word) {
-  if (!word) return;
+function openWordFromDictionary(dictionaryId, wordId) {
+  if (!dictionaryId || !wordId) return;
 
-  showPage("home");
-  setMode("word");
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  const wordItem = dict?.words?.find((item) => item.id === wordId);
 
-  const wordInput = document.getElementById("wordInput");
+  if (!dict || !wordItem) return;
 
-  lastWordTranslateSource = String(word || "").trim();
-  wordCopiedValue = "";
-  currentWordTranslationCard = null;
-  currentWordPartIndex = 0;
-  wordExamplesExpanded = false;
-  wordActivePanel = "center";
-  wordSideRequestId += 1;
-  wordLeftPanelHtml = "";
-  wordRightPanelHtml = "";
-  wordLeftPanelPayload = null;
-  wordRightPanelPayload = null;
+  const key = getExpandedDictionaryWordKey(dictionaryId, wordId);
 
-  if (wordInput) {
-    wordInput.value = lastWordTranslateSource;
-    wordInput.focus();
+  if (expandedDictionaryWordKey === key) {
+    expandedDictionaryWordKey = null;
+    dictionaryWordActivePanel = "center";
+    dictionaryWordPartIndex = 0;
+    dictionaryWordExamplesExpanded = false;
+    renderDictionaryList(getDictionarySearchValue());
+    return;
   }
 
-  setWordResult("Перевод появится здесь.", true);
-  updateWordSwipeUI();
-  updateWordModeButtons();
-  updateWordCopyFeedback();
+  expandedDictionaryId = dictionaryId;
+  expandedDictionaryWordKey = key;
+  dictionaryWordActivePanel = "center";
+  dictionaryWordPartIndex = 0;
+  dictionaryWordExamplesExpanded = false;
+  renderDictionaryList(getDictionarySearchValue());
 
-  if (homeResultCard) homeResultCard.classList.add("hidden");
+  if (!isWordFullCardReady(wordItem) && !isWordFullCardLoading(wordItem)) {
+    enrichDictionaryWordFullCard(dictionaryId, wordId)
+      .catch((err) => {
+        console.warn("Dictionary inline word enrichment failed:", wordItem.word, err);
+      })
+      .finally(() => {
+        if (expandedDictionaryWordKey === key) {
+          renderDictionaryList(getDictionarySearchValue());
+        }
+      });
+  }
 }
 
 // ===== MODE SWITCH =====
