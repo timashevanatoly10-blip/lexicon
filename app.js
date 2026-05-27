@@ -6344,7 +6344,7 @@ function isDictionaryWordExpanded(dictionaryId, wordId) {
 
 function renderWordsHtml(dict) {
   const words = dict.words || [];
-  const isEditMode = dictionaryEditModeId === dict.id;
+  const isEditMode = !publicDictionaryMode && dictionaryEditModeId === dict.id;
 
   if (!words.length) {
     return `<div class="empty-word-list">${publicDictionaryMode ? "В этом публичном словаре пока нет слов." : "Слов пока нет. Введите первое слово сверху."}</div>`;
@@ -6378,7 +6378,9 @@ function renderDictionaryWordRowHtml(dict, item, index, isEditMode, isExpanded =
 
   return `
     <div class="word-row dictionary-word-card ${isEditMode ? "editing" : ""} ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}" data-dictionary-id="${escapeHTML(dict.id)}" data-word-open="${escapeHTML(item.id)}">
-      <span class="word-number-badge" data-word-select="${escapeHTML(item.id)}" data-dictionary-id="${escapeHTML(dict.id)}" title="Выбрать">${index + 1}</span>
+      ${publicDictionaryMode
+        ? `<span class="word-number-badge" title="Номер">${index + 1}</span>`
+        : `<span class="word-number-badge" data-word-select="${escapeHTML(item.id)}" data-dictionary-id="${escapeHTML(dict.id)}" title="Выбрать">${index + 1}</span>`}
 
       <div class="word-main dictionary-word-main">
         <div class="word-line dictionary-word-line">
@@ -6416,7 +6418,7 @@ function buildDictionaryWordInlineDetailHtml(dict, item) {
   if (!fullCard) {
     return `
       <div class="dictionary-word-inline-detail">
-        <div class="dictionary-word-inline-loading">Готовлю полную карточку слова...</div>
+        <div class="dictionary-word-inline-loading">${publicDictionaryMode ? "Полная карточка пока не сохранена владельцем." : "Готовлю полную карточку слова..."}</div>
       </div>
     `;
   }
@@ -6851,8 +6853,7 @@ async function createAndCopyDictionaryPublicLink(dictionaryId) {
 }
 
 async function bootstrapPublicDictionaryFromUrl() {
-  const params = new URLSearchParams(window.location.search || "");
-  const shareId = (params.get("publicDictionary") || params.get("public_dictionary") || "").trim();
+  const shareId = getPublicDictionaryShareIdFromUrl();
 
   if (!shareId) return;
 
@@ -7049,6 +7050,8 @@ function openWordFromDictionary(dictionaryId, wordId) {
   dictionaryWordExamplesExpanded = false;
   renderDictionaryList(getDictionarySearchValue());
 
+  if (publicDictionaryMode) return;
+
   if (!isWordFullCardReady(wordItem) && !isWordFullCardLoading(wordItem)) {
     enrichDictionaryWordFullCard(dictionaryId, wordId)
       .catch((err) => {
@@ -7085,7 +7088,14 @@ function showHomeResult(text) {
 }
 
 // ===== TOKEN =====
+function getPublicDictionaryShareIdFromUrl() {
+  const params = new URLSearchParams(window.location.search || "");
+  return (params.get("publicDictionary") || params.get("public_dictionary") || "").trim();
+}
+
 function initAccessToken() {
+  if (getPublicDictionaryShareIdFromUrl()) return;
+
   const savedToken = getAccessToken();
   if (savedToken) return;
   requestAccessToken();
