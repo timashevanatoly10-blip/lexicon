@@ -143,101 +143,6 @@ function ensureDictionaryPickerStyles() {
       from { transform: translateY(18px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    @keyframes textAttachBubbleIn {
-      from { opacity: 0; transform: translate(-50%, 10px) scale(0.54); }
-      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
-    }
-
-    @keyframes textAttachBackdropIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .text-attach-menu-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 9996;
-      background: transparent;
-      animation: textAttachBackdropIn 0.12s ease-out;
-    }
-
-    .text-attach-menu {
-      position: fixed;
-      z-index: 9997;
-      pointer-events: none;
-    }
-
-    .text-attach-option {
-      position: absolute;
-      left: 0;
-      width: 38px;
-      height: 38px;
-      border: 0;
-      border-radius: 999px;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%);
-      border: 2px solid rgba(255,255,255,0.94);
-      color: #5f9962;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      box-shadow:
-        inset 0 0 0 3px rgba(255,255,255,0.42),
-        inset 2px 2px 5px rgba(255,255,255,0.78),
-        inset -3px -3px 7px rgba(205,214,204,0.15),
-        0 8px 18px rgba(60,80,65,0.12);
-      -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-      pointer-events: auto;
-      animation: textAttachBubbleIn 0.18s cubic-bezier(.2,.9,.2,1.12) both;
-      transform-origin: 50% 100%;
-    }
-
-    .text-attach-option:nth-child(2) { animation-delay: 0.025s; }
-    .text-attach-option:nth-child(3) { animation-delay: 0.05s; }
-
-    .text-attach-option.primary {
-      width: 42px;
-      height: 42px;
-      color: #2f7d59;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.94) 0%, rgba(244,249,243,0.97) 56%, rgba(255,255,255,0.99) 100%);
-      box-shadow:
-        inset 0 0 0 3px rgba(255,255,255,0.48),
-        inset 2px 2px 5px rgba(255,255,255,0.82),
-        inset -3px -3px 7px rgba(143,177,147,0.16),
-        0 9px 20px rgba(60,80,65,0.13);
-    }
-
-    .text-attach-option.primary svg {
-      width: 18.5px;
-      height: 18.5px;
-    }
-
-    .text-attach-option:active {
-      transform: translate(-50%, 0) scale(0.94);
-      box-shadow:
-        inset 2px 2px 6px rgba(186,193,184,0.12),
-        0 4px 12px rgba(60,80,65,0.10);
-    }
-
-    .text-attach-option svg {
-      width: 17.5px;
-      height: 17.5px;
-      stroke: currentColor;
-      stroke-width: 2.3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .text-attach-btn.open {
-      color: #2f7d59;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.92) 0%, rgba(244,249,243,0.96) 56%, rgba(255,255,255,0.99) 100%);
-    }
-
 
     .text-word-token {
       display: inline;
@@ -516,34 +421,6 @@ function ensureDictionaryPickerStyles() {
 
     .text-big-input { height: auto; resize: none; }
     .text-big-input::placeholder { color: rgba(119,122,119,0.42); }
-
-    .text-processing-overlay {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      z-index: 12;
-      transform: translate(-50%, -50%);
-      min-width: 190px;
-      max-width: calc(100% - 46px);
-      padding: 13px 18px;
-      border-radius: 22px;
-      background:
-        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.92) 0%, rgba(249,250,247,0.97) 56%, rgba(255,255,255,0.99) 100%);
-      border: 2px solid rgba(255,255,255,0.94);
-      color: #1f6f56;
-      font-size: clamp(14px, 3.25vw, 18px);
-      font-weight: 650;
-      line-height: 1.15;
-      text-align: center;
-      letter-spacing: -0.01em;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.42),
-        inset 2px 2px 5px rgba(255,255,255,0.78),
-        inset -3px -3px 7px rgba(205,214,204,0.15),
-        0 12px 32px rgba(60,80,65,0.13);
-      pointer-events: none;
-      animation: textAttachBubbleIn 0.16s cubic-bezier(.2,.9,.2,1.08) both;
-    }
 
     .text-bottom-toolbar {
       position: absolute;
@@ -4438,18 +4315,6 @@ function iconCamera() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7.5 8.7 5.4h6.6L17 7.5h2.1c1 0 1.9.8 1.9 1.9v8.1c0 1-.8 1.9-1.9 1.9H4.9c-1 0-1.9-.8-1.9-1.9V9.4c0-1 .8-1.9 1.9-1.9H7Z"/><circle cx="12" cy="13.4" r="3.4"/></svg>`;
 }
 
-function iconPaperclip() {
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.4 12.4 14.9 5.9c1.8-1.8 4.6-1.8 6.2 0 1.7 1.8 1.6 4.6-.2 6.4l-8.2 8.2c-2.4 2.4-6.2 2.4-8.5 0-2.3-2.4-2.2-6.2.2-8.6l8.1-8.1"/><path d="M15.3 9.2 7.9 16.6c-.8.8-.8 2.1 0 2.9.8.8 2.1.8 2.9 0l7.8-7.8"/></svg>`;
-}
-
-function iconGallery() {
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="8.5" cy="9.2" r="1.4"/><path d="M5.8 16.8 10.2 12.4l3.1 3.1 2.1-2.1 3.1 3.4"/></svg>`;
-}
-
-function iconFileText() {
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h6.7L18 8.1v12.1H7V3.8Z"/><path d="M13.7 3.8v4.6H18"/><path d="M9.6 12h5.8"/><path d="M9.6 15h5.8"/><path d="M9.6 18h3.8"/></svg>`;
-}
-
 function iconMic() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5c2 0 3.4-1.5 3.4-3.5V6.6c0-2-1.4-3.5-3.4-3.5S8.6 4.6 8.6 6.6V11c0 2 1.4 3.5 3.4 3.5Z"/><path d="M5.7 10.8c0 3.5 2.6 6.1 6.3 6.1s6.3-2.6 6.3-6.1"/><path d="M12 16.9v4"/></svg>`;
 }
@@ -4469,7 +4334,7 @@ function iconClose() {
 function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn", panelName = "source") {
   return `
     <div class="text-bottom-toolbar">
-      <button class="text-bottom-icon-btn text-attach-btn" type="button" title="Добавить данные">${iconPaperclip()}</button>
+      <button class="text-bottom-icon-btn text-camera-btn" type="button" title="Фото">${iconCamera()}</button>
       <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
       <button class="text-bottom-icon-btn text-copy-btn" type="button" data-copy-panel="${panelName}" title="Копировать">${iconCopy()}</button>
       <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
@@ -4930,84 +4795,21 @@ function buildTextReadingFallbackHtml(text) {
 }
 
 
-function handleTextAttachMenu(event) {
+function handleTextPhotoExtract(event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  const btn = event?.currentTarget || event?.target?.closest?.(".text-attach-btn") || document.querySelector(".text-attach-btn");
-
-  if (!btn) return;
-
-  if (document.getElementById("textAttachMenuBackdrop")) {
-    closeTextAttachMenu();
-    return;
-  }
-
-  openTextAttachMenu(btn);
-}
-
-function openTextAttachMenu() {
-  triggerUnifiedMediaPicker();
-}
-
-function closeTextAttachMenu() {
-  const backdrop = document.getElementById("textAttachMenuBackdrop");
-  const menu = document.getElementById("textAttachMenu");
-
-  if (backdrop) backdrop.remove();
-  if (menu) menu.remove();
-
-  document.querySelectorAll(".text-attach-btn").forEach((btn) => btn.classList.remove("open"));
-}
-
-async function handleTextImageExtractSource(sourceType = "camera") {
   if (!ensureAccessToken()) return;
-
-  if (sourceType === "gallery" && window.showOpenFilePicker) {
-    try {
-      const handles = await window.showOpenFilePicker({
-        multiple: false,
-        excludeAcceptAllOption: true,
-        types: [
-          {
-            description: "Images",
-            accept: {
-              "image/*": [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"]
-            }
-          }
-        ]
-      });
-
-      const handle = handles && handles[0];
-      const file = handle ? await handle.getFile() : null;
-
-      if (!file) return;
-
-      await extractTextFromPhotoToTextMode(file);
-      return;
-    } catch (err) {
-      if (err && (err.name === "AbortError" || err.name === "NotAllowedError")) return;
-      // If the modern picker is not available/failed, fall back to the normal input below.
-    }
-  }
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = "image/*";
-  input.multiple = false;
-
-  if (sourceType === "camera") {
-    input.setAttribute("capture", "environment");
-  } else {
-    input.removeAttribute("capture");
-  }
-
+  input.accept = "image/jpeg,image/png,image/webp,image/*";
+  input.setAttribute("capture", "environment");
   input.style.position = "fixed";
   input.style.left = "-9999px";
   input.style.top = "0";
-  input.style.opacity = "0";
 
   input.onchange = async () => {
     const file = input.files && input.files[0];
@@ -5022,113 +4824,6 @@ async function handleTextImageExtractSource(sourceType = "camera") {
   input.click();
 }
 
-function handleTextFileExtractSource() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = [
-    "text/plain",
-    ".txt",
-    ".md",
-    ".csv",
-    ".json",
-    ".html",
-    ".htm",
-    ".srt",
-    ".vtt",
-    ".pdf",
-    ".doc",
-    ".docx",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ].join(",");
-
-  input.style.position = "fixed";
-  input.style.left = "-9999px";
-  input.style.top = "0";
-
-  input.onchange = async () => {
-    const file = input.files && input.files[0];
-    input.remove();
-
-    if (!file) return;
-
-    await handleTextPickedFile(file);
-  };
-
-  document.body.appendChild(input);
-  input.click();
-}
-
-async function handleTextPickedFile(file) {
-  if (!file) return;
-
-  setTextDataBusy(true);
-  setTextWordMiniDisplay("Обработка данных...", "loading");
-  resetTextCopyState();
-  clearSelectedTextWord();
-
-  try {
-    const name = String(file.name || "").toLowerCase();
-    const mime = String(file.type || "").toLowerCase();
-    const isTextLike =
-      mime.startsWith("text/") ||
-      [".txt", ".md", ".csv", ".json", ".html", ".htm", ".srt", ".vtt"].some((ext) => name.endsWith(ext));
-
-    if (isTextLike) {
-      const content = await readTextFile(file);
-      const cleanText = String(content || "").trim();
-
-      if (!cleanText) {
-        alert("Файл пустой или текст не прочитан.");
-        return;
-      }
-
-      insertExtractedTextIntoTextSource(cleanText);
-      setTextWordMiniDisplay("Текст добавлен", "ready");
-
-      window.setTimeout(() => {
-        if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
-          setTextWordMiniDisplay("");
-        }
-      }, 900);
-
-      return;
-    }
-
-    setTextWordMiniDisplay("Файл выбран", "ready");
-
-    window.setTimeout(() => {
-      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Файл выбран") {
-        setTextWordMiniDisplay("PDF/DOCX — через раздел «Файлы»", "ready");
-      }
-    }, 650);
-
-    window.setTimeout(() => {
-      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "PDF/DOCX — через раздел «Файлы»") {
-        setTextWordMiniDisplay("");
-      }
-    }, 2200);
-  } catch (err) {
-    alert("Не удалось обработать данные:\n" + err.message);
-  } finally {
-    setTextDataBusy(false);
-    updateTextCopyFeedback();
-    updateTextInlineClearVisibility();
-  }
-}
-
-function readTextFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Не удалось прочитать файл."));
-
-    reader.readAsText(file);
-  });
-}
-
 async function extractTextFromPhotoToTextMode(file) {
   const mime = String(file?.type || "").toLowerCase();
 
@@ -5139,8 +4834,8 @@ async function extractTextFromPhotoToTextMode(file) {
     return;
   }
 
-  setTextDataBusy(true);
-  setTextWordMiniDisplay("Обработка данных...", "loading");
+  setTextPhotoBusy(true);
+  setTextWordMiniDisplay("Фото...", "loading");
   resetTextCopyState();
   clearSelectedTextWord();
 
@@ -5149,22 +4844,16 @@ async function extractTextFromPhotoToTextMode(file) {
     const cleanText = String(extractedText || "").trim();
 
     if (!cleanText) {
-      alert("Текст не распознан.");
+      alert("Текст на фото не распознан.");
       return;
     }
 
     insertExtractedTextIntoTextSource(cleanText);
-    setTextWordMiniDisplay("Текст добавлен", "ready");
-
-    window.setTimeout(() => {
-      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
-        setTextWordMiniDisplay("");
-      }
-    }, 900);
   } catch (err) {
-    alert("Не удалось обработать данные:\n" + err.message);
+    alert("Не удалось распознать текст с фото:\n" + err.message);
   } finally {
-    setTextDataBusy(false);
+    setTextPhotoBusy(false);
+    setTextWordMiniDisplay("");
     updateTextCopyFeedback();
     updateTextInlineClearVisibility();
   }
@@ -5224,37 +4913,12 @@ function insertExtractedTextIntoTextSource(extractedText) {
   textInput.focus();
 }
 
-function setTextProcessingOverlay(isVisible, text = "Обработка данных...") {
-  const sourcePanel = document.querySelector('[data-text-panel="source"]');
-  if (!sourcePanel) return;
-
-  let overlay = document.getElementById("textProcessingOverlay");
-
-  if (!isVisible) {
-    if (overlay) overlay.remove();
-    return;
-  }
-
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "textProcessingOverlay";
-    overlay.className = "text-processing-overlay";
-    sourcePanel.appendChild(overlay);
-  }
-
-  overlay.textContent = text;
-}
-
-function setTextDataBusy(isBusy) {
-  const busy = Boolean(isBusy);
-
-  document.querySelectorAll(".text-attach-btn").forEach((btn) => {
-    btn.disabled = busy;
-    btn.classList.toggle("inactive", busy);
-    btn.title = busy ? "Обработка данных..." : "Добавить данные";
+function setTextPhotoBusy(isBusy) {
+  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
+    btn.disabled = Boolean(isBusy);
+    btn.classList.toggle("inactive", Boolean(isBusy));
+    btn.title = isBusy ? "Распознаю фото..." : "Фото";
   });
-
-  setTextProcessingOverlay(busy, "Обработка данных...");
 }
 
 function bindTextInlineClearButtons() {
@@ -5272,8 +4936,8 @@ function bindTextInlineClearButtons() {
     if (!inlineClearBtnTranslation.classList.contains("inactive")) clearTextMode();
   };
 
-  document.querySelectorAll(".text-attach-btn").forEach((btn) => {
-    btn.onclick = handleTextAttachMenu;
+  document.querySelectorAll(".text-camera-btn").forEach((btn) => {
+    btn.onclick = handleTextPhotoExtract;
   });
 
   document.querySelectorAll(".text-mic-btn").forEach((btn) => {
