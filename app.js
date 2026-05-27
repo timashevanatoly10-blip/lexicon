@@ -2157,9 +2157,48 @@ function normalizeWordFromApi(item) {
     transcription: String(item.transcription || "—").trim(),
     translation: String(item.translation || "перевод позже").trim(),
     partOfSpeech: String(item.partOfSpeech || item.part_of_speech || "").trim(),
+    meta: normalizeWordMeta(item.meta),
     createdAt: item.createdAt || item.created_at || new Date().toISOString(),
     updatedAt: item.updatedAt || item.updated_at || new Date().toISOString()
   };
+}
+
+function normalizeWordMeta(meta) {
+  if (!meta) return {};
+
+  if (typeof meta === "string") {
+    try {
+      const parsed = JSON.parse(meta);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  if (typeof meta === "object" && !Array.isArray(meta)) {
+    return { ...meta };
+  }
+
+  return {};
+}
+
+function getWordFullCardMeta(wordItem) {
+  const meta = normalizeWordMeta(wordItem?.meta);
+  const fullCard = meta.fullCard && typeof meta.fullCard === "object" && !Array.isArray(meta.fullCard)
+    ? meta.fullCard
+    : null;
+
+  return fullCard;
+}
+
+function isWordFullCardReady(wordItem) {
+  const fullCard = getWordFullCardMeta(wordItem);
+  return Boolean(fullCard && fullCard.status === "ready" && (fullCard.center || fullCard.left || fullCard.right));
+}
+
+function isWordFullCardLoading(wordItem) {
+  const fullCard = getWordFullCardMeta(wordItem);
+  return Boolean(fullCard && fullCard.status === "loading");
 }
 
 async function bootstrapDictionaries() {
@@ -2280,7 +2319,20 @@ async function createWordInCloud(dictionaryId, wordItem) {
       word: wordItem.word,
       transcription: wordItem.transcription,
       translation: wordItem.translation,
-      partOfSpeech: wordItem.partOfSpeech
+      partOfSpeech: wordItem.partOfSpeech,
+      meta: normalizeWordMeta(wordItem.meta)
+    })
+  });
+}
+
+async function updateWordMetaInCloud(dictionaryId, wordId, meta) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}/words/${encodeURIComponent(wordId)}/meta`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      meta: normalizeWordMeta(meta)
     })
   });
 }
@@ -2304,6 +2356,103 @@ async function createWordInCloudWithDictionaryRetry(dict, wordItem) {
     await createDictionaryInCloud(dict);
     return await createWordInCloud(dict.id, wordItem);
   }
+}
+
+function queueDictionaryWordFullCardEnrichment(dictionaryId, wordId) {
+  if (!dictionaryId || !wordId) return;
+
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  const wordItem = dict?.words?.find((item) => item.id === wordId);
+
+  if (!dict || !wordItem) return;
+  if (isWordFullCardReady(wordItem) || isWordFullCardLoading(wordItem)) return;
+
+  enrichDictionaryWordFullCard(dictionaryId, wordId).catch((err) => {
+    console.warn("Dictionary word enrichment failed:", wordItem.word, err);
+  });
+}
+
+async function enrichDictionaryWordFullCard(dictionaryId, wordId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  const wordItem = dict?.words?.find((item) => item.id === wordId);
+
+  if (!dict || !wordItem) return null;
+  if (isWordFullCardReady(wordItem)) return getWordFullCardMeta(wordItem);
+
+  const sourceWord = String(wordItem.word || "").trim();
+  if (!sourceWord) return null;
+
+  const startedAt = new Date().toISOString();
+  wordItem.meta = {
+    ...normalizeWordMeta(wordItem.meta),
+    fullCard: {
+      status: "loading",
+      startedAt,
+      updatedAt: startedAt
+    }
+  };
+  wordItem.updatedAt = startedAt;
+  dict.updatedAt = startedAt;
+  saveDictionaries();
+
+  try {
+    await updateWordMetaInCloud(dictionaryId, wordId, wordItem.meta);
+  } catch (err) {
+    console.warn("Saving dictionary word loading meta failed:", sourceWord, err);
+  }
+
+  const [centerResult, leftResult, rightResult] = await Promise.allSettled([
+    callAi("word_translate", sourceWord),
+    callAi("word_left", sourceWord),
+    callAi("word_right", sourceWord)
+  ]);
+
+  const centerData = centerResult.status === "fulfilled" ? centerResult.value : null;
+  const leftData = leftResult.status === "fulfilled" ? leftResult.value : null;
+  const rightData = rightResult.status === "fulfilled" ? rightResult.value : null;
+
+  const centerCard = centerData ? getStructuredWordCardFromAiData(centerData) : null;
+  const leftPayload = leftData ? getWordLeftPayloadFromAiData(leftData) : null;
+  const rightPayload = rightData ? getWordRightPayloadFromAiData(rightData) : null;
+
+  const errors = [];
+  if (centerResult.status === "rejected") errors.push({ panel: "center", message: String(centerResult.reason?.message || centerResult.reason || "") });
+  if (leftResult.status === "rejected") errors.push({ panel: "left", message: String(leftResult.reason?.message || leftResult.reason || "") });
+  if (rightResult.status === "rejected") errors.push({ panel: "right", message: String(rightResult.reason?.message || rightResult.reason || "") });
+
+  const updatedAt = new Date().toISOString();
+  const fullCard = {
+    status: centerCard || leftPayload || rightPayload ? "ready" : "error",
+    source: sourceWord,
+    center: centerCard || (centerData ? { raw: centerData.result || centerData.raw || "" } : null),
+    left: leftPayload || (leftData ? { raw: leftData.result || leftData.raw || "" } : null),
+    right: rightPayload || (rightData ? { raw: rightData.result || rightData.raw || "" } : null),
+    errors,
+    startedAt,
+    updatedAt
+  };
+
+  wordItem.meta = {
+    ...normalizeWordMeta(wordItem.meta),
+    fullCard
+  };
+  wordItem.updatedAt = updatedAt;
+  dict.updatedAt = updatedAt;
+  saveDictionaries();
+
+  try {
+    const saved = await updateWordMetaInCloud(dictionaryId, wordId, wordItem.meta);
+    const savedWord = saved.word ? normalizeWordFromApi(saved.word) : null;
+
+    if (savedWord) {
+      Object.assign(wordItem, savedWord);
+      saveDictionaries();
+    }
+  } catch (err) {
+    console.warn("Saving dictionary word full card failed:", sourceWord, err);
+  }
+
+  return fullCard;
 }
 
 
@@ -2539,6 +2688,7 @@ async function addWordCardToDictionary(dictionaryId, rawWord) {
   });
 
   if (existing) {
+    queueDictionaryWordFullCardEnrichment(dictionaryId, existing.id);
     return existing;
   }
 
@@ -2569,6 +2719,7 @@ async function addWordCardToDictionary(dictionaryId, rawWord) {
     }
 
     saveDictionaries();
+    queueDictionaryWordFullCardEnrichment(dictionaryId, wordItem.id);
   } catch (err) {
     wordItem.transcription = "—";
     wordItem.translation = "перевод позже";
@@ -5323,6 +5474,7 @@ function makeWordItem(word, transcription = "—", translation = "перевод
     transcription,
     translation,
     partOfSpeech,
+    meta: {},
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
