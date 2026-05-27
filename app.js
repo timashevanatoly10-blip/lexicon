@@ -2,6 +2,9 @@ const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
 const TOKEN_STORAGE_KEY = "lexicon_access_token";
 const LEXICON_STORAGE_KEY = "lexicon_dictionaries_v1";
 
+let publicDictionaryMode = false;
+let publicDictionaryShareId = "";
+
 let currentDocumentId = "";
 let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
@@ -91,6 +94,7 @@ ensureDictionaryPickerStyles();
 retireLegacyHomeResultCard();
 bootstrapDictionaries();
 showPage("home");
+bootstrapPublicDictionaryFromUrl();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -1830,6 +1834,15 @@ function ensureDictionaryPickerStyles() {
       border-color: rgba(255,255,255,0.76) !important;
     }
 
+    .dictionary-public-title {
+      min-width: 0 !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      padding: 2px 4px !important;
+    }
+
     .dictionary-add-row {
       display: grid !important;
       grid-template-columns: minmax(0, 1fr) auto !important;
@@ -2531,6 +2544,26 @@ async function deleteDictionaryInCloud(dictionaryId) {
   return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}`, {
     method: "DELETE"
   });
+}
+
+async function createDictionaryPublicLinkInCloud(dictionaryId) {
+  return await dictionaryApi(`/api/dictionaries/${encodeURIComponent(dictionaryId)}/public-link`, {
+    method: "POST"
+  });
+}
+
+async function loadPublicDictionaryFromCloud(shareId) {
+  let res;
+
+  try {
+    res = await fetch(`${API_BASE}/public/dictionary/${encodeURIComponent(shareId)}`, {
+      method: "GET"
+    });
+  } catch (err) {
+    throw new Error("Не удалось загрузить публичный словарь. Проверь интернет и Worker.\n" + err.message);
+  }
+
+  return await readJsonOrThrow(res);
 }
 
 async function createWordInCloud(dictionaryId, wordItem) {
@@ -6036,7 +6069,9 @@ function showLexiconPage() {
   if (!lexiconPage) return;
   renderLexiconPage();
   showExistingPage(lexiconPage);
-  bootstrapDictionaries();
+  if (!publicDictionaryMode) {
+    bootstrapDictionaries();
+  }
 }
 
 // ===== LEXICON =====
@@ -6076,19 +6111,25 @@ function renderLexiconPage() {
 
   const totalWords = dictionaries.reduce((sum, dict) => sum + (dict.words || []).length, 0);
 
+  const lexiconSubtitle = publicDictionaryMode
+    ? `Публичный словарь • ${totalWords} слов`
+    : `${dictionaries.length} словарей • ${totalWords} слов`;
+
   lexiconPage.innerHTML = `
-    <section class="lexicon-shell">
+    <section class="lexicon-shell ${publicDictionaryMode ? "public-lexicon-shell" : ""}">
       <div class="lexicon-topline">
-        <button id="backHomeFromLexiconBtn" class="back-btn lexicon-back-icon-btn" type="button" title="Назад">←</button>
+        ${publicDictionaryMode ? "" : `<button id="backHomeFromLexiconBtn" class="back-btn lexicon-back-icon-btn" type="button" title="Назад">←</button>`}
 
         <div class="lexicon-title-block">
-          <div class="lexicon-subtitle">${dictionaries.length} словарей • ${totalWords} слов</div>
+          <div class="lexicon-subtitle">${lexiconSubtitle}</div>
         </div>
 
-        <div class="lexicon-actions">
-          <button id="lexiconMenuBtn" class="lexicon-icon-btn" type="button" title="Меню">☰</button>
-          <button id="addDictionaryBtn" class="lexicon-add-btn" type="button" title="Добавить словарь">+</button>
-        </div>
+        ${publicDictionaryMode ? "" : `
+          <div class="lexicon-actions">
+            <button id="lexiconMenuBtn" class="lexicon-icon-btn" type="button" title="Меню">☰</button>
+            <button id="addDictionaryBtn" class="lexicon-add-btn" type="button" title="Добавить словарь">+</button>
+          </div>
+        `}
       </div>
 
       <div id="dictionaryList" class="dictionary-list"></div>
@@ -6152,16 +6193,23 @@ function renderDictionaryList(filterText = "") {
 
       <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
         <div class="dictionary-panel-head">
-          <div class="dictionary-add-row">
-            <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
-            <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
-          </div>
-
-          <div class="dictionary-panel-actions">
-            <div class="dictionary-panel-menu-wrap">
-              <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
+          ${publicDictionaryMode ? `
+            <div class="dictionary-public-title">
+              <div class="dictionary-panel-title">${escapeHTML(dict.title || "Без названия")}</div>
+              ${dict.note ? `<div class="dictionary-panel-subtitle">${escapeHTML(dict.note)}</div>` : ""}
             </div>
-          </div>
+          ` : `
+            <div class="dictionary-add-row">
+              <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
+              <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
+            </div>
+
+            <div class="dictionary-panel-actions">
+              <div class="dictionary-panel-menu-wrap">
+                <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
+              </div>
+            </div>
+          `}
         </div>
 
         <div class="word-list" data-word-list="${dict.id}">
@@ -6299,7 +6347,7 @@ function renderWordsHtml(dict) {
   const isEditMode = dictionaryEditModeId === dict.id;
 
   if (!words.length) {
-    return `<div class="empty-word-list">Слов пока нет. Введите первое слово сверху.</div>`;
+    return `<div class="empty-word-list">${publicDictionaryMode ? "В этом публичном словаре пока нет слов." : "Слов пока нет. Введите первое слово сверху."}</div>`;
   }
 
   return words.map((item, index) => {
@@ -6704,15 +6752,16 @@ function openDictionaryMenu(dictionaryId, anchor) {
   popover.innerHTML = `
     <button type="button" data-menu-action="edit">${isEditMode ? "Done" : "Edit"}</button>
     <button type="button" data-menu-action="rename">Rename</button>
+    <button type="button" data-menu-action="public-link">Public link</button>
     <button type="button" class="danger" data-menu-action="delete">Delete</button>
   `;
 
   document.body.appendChild(popover);
 
   const rect = anchor.getBoundingClientRect();
-  const popoverWidth = 118;
+  const popoverWidth = 138;
   const left = Math.max(10, Math.min(window.innerWidth - popoverWidth - 10, rect.right - popoverWidth));
-  const top = Math.min(window.innerHeight - 90, rect.bottom + 7);
+  const top = Math.min(window.innerHeight - 124, rect.bottom + 7);
 
   popover.style.left = `${left}px`;
   popover.style.top = `${top}px`;
@@ -6761,12 +6810,99 @@ function openDictionaryMenu(dictionaryId, anchor) {
     renameDictionary(dictionaryId);
   });
 
+  popover.querySelector('[data-menu-action="public-link"]')?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeDictionaryMenu();
+    cleanupOutside();
+    createAndCopyDictionaryPublicLink(dictionaryId);
+  });
+
   popover.querySelector('[data-menu-action="delete"]')?.addEventListener("click", (event) => {
     event.stopPropagation();
     closeDictionaryMenu();
     cleanupOutside();
     deleteDictionary(dictionaryId);
   });
+}
+
+async function createAndCopyDictionaryPublicLink(dictionaryId) {
+  const dict = dictionaries.find((item) => item.id === dictionaryId);
+  if (!dict) return;
+
+  try {
+    const data = await createDictionaryPublicLinkInCloud(dictionaryId);
+    const publicLink = data.publicLink || {};
+    const url = publicLink.url || publicLink.publicAppUrl || publicLink.publicApiUrl || "";
+
+    if (!url) {
+      throw new Error("Worker не вернул public link.");
+    }
+
+    const copied = await writeTextToClipboard(url);
+
+    if (copied) {
+      alert(`Public link скопирован:\n${url}`);
+    } else {
+      prompt("Скопируй public link:", url);
+    }
+  } catch (err) {
+    alert("Не удалось создать public link:\n" + err.message);
+  }
+}
+
+async function bootstrapPublicDictionaryFromUrl() {
+  const params = new URLSearchParams(window.location.search || "");
+  const shareId = (params.get("publicDictionary") || params.get("public_dictionary") || "").trim();
+
+  if (!shareId) return;
+
+  publicDictionaryMode = true;
+  publicDictionaryShareId = shareId;
+  dictionaries = [];
+  expandedDictionaryId = null;
+  dictionaryEditModeId = null;
+  expandedDictionaryWordKey = null;
+
+  hidePage(homePage);
+  hidePage(filesPage);
+  hidePage(aiPage);
+
+  if (lexiconPage) {
+    lexiconPage.innerHTML = `
+      <section class="lexicon-shell public-lexicon-shell">
+        <div class="lexicon-topline">
+          <div class="lexicon-title-block">
+            <div class="lexicon-subtitle">Загрузка публичного словаря...</div>
+          </div>
+        </div>
+        <div class="lexicon-empty">Пожалуйста, подождите.</div>
+      </section>
+    `;
+    showExistingPage(lexiconPage);
+  }
+
+  try {
+    const data = await loadPublicDictionaryFromCloud(shareId);
+    const dictionary = normalizeDictionaryFromApi(data.dictionary || data.publicDictionary || {});
+    dictionaries = dictionary.id ? [dictionary] : [];
+    expandedDictionaryId = dictionary.id || null;
+    renderLexiconPage();
+    showExistingPage(lexiconPage);
+  } catch (err) {
+    if (lexiconPage) {
+      lexiconPage.innerHTML = `
+        <section class="lexicon-shell public-lexicon-shell">
+          <div class="lexicon-topline">
+            <div class="lexicon-title-block">
+              <div class="lexicon-subtitle">Public link недоступен</div>
+            </div>
+          </div>
+          <div class="lexicon-empty">${escapeHTML(err.message || "Не удалось открыть публичный словарь.")}</div>
+        </section>
+      `;
+      showExistingPage(lexiconPage);
+    }
+  }
 }
 
 async function renameDictionary(dictionaryId) {
