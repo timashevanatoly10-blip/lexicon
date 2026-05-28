@@ -84,17 +84,27 @@ let manualId = document.getElementById("manualId");
 let manualKey = document.getElementById("manualKey");
 let manualCheckBtn = document.getElementById("manualCheckBtn");
 
+const initialPublicDictionaryShareId = getPublicDictionaryShareIdFromUrl();
+if (initialPublicDictionaryShareId) {
+  publicDictionaryMode = true;
+  publicDictionaryShareId = initialPublicDictionaryShareId;
+}
+
 ensureWordModeMarkup();
 ensureTextModeMarkup();
 ensureFilesPageMarkup();
 refreshFileElements();
 bindEvents();
-initAccessToken();
 ensureDictionaryPickerStyles();
 retireLegacyHomeResultCard();
-bootstrapDictionaries();
-showPage("home");
-bootstrapPublicDictionaryFromUrl();
+
+if (publicDictionaryMode) {
+  bootstrapPublicDictionaryFromUrl();
+} else {
+  initAccessToken();
+  bootstrapDictionaries();
+  showPage("home");
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -2440,6 +2450,7 @@ function isWordFullCardLoading(wordItem) {
 }
 
 async function bootstrapDictionaries() {
+  if (publicDictionaryMode) return;
   if (!getAccessToken()) return;
 
   const localDictionaries = loadDictionaries();
@@ -2448,6 +2459,8 @@ async function bootstrapDictionaries() {
     const data = await dictionaryApi("/api/dictionaries", {
       method: "GET"
     });
+
+    if (publicDictionaryMode) return;
 
     const cloudDictionaries = Array.isArray(data.dictionaries)
       ? data.dictionaries.map(normalizeDictionaryFromApi)
@@ -2463,6 +2476,8 @@ async function bootstrapDictionaries() {
         method: "GET"
       });
 
+      if (publicDictionaryMode) return;
+
       dictionaries = Array.isArray(afterMigration.dictionaries)
         ? afterMigration.dictionaries.map(normalizeDictionaryFromApi)
         : localDictionaries;
@@ -2476,6 +2491,7 @@ async function bootstrapDictionaries() {
       renderLexiconPage();
     }
   } catch (err) {
+    if (publicDictionaryMode) return;
     console.warn("Cloud dictionaries are unavailable, using local cache:", err);
     dictionaries = localDictionaries;
     saveDictionaries();
@@ -6840,16 +6856,88 @@ async function createAndCopyDictionaryPublicLink(dictionaryId) {
       throw new Error("Worker не вернул public link.");
     }
 
-    const copied = await writeTextToClipboard(url);
-
-    if (copied) {
-      alert(`Public link скопирован:\n${url}`);
-    } else {
-      prompt("Скопируй public link:", url);
-    }
+    showPublicLinkModal(url, dict.title || "Без названия");
   } catch (err) {
     alert("Не удалось создать public link:\n" + err.message);
   }
+}
+
+function showPublicLinkModal(url, dictionaryTitle = "") {
+  closePublicLinkModal();
+
+  const overlay = document.createElement("div");
+  overlay.id = "publicLinkOverlay";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.zIndex = "10000";
+  overlay.style.background = "rgba(10, 20, 15, 0.32)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "flex-end";
+  overlay.style.justifyContent = "center";
+  overlay.style.padding = "16px";
+
+  const sheet = document.createElement("div");
+  sheet.style.width = "min(520px, 100%)";
+  sheet.style.background = "#ffffff";
+  sheet.style.border = "1px solid #d7e1da";
+  sheet.style.borderRadius = "24px";
+  sheet.style.boxShadow = "0 18px 50px rgba(20, 40, 30, 0.22)";
+  sheet.style.padding = "16px";
+  sheet.style.animation = "dictionaryPickerRise 0.18s ease-out";
+
+  sheet.innerHTML = `
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px;">
+      <div style="min-width:0;">
+        <div style="font-size:20px; font-weight:800; color:#17211b;">Public link</div>
+        <div style="font-size:14px; color:#6d7a72; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(dictionaryTitle || "словарь")}</div>
+      </div>
+      <button id="publicLinkCloseBtn" type="button" style="border:0; background:#f3f7f4; border-radius:999px; width:38px; height:38px; font-size:22px; line-height:1; color:#17211b;">×</button>
+    </div>
+
+    <div style="background:#f7fbf8; border:1px solid #d7e1da; border-radius:16px; padding:12px; color:#17211b; font-size:13px; line-height:1.35; word-break:break-all; user-select:text;">${escapeHTML(url)}</div>
+
+    <button id="publicLinkCopyBtn" type="button" style="width:100%; margin-top:12px; border:0; background:#5f9962; color:#ffffff; border-radius:16px; padding:14px 16px; font-weight:800; text-align:center;">
+      Скопировать ссылку
+    </button>
+
+    <button id="publicLinkOpenBtn" type="button" style="width:100%; margin-top:10px; border:0; background:#f3f7f4; color:#2f6f4b; border-radius:16px; padding:13px 16px; font-weight:750;">
+      Открыть
+    </button>
+  `;
+
+  overlay.appendChild(sheet);
+  document.body.appendChild(overlay);
+
+  const close = () => closePublicLinkModal();
+
+  sheet.querySelector("#publicLinkCloseBtn")?.addEventListener("click", close);
+  sheet.querySelector("#publicLinkOpenBtn")?.addEventListener("click", () => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+  sheet.querySelector("#publicLinkCopyBtn")?.addEventListener("click", async () => {
+    const copied = await writeTextToClipboard(url);
+    const btn = sheet.querySelector("#publicLinkCopyBtn");
+
+    if (btn) {
+      btn.textContent = copied ? "Ссылка скопирована" : "Не удалось скопировать";
+      setTimeout(() => {
+        if (btn && document.body.contains(btn)) btn.textContent = "Скопировать ссылку";
+      }, 1200);
+    }
+
+    if (!copied) {
+      prompt("Скопируй public link:", url);
+    }
+  });
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) close();
+  });
+}
+
+function closePublicLinkModal() {
+  const existing = document.getElementById("publicLinkOverlay");
+  if (existing) existing.remove();
 }
 
 async function bootstrapPublicDictionaryFromUrl() {
@@ -7313,8 +7401,10 @@ async function readJsonOrThrow(res) {
 
   if (!res.ok) {
     if (res.status === 401) {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      lockApp();
+      if (!publicDictionaryMode) {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        lockApp();
+      }
       throw new Error("Unauthorized");
     }
 
