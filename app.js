@@ -1,9 +1,12 @@
 const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
+const VETAI_API_BASE = "https://gpt24-test.timashevanatoly10.workers.dev";
 const TOKEN_STORAGE_KEY = "lexicon_access_token";
 const LEXICON_STORAGE_KEY = "lexicon_dictionaries_v1";
 
 let publicDictionaryMode = false;
 let publicDictionaryShareId = "";
+let vettingSessionId = localStorage.getItem("vetai_session_id") || "";
+let vettingBusy = false;
 
 let currentDocumentId = "";
 let currentDocumentKey = "";
@@ -2616,6 +2619,38 @@ function ensureDictionaryPickerStyles() {
 
     .vetting-field textarea::placeholder {
       color: rgba(119,122,119,0.42);
+    }
+
+
+    .vetting-answer-card {
+      display: none;
+      border-radius: 22px;
+      border: 1px solid rgba(226,231,224,0.74);
+      background: rgba(255,255,255,0.66);
+      color: rgba(31,33,31,0.82);
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 440;
+      line-height: 1.38;
+      padding: 13px 14px;
+      white-space: pre-wrap;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.46),
+        0 1px 4px rgba(180,188,178,0.035);
+    }
+
+    .vetting-answer-card.visible {
+      display: block;
+    }
+
+    .vetting-answer-card.loading {
+      color: #1f6f56;
+      font-weight: 680;
+      text-align: center;
+    }
+
+    .vetting-action-btn:disabled {
+      opacity: 0.62;
+      cursor: default;
     }
 
     .ai-notice-overlay {
@@ -6552,6 +6587,7 @@ function renderVettingInspectorPage() {
   if (!aiPage) return;
 
   const crewGroups = ["Officers", "Engineers", "ETO", "Ratings", "Catering"];
+  ensureVettingSessionId();
 
   aiPage.innerHTML = `
     <section class="ai-shell vetting-shell">
@@ -6567,7 +6603,7 @@ function renderVettingInspectorPage() {
         <div class="vetting-hero">
           <div class="vetting-label">Start mode</div>
           <div class="vetting-title">Подготовка к vetting-инспекции</div>
-          <div class="vetting-note">Пока это стартовая заготовка. Позже подключим отдельную логику вопросов, ролей и ответов.</div>
+          <div class="vetting-note">Связь с VetAI Worker подключена. Сейчас это базовый чат без SIRE File Search; дальше добавим документы, роли и режим тренировки.</div>
         </div>
 
         <div class="vetting-chip-row">
@@ -6577,14 +6613,16 @@ function renderVettingInspectorPage() {
         </div>
 
         <div class="vetting-action-row">
-          <button class="vetting-action-btn primary" type="button" data-vetting-stub="ask">Задать вопрос</button>
-          <button class="vetting-action-btn" type="button" data-vetting-stub="train">Тренировка</button>
+          <button id="vettingAskBtn" class="vetting-action-btn primary" type="button" data-vetting-action="ask">Задать вопрос</button>
+          <button id="vettingTrainBtn" class="vetting-action-btn" type="button" data-vetting-action="train">Тренировка</button>
         </div>
 
         <label class="vetting-field">
           <span>Вопрос или ситуация</span>
           <textarea id="vettingPromptInput" rows="6" placeholder="Например: Inspector asks ETO about emergency generator test..."></textarea>
         </label>
+
+        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     </section>
   `;
@@ -6599,9 +6637,91 @@ function renderVettingInspectorPage() {
     };
   });
 
-  aiPage.querySelectorAll("[data-vetting-stub]").forEach((btn) => {
-    btn.onclick = () => showAiNotice("Vetting Inspector пока в разработке.");
+  aiPage.querySelectorAll("[data-vetting-action]").forEach((btn) => {
+    btn.onclick = () => sendVettingMessage(btn.dataset.vettingAction || "ask");
   });
+}
+
+function ensureVettingSessionId() {
+  if (vettingSessionId) return vettingSessionId;
+
+  vettingSessionId = uid("vetai_session");
+  localStorage.setItem("vetai_session_id", vettingSessionId);
+  return vettingSessionId;
+}
+
+function getActiveVettingRole() {
+  const active = aiPage?.querySelector("[data-vetting-chip].active");
+  return active?.dataset?.vettingChip || "ETO";
+}
+
+function setVettingAnswer(text, state = "ready") {
+  const box = document.getElementById("vettingAnswerBox");
+  if (!box) return;
+
+  box.classList.add("visible");
+  box.classList.toggle("loading", state === "loading");
+  box.textContent = String(text || "").trim();
+}
+
+function setVettingBusy(isBusy) {
+  vettingBusy = !!isBusy;
+  aiPage?.querySelectorAll("[data-vetting-action]").forEach((btn) => {
+    btn.disabled = vettingBusy;
+  });
+}
+
+async function sendVettingMessage(action = "ask") {
+  if (vettingBusy) return;
+  if (!ensureAccessToken()) return;
+
+  const input = document.getElementById("vettingPromptInput");
+  const userText = String(input?.value || "").trim();
+  const role = getActiveVettingRole();
+
+  let message = userText;
+  if (!message && action === "train") {
+    message = `Start vetting inspection training for ${role}. Ask me one practical question in English. Keep it simple and wait for my answer.`;
+  }
+  if (!message) {
+    showAiNotice("Напиши вопрос или нажми «Тренировка», чтобы начать без своего текста.");
+    return;
+  }
+
+  const modeText = action === "train" ? "training" : "question";
+  const finalMessage = `Mode: ${modeText}\nRole/group: ${role}\nUser request:\n${message}`;
+
+  setVettingBusy(true);
+  setVettingAnswer("Связь с VetAI Worker...", "loading");
+
+  try {
+    const response = await fetch(`${VETAI_API_BASE}/api/vetai-chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({
+        sessionId: ensureVettingSessionId(),
+        message: finalMessage,
+        mode: modeText,
+        role,
+      }),
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.ok) {
+      const err = data?.error || `HTTP ${response.status}`;
+      throw new Error(err);
+    }
+
+    const answer = data.answer || data.result || "Пустой ответ от VetAI.";
+    setVettingAnswer(answer, "ready");
+  } catch (error) {
+    setVettingAnswer(`Ошибка связи с VetAI Worker: ${error?.message || error}`, "ready");
+  } finally {
+    setVettingBusy(false);
+  }
 }
 
 function showAiNotice(message) {
