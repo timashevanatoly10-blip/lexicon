@@ -2245,6 +2245,107 @@ function ensureDictionaryPickerStyles() {
       color: rgba(150,48,45,0.86);
     }
 
+
+
+    .public-lexicon-shell .lexicon-topline {
+      display: block !important;
+      min-height: 0 !important;
+      padding: 4px 8px 10px !important;
+    }
+
+    .public-lexicon-header {
+      width: 100% !important;
+      min-height: 72px !important;
+      box-sizing: border-box !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 12px 13px !important;
+      border-radius: 28px !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.90) 58%, rgba(255,255,255,0.98) 100%) !important;
+      border: 2px solid rgba(255,255,255,0.92) !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.72),
+        inset -3px -3px 7px rgba(205,214,204,0.10),
+        0 2px 6px rgba(186,193,184,0.07) !important;
+    }
+
+    .public-lexicon-title-block {
+      min-width: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      gap: 4px !important;
+    }
+
+    .public-lexicon-title {
+      color: #1f6f56 !important;
+      font-size: clamp(16px, 3.75vw, 22px) !important;
+      font-weight: 720 !important;
+      line-height: 1.06 !important;
+      letter-spacing: -0.025em !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .public-lexicon-count {
+      color: rgba(31,33,31,0.54) !important;
+      font-size: clamp(11.5px, 2.6vw, 14.5px) !important;
+      font-weight: 600 !important;
+      line-height: 1.1 !important;
+      letter-spacing: -0.005em !important;
+    }
+
+    .public-lexicon-add-btn {
+      min-width: 104px !important;
+      height: 38px !important;
+      padding: 0 13px !important;
+      border-radius: 999px !important;
+      border: 2px solid rgba(255,255,255,0.94) !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.82) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
+      color: #1f6f56 !important;
+      font-size: clamp(11px, 2.55vw, 13.5px) !important;
+      font-weight: 760 !important;
+      line-height: 1 !important;
+      letter-spacing: -0.01em !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 5px !important;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.14),
+        0 2px 5px rgba(186,193,184,0.08) !important;
+      cursor: pointer !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    .public-lexicon-add-btn:active {
+      transform: scale(0.97) !important;
+      box-shadow:
+        inset 2px 2px 6px rgba(186,193,184,0.12),
+        0 1px 4px rgba(186,193,184,0.10) !important;
+    }
+
+    .public-lexicon-shell .dictionary-panel-head {
+      display: none !important;
+    }
+
+    .public-lexicon-shell .dictionary-panel {
+      padding-top: 10px !important;
+    }
+
+    .public-lexicon-shell .dictionary-block.open {
+      --dictionary-sticky-head-offset: 0px;
+    }
+
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -6128,19 +6229,27 @@ function renderLexiconPage() {
   const totalWords = dictionaries.reduce((sum, dict) => sum + (dict.words || []).length, 0);
 
   const lexiconSubtitle = publicDictionaryMode
-    ? `Публичный словарь • ${totalWords} слов`
-    : `${dictionaries.length} словарей • ${totalWords} слов`;
+    ? `Публичный словарь · ${formatWordsCountRu(totalWords)}`
+    : `${dictionaries.length} словарей • ${formatWordsCountRu(totalWords)}`;
 
   lexiconPage.innerHTML = `
     <section class="lexicon-shell ${publicDictionaryMode ? "public-lexicon-shell" : ""}">
       <div class="lexicon-topline">
-        ${publicDictionaryMode ? "" : `<button id="backHomeFromLexiconBtn" class="back-btn lexicon-back-icon-btn" type="button" title="Назад">←</button>`}
-
-        <div class="lexicon-title-block">
-          <div class="lexicon-subtitle">${lexiconSubtitle}</div>
-        </div>
+        ${publicDictionaryMode ? `
+          <div class="public-lexicon-header">
+            <div class="public-lexicon-title-block">
+              <div class="public-lexicon-title">Публичный словарь</div>
+              <div class="public-lexicon-count">${formatWordsCountRu(totalWords)}</div>
+            </div>
+            <button id="publicLexiconInstallBtn" class="public-lexicon-add-btn" type="button" title="Добавить в Lexicon">+ Lexicon</button>
+          </div>
+        ` : `<button id="backHomeFromLexiconBtn" class="back-btn lexicon-back-icon-btn" type="button" title="Назад">←</button>`}
 
         ${publicDictionaryMode ? "" : `
+          <div class="lexicon-title-block">
+            <div class="lexicon-subtitle">${lexiconSubtitle}</div>
+          </div>
+
           <div class="lexicon-actions">
             <button id="lexiconMenuBtn" class="lexicon-icon-btn" type="button" title="Меню">☰</button>
             <button id="addDictionaryBtn" class="lexicon-add-btn" type="button" title="Добавить словарь">+</button>
@@ -6157,10 +6266,26 @@ function renderLexiconPage() {
 
   const addDictionaryBtn = document.getElementById("addDictionaryBtn");
   const lexiconMenuBtn = document.getElementById("lexiconMenuBtn");
+  const publicLexiconInstallBtn = document.getElementById("publicLexiconInstallBtn");
   on(addDictionaryBtn, "click", addDictionary);
   on(lexiconMenuBtn, "click", () => alert("Меню пока заглушка. Потом здесь будут импорт, экспорт, настройки и режимы."));
+  on(publicLexiconInstallBtn, "click", showPublicLexiconInstallNotice);
 
   renderDictionaryList("");
+}
+
+function formatWordsCountRu(count) {
+  const value = Math.max(0, Number(count) || 0);
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return `${value} слово`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${value} слова`;
+  return `${value} слов`;
+}
+
+function showPublicLexiconInstallNotice() {
+  alert("Для добавления словаря необходимо установить приложение Lexicon.");
 }
 
 function renderDictionaryList(filterText = "") {
@@ -6208,13 +6333,8 @@ function renderDictionaryList(filterText = "") {
       </button>
 
       <div class="dictionary-panel ${isOpen ? "" : "hidden"}">
-        <div class="dictionary-panel-head">
-          ${publicDictionaryMode ? `
-            <div class="dictionary-public-title">
-              <div class="dictionary-panel-title">${escapeHTML(dict.title || "Без названия")}</div>
-              ${dict.note ? `<div class="dictionary-panel-subtitle">${escapeHTML(dict.note)}</div>` : ""}
-            </div>
-          ` : `
+        ${publicDictionaryMode ? "" : `
+          <div class="dictionary-panel-head">
             <div class="dictionary-add-row">
               <input class="dictionary-word-input" data-word-input="${dict.id}" type="text" placeholder="+ Введите слово..." />
               <button class="dictionary-add-word-btn" type="button" data-word-add="${dict.id}" title="Добавить">→</button>
@@ -6225,8 +6345,8 @@ function renderDictionaryList(filterText = "") {
                 <button class="dictionary-panel-menu-btn" type="button" data-dict-menu="${dict.id}" title="Меню словаря">⋯</button>
               </div>
             </div>
-          `}
-        </div>
+          </div>
+        `}
 
         <div class="word-list" data-word-list="${dict.id}">
           ${renderWordsHtml(dict)}
