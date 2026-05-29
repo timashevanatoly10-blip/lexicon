@@ -2346,6 +2346,334 @@ function ensureDictionaryPickerStyles() {
     }
 
 
+    .ai-shell {
+      --ai-green: #1f6f56;
+      --ai-soft-green: #5f9962;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 4px 10px;
+    }
+
+    .ai-topline {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 4px 8px 9px;
+      box-sizing: border-box;
+    }
+
+    .ai-back-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--ai-green) !important;
+      font-size: 27px !important;
+      font-weight: 500 !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transform: translateY(-4px) !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ai-title-block {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transform: translateY(1px);
+    }
+
+    .ai-title {
+      color: var(--ai-green);
+      font-size: clamp(18px, 4.3vw, 26px);
+      font-weight: 760;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ai-subtitle {
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(11.5px, 2.75vw, 15px);
+      font-weight: 560;
+      line-height: 1.15;
+      letter-spacing: -0.008em;
+    }
+
+    .ai-hub-card,
+    .vetting-main-card {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 30px;
+      background: rgba(250,251,248,0.94);
+      border: 2px solid rgba(255,255,255,0.76);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.62),
+        inset -2px -2px 6px rgba(197,207,196,0.12),
+        0 1px 5px rgba(180,186,176,0.06);
+      padding: 13px;
+    }
+
+    .ai-assistant-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .ai-assistant-pill {
+      min-width: 0;
+      min-height: clamp(74px, 15.3vh, 104px);
+      border-radius: 28px;
+      border: 2px solid rgba(255,255,255,0.92);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.78) 0%, rgba(248,249,246,0.91) 58%, rgba(255,255,255,0.99) 100%);
+      color: #1f211f;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.76),
+        inset -3px -3px 7px rgba(205,214,204,0.12),
+        0 2px 6px rgba(186,193,184,0.08);
+      padding: 11px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-align: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    }
+
+    .ai-assistant-pill:active {
+      transform: scale(0.975);
+      box-shadow:
+        inset 2px 2px 6px rgba(186,193,184,0.12),
+        0 1px 4px rgba(186,193,184,0.10);
+    }
+
+    .ai-assistant-title {
+      color: var(--ai-green);
+      font-size: clamp(13.5px, 3.2vw, 18px);
+      font-weight: 760;
+      line-height: 1.08;
+      letter-spacing: -0.018em;
+    }
+
+    .ai-assistant-subtitle {
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(10.5px, 2.45vw, 13.5px);
+      font-weight: 560;
+      line-height: 1.12;
+      letter-spacing: -0.004em;
+    }
+
+    .vetting-main-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .vetting-hero {
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 36%),
+        linear-gradient(180deg, rgba(255,255,252,0.96) 0%, rgba(247,249,245,0.94) 100%);
+      border: 1px solid rgba(226,231,224,0.74);
+      padding: 14px 14px 13px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 1px 4px rgba(180,188,178,0.035);
+    }
+
+    .vetting-label {
+      color: rgba(31,33,31,0.50);
+      font-size: clamp(10px, 2.25vw, 12.5px);
+      font-weight: 760;
+      line-height: 1;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .vetting-title {
+      color: var(--ai-green);
+      font-size: clamp(17px, 4vw, 23px);
+      font-weight: 760;
+      line-height: 1.1;
+      letter-spacing: -0.032em;
+    }
+
+    .vetting-note {
+      margin-top: 7px;
+      color: rgba(31,33,31,0.62);
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 450;
+      line-height: 1.32;
+    }
+
+    .vetting-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .vetting-chip {
+      min-height: 31px;
+      border-radius: 999px;
+      border: 1px solid rgba(225,231,224,0.76);
+      background: rgba(255,255,255,0.72);
+      color: rgba(31,33,31,0.70);
+      padding: 0 11px;
+      font-size: clamp(10.8px, 2.45vw, 13.5px);
+      font-weight: 680;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.52),
+        0 1px 3px rgba(180,188,178,0.035);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .vetting-chip.active {
+      color: #ffffff;
+      background: var(--ai-green);
+      border-color: rgba(31,111,86,0.18);
+      box-shadow: 0 2px 5px rgba(31,111,86,0.07);
+    }
+
+    .vetting-action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .vetting-action-btn {
+      min-height: 42px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.92);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
+      color: var(--ai-green);
+      font-size: clamp(12px, 2.8vw, 15px);
+      font-weight: 740;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.15),
+        0 2px 5px rgba(186,193,184,0.08);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .vetting-action-btn.primary {
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.94) 0%, rgba(244,249,243,0.97) 56%, rgba(255,255,255,0.99) 100%);
+    }
+
+    .vetting-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: rgba(31,33,31,0.58);
+      font-size: clamp(11px, 2.5vw, 13.5px);
+      font-weight: 680;
+      line-height: 1.1;
+    }
+
+    .vetting-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 154px;
+      resize: vertical;
+      border-radius: 22px;
+      border: 2px solid rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.62);
+      color: #1f211f;
+      font-size: clamp(14px, 3.1vw, 18px);
+      font-weight: 430;
+      line-height: 1.34;
+      padding: 13px 14px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10);
+    }
+
+    .vetting-field textarea::placeholder {
+      color: rgba(119,122,119,0.42);
+    }
+
+    .ai-notice-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(10,20,15,0.28);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+      animation: textAttachBackdropIn 0.12s ease-out;
+    }
+
+    .ai-notice-card {
+      width: min(420px, 100%);
+      border-radius: 26px;
+      background: rgba(255,255,252,0.98);
+      border: 1px solid rgba(226,231,224,0.84);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 18px 46px rgba(20,40,30,0.20);
+      padding: 18px 16px 14px;
+      animation: dictionaryPickerRise 0.16s ease-out;
+    }
+
+    .ai-notice-title {
+      color: var(--ai-green, #1f6f56);
+      font-size: 20px;
+      font-weight: 780;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 7px;
+    }
+
+    .ai-notice-text {
+      color: rgba(31,33,31,0.70);
+      font-size: 15px;
+      font-weight: 520;
+      line-height: 1.34;
+      margin-bottom: 14px;
+    }
+
+    .ai-notice-btn {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.90);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 760;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -6162,24 +6490,144 @@ function showExistingPage(page) {
 function showAiPage() {
   if (!aiPage) return;
 
-  if (!aiPage.children.length) {
-    aiPage.innerHTML = `
-      <section class="page-head">
-        <button id="backHomeFromAiBtn" class="back-btn" type="button">← Назад</button>
-        <h1>ИИ</h1>
-      </section>
-
-      <section class="card muted-card">
-        <h2>Умный режим</h2>
-        <div class="status">Пока заглушка. Здесь позже будет ИИ-редактор текста и версии результата.</div>
-      </section>
-    `;
-
-    backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
-    on(backHomeFromAiBtn, "click", () => showPage("home"));
-  }
-
+  renderAiHubPage();
   showExistingPage(aiPage);
+}
+
+function renderAiHubPage() {
+  if (!aiPage) return;
+
+  const assistants = [
+    { title: "Сбор словаря", subtitle: "создание карточек", action: "soon" },
+    { title: "Запомнить слова", subtitle: "ассоциации и образы", action: "soon" },
+    { title: "Тренировка слов", subtitle: "проверка и повторение", action: "soon" },
+    { title: "Разбор текста", subtitle: "смысл и перевод", action: "soon" },
+    { title: "Грамматика", subtitle: "правила с примерами", action: "soon" },
+    { title: "Разговор", subtitle: "тренажёр диалога", action: "soon" },
+    { title: "Письма", subtitle: "сообщения и email", action: "soon" },
+    { title: "Vetting Inspector", subtitle: "English preparation", action: "vetting" }
+  ];
+
+  aiPage.innerHTML = `
+    <section class="ai-shell">
+      <div class="ai-topline">
+        <button id="backHomeFromAiBtn" class="back-btn ai-back-btn" type="button" title="Назад">←</button>
+        <div class="ai-title-block">
+          <div class="ai-title">ИИ ассистенты</div>
+          <div class="ai-subtitle">Выберите режим работы Lexicon</div>
+        </div>
+      </div>
+
+      <div class="ai-hub-card">
+        <div class="ai-assistant-grid">
+          ${assistants.map((item) => `
+            <button class="ai-assistant-pill" type="button" data-ai-action="${item.action}">
+              <span class="ai-assistant-title">${escapeHTML(item.title)}</span>
+              <span class="ai-assistant-subtitle">${escapeHTML(item.subtitle)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+
+  backHomeFromAiBtn = document.getElementById("backHomeFromAiBtn");
+  on(backHomeFromAiBtn, "click", () => showPage("home"));
+
+  aiPage.querySelectorAll("[data-ai-action]").forEach((btn) => {
+    btn.onclick = () => {
+      const action = btn.dataset.aiAction || "soon";
+
+      if (action === "vetting") {
+        renderVettingInspectorPage();
+        return;
+      }
+
+      showAiNotice("Ассистент в разработке.");
+    };
+  });
+}
+
+function renderVettingInspectorPage() {
+  if (!aiPage) return;
+
+  const crewGroups = ["Officers", "Engineers", "ETO", "Ratings", "Catering"];
+
+  aiPage.innerHTML = `
+    <section class="ai-shell vetting-shell">
+      <div class="ai-topline">
+        <button id="backAiHubBtn" class="back-btn ai-back-btn" type="button" title="Назад">←</button>
+        <div class="ai-title-block">
+          <div class="ai-title">Vetting Inspector</div>
+          <div class="ai-subtitle">английский для проверки судна</div>
+        </div>
+      </div>
+
+      <div class="vetting-main-card">
+        <div class="vetting-hero">
+          <div class="vetting-label">Start mode</div>
+          <div class="vetting-title">Подготовка к vetting-инспекции</div>
+          <div class="vetting-note">Пока это стартовая заготовка. Позже подключим отдельную логику вопросов, ролей и ответов.</div>
+        </div>
+
+        <div class="vetting-chip-row">
+          ${crewGroups.map((item, index) => `
+            <button class="vetting-chip ${index === 2 ? "active" : ""}" type="button" data-vetting-chip="${escapeHTML(item)}">${escapeHTML(item)}</button>
+          `).join("")}
+        </div>
+
+        <div class="vetting-action-row">
+          <button class="vetting-action-btn primary" type="button" data-vetting-stub="ask">Задать вопрос</button>
+          <button class="vetting-action-btn" type="button" data-vetting-stub="train">Тренировка</button>
+        </div>
+
+        <label class="vetting-field">
+          <span>Вопрос или ситуация</span>
+          <textarea id="vettingPromptInput" rows="6" placeholder="Например: Inspector asks ETO about emergency generator test..."></textarea>
+        </label>
+      </div>
+    </section>
+  `;
+
+  const backBtn = document.getElementById("backAiHubBtn");
+  on(backBtn, "click", renderAiHubPage);
+
+  aiPage.querySelectorAll("[data-vetting-chip]").forEach((btn) => {
+    btn.onclick = () => {
+      aiPage.querySelectorAll("[data-vetting-chip]").forEach((item) => item.classList.remove("active"));
+      btn.classList.add("active");
+    };
+  });
+
+  aiPage.querySelectorAll("[data-vetting-stub]").forEach((btn) => {
+    btn.onclick = () => showAiNotice("Vetting Inspector пока в разработке.");
+  });
+}
+
+function showAiNotice(message) {
+  const text = String(message || "Ассистент в разработке.").trim();
+
+  const overlay = document.createElement("div");
+  overlay.className = "ai-notice-overlay";
+
+  overlay.innerHTML = `
+    <div class="ai-notice-card">
+      <div class="ai-notice-title">Lexicon</div>
+      <div class="ai-notice-text">${escapeHTML(text)}</div>
+      <button class="ai-notice-btn" type="button">Понятно</button>
+    </div>
+  `;
+
+  const close = () => overlay.remove();
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) close();
+  });
+
+  const btn = overlay.querySelector(".ai-notice-btn");
+  if (btn) btn.onclick = close;
+
+  document.body.appendChild(overlay);
 }
 
 function showLexiconPage() {
