@@ -6945,6 +6945,22 @@ function setVettingAnswer(text, state = "ready") {
   box.textContent = String(text || "").trim();
 }
 
+function setVettingQuestion(text, state = "ready") {
+  const box = document.getElementById("vettingQuestionBox");
+  if (!box) return;
+
+  box.classList.toggle("loading", state === "loading");
+  box.textContent = String(text || "").trim();
+}
+
+function clearVettingAnswer() {
+  const box = document.getElementById("vettingAnswerBox");
+  if (!box) return;
+
+  box.classList.remove("visible", "loading");
+  box.textContent = "";
+}
+
 function setVettingBusy(isBusy) {
   vettingBusy = !!isBusy;
   aiPage?.querySelectorAll("[data-vetting-action]").forEach((btn) => {
@@ -6962,7 +6978,13 @@ async function sendVettingAction(action = "") {
   const text = getVettingTextValue();
 
   setVettingBusy(true);
-  setVettingAnswer("Связь с VetAI Worker...", "loading");
+
+  if (mode === "cards") {
+    clearVettingAnswer();
+    setVettingQuestion("Связь с VetAI Worker...", "loading");
+  } else {
+    setVettingAnswer("Связь с VetAI Worker...", "loading");
+  }
 
   try {
     const response = await fetch(`${VETAI_API_BASE}/api/vetai-chat`, {
@@ -6977,8 +6999,7 @@ async function sendVettingAction(action = "") {
         role,
         action,
         topic,
-        text,
-        message: text || topic || action || mode
+        text
       }),
     });
 
@@ -6989,9 +7010,20 @@ async function sendVettingAction(action = "") {
     }
 
     const answer = data.answer || data.result || "Пустой ответ от VetAI.";
-    setVettingAnswer(answer, "ready");
+
+    if (mode === "cards") {
+      setVettingQuestion(answer, "ready");
+    } else {
+      setVettingAnswer(answer, "ready");
+    }
   } catch (error) {
-    setVettingAnswer(`Ошибка связи с VetAI Worker: ${error?.message || error}`, "ready");
+    const errorText = `Ошибка связи с VetAI Worker: ${error?.message || error}`;
+
+    if (mode === "cards") {
+      setVettingQuestion(errorText, "ready");
+    } else {
+      setVettingAnswer(errorText, "ready");
+    }
   } finally {
     setVettingBusy(false);
   }
