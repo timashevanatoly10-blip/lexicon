@@ -3368,6 +3368,93 @@ function ensureDictionaryPickerStyles() {
       .text-bottom-toolbar { gap: 6px; padding-left: 17px; padding-right: 17px; }
       .text-bottom-icon-btn { width: 35px; height: 35px; }
     }
+
+
+    /* VetAI v103 final polish: raise header and align bottom buttons */
+    body.vetting-page-open .app {
+      padding-top: 0 !important;
+    }
+
+    body.vetting-page-open .ai-shell.vetting-shell {
+      height: calc(100dvh - 2px) !important;
+      padding-top: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-topline {
+      min-height: 30px !important;
+      padding: 0 6px 0 !important;
+      margin-top: -8px !important;
+      margin-bottom: 1px !important;
+      align-items: center !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-back-btn {
+      width: 29px !important;
+      min-width: 29px !important;
+      height: 29px !important;
+      font-size: 24px !important;
+      transform: translateY(0) !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-title {
+      font-size: clamp(18px, 4.7vw, 25px) !important;
+      line-height: 0.98 !important;
+    }
+
+    body.vetting-page-open .vetting-main-card-clean {
+      gap: 6px !important;
+      padding-top: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-role-row {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-mode-row {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-work-card {
+      gap: 6px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box {
+      padding-top: 15px !important;
+      padding-bottom: 16px !important;
+    }
+
+    body.vetting-page-open .vetting-action-row {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+      padding: 0 34px max(10px, env(safe-area-inset-bottom)) !important;
+      margin: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-action-row.single {
+      grid-template-columns: 1fr !important;
+    }
+
+    body.vetting-page-open .vetting-action-btn,
+    body.vetting-page-open .vetting-action-btn.primary {
+      width: 100% !important;
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      margin: 0 !important;
+      padding: 0 10px !important;
+      box-sizing: border-box !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      line-height: 1.05 !important;
+      white-space: normal !important;
+    }
   `;
 
   document.head.appendChild(style);
