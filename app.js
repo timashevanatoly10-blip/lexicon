@@ -7,10 +7,8 @@ let publicDictionaryMode = false;
 let publicDictionaryShareId = "";
 let vettingSessionId = localStorage.getItem("vetai_session_id") || "";
 let vettingBusy = false;
+let vettingActiveRole = "ETO";
 let vettingActiveMode = "cards";
-let vettingQuestionCounter = Number(localStorage.getItem("vetai_question_counter") || "0") || 0;
-let vettingCurrentQuestion = "";
-let vettingCurrentTrainingQuestion = "";
 
 let currentDocumentId = "";
 let currentDocumentKey = "";
@@ -2562,128 +2560,6 @@ function ensureDictionaryPickerStyles() {
       box-shadow: 0 2px 5px rgba(31,111,86,0.07);
     }
 
-
-
-    .vetting-shell .ai-topline {
-      margin-bottom: 10px;
-    }
-
-    .vetting-main-card.compact {
-      gap: 10px;
-      padding: 12px;
-    }
-
-    .vetting-mode-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 7px;
-    }
-
-    .vetting-mode-btn {
-      min-height: 37px;
-      border-radius: 999px;
-      border: 1px solid rgba(225,231,224,0.76);
-      background: rgba(255,255,255,0.72);
-      color: rgba(31,33,31,0.70);
-      padding: 0 8px;
-      font-size: clamp(10.4px, 2.35vw, 13px);
-      font-weight: 740;
-      line-height: 1;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.52),
-        0 1px 3px rgba(180,188,178,0.035);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .vetting-mode-btn.active {
-      color: #ffffff;
-      background: var(--ai-green);
-      border-color: rgba(31,111,86,0.18);
-      box-shadow: 0 2px 5px rgba(31,111,86,0.07);
-    }
-
-    .vetting-work-card {
-      min-height: min(52dvh, 520px);
-      border-radius: 25px;
-      border: 1px solid rgba(226,231,224,0.74);
-      background: rgba(255,255,255,0.66);
-      color: rgba(31,33,31,0.82);
-      padding: 15px 14px 16px;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.46),
-        0 1px 4px rgba(180,188,178,0.035);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .vetting-work-title {
-      color: var(--ai-green);
-      font-size: clamp(18px, 4.1vw, 24px);
-      font-weight: 780;
-      line-height: 1.08;
-      letter-spacing: -0.035em;
-    }
-
-    .vetting-work-subtitle {
-      color: rgba(31,33,31,0.56);
-      font-size: clamp(11px, 2.55vw, 14px);
-      font-weight: 650;
-      line-height: 1.18;
-    }
-
-    .vetting-work-text {
-      color: rgba(31,33,31,0.82);
-      font-size: clamp(13.5px, 3.1vw, 17px);
-      font-weight: 450;
-      line-height: 1.38;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .vetting-button-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 9px;
-      margin-top: auto;
-    }
-
-    .vetting-button-row.single {
-      grid-template-columns: 1fr;
-    }
-
-    .vetting-option-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 2px;
-    }
-
-    .vetting-textarea {
-      width: 100%;
-      min-height: 96px;
-      box-sizing: border-box;
-      resize: vertical;
-      border-radius: 20px;
-      border: 2px solid rgba(255,255,255,0.88);
-      background: rgba(255,255,255,0.72);
-      color: #1f211f;
-      font-size: clamp(14px, 3.1vw, 18px);
-      font-weight: 430;
-      line-height: 1.34;
-      padding: 12px 13px;
-      outline: none;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.40),
-        inset 2px 2px 5px rgba(255,255,255,0.60),
-        inset -2px -2px 6px rgba(197,207,196,0.10);
-    }
-
-    .vetting-textarea::placeholder {
-      color: rgba(119,122,119,0.42);
-    }
-
     .vetting-action-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -2832,6 +2708,174 @@ function ensureDictionaryPickerStyles() {
       font-weight: 760;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+    }
+
+
+
+    .vetting-topline .ai-title {
+      white-space: normal;
+    }
+
+    .vetting-main-card-clean {
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .vetting-role-row {
+      justify-content: center;
+    }
+
+    .vetting-mode-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 7px;
+      padding: 2px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
+      border: 2px solid rgba(255,255,255,0.90);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06);
+    }
+
+    .vetting-mode-btn {
+      min-width: 0;
+      min-height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: rgba(31,33,31,0.64);
+      font-size: clamp(10.5px, 2.45vw, 13.5px);
+      font-weight: 720;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .vetting-mode-btn.active {
+      color: #ffffff;
+      background: var(--ai-green);
+      box-shadow: 0 2px 5px rgba(31,111,86,0.07);
+    }
+
+    .vetting-workspace {
+      min-height: 360px;
+    }
+
+    .vetting-work-card {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      min-height: 360px;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 36%),
+        linear-gradient(180deg, rgba(255,255,252,0.96) 0%, rgba(247,249,245,0.94) 100%);
+      border: 1px solid rgba(226,231,224,0.74);
+      padding: 13px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 1px 4px rgba(180,188,178,0.035);
+    }
+
+    .vetting-work-head {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .vetting-work-kicker {
+      color: rgba(31,33,31,0.48);
+      font-size: clamp(9.5px, 2.15vw, 12px);
+      font-weight: 760;
+      line-height: 1;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .vetting-work-title {
+      color: var(--ai-green);
+      font-size: clamp(17px, 4vw, 23px);
+      font-weight: 760;
+      line-height: 1.08;
+      letter-spacing: -0.032em;
+    }
+
+    .vetting-work-note {
+      color: rgba(31,33,31,0.58);
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 450;
+      line-height: 1.32;
+    }
+
+    .vetting-question-box {
+      flex: 1 1 auto;
+      min-height: 135px;
+      border-radius: 22px;
+      border: 1px solid rgba(226,231,224,0.74);
+      background: rgba(255,255,255,0.62);
+      color: rgba(31,33,31,0.78);
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 440;
+      line-height: 1.38;
+      padding: 13px 14px;
+      white-space: pre-wrap;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.46),
+        0 1px 4px rgba(180,188,178,0.035);
+    }
+
+    .vetting-empty-state {
+      color: rgba(31,33,31,0.46);
+      font-weight: 560;
+    }
+
+    .vetting-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .vetting-option-btn {
+      min-height: 58px;
+      border-radius: 18px;
+      border: 1px solid rgba(225,231,224,0.76);
+      background: rgba(255,255,255,0.64);
+      color: rgba(31,33,31,0.72);
+      padding: 9px 10px;
+      text-align: left;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.52),
+        0 1px 3px rgba(180,188,178,0.035);
+    }
+
+    .vetting-option-btn span {
+      display: block;
+      color: var(--ai-green);
+      font-size: 13px;
+      font-weight: 780;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .vetting-option-btn em {
+      display: block;
+      color: rgba(31,33,31,0.50);
+      font-size: clamp(11px, 2.5vw, 13.5px);
+      font-style: normal;
+      font-weight: 560;
+      line-height: 1.18;
+    }
+
+    .vetting-action-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .vetting-field.compact textarea {
+      min-height: 94px;
     }
 
 
@@ -6714,37 +6758,37 @@ function renderVettingInspectorPage() {
 
   const crewGroups = ["Officers", "Engineers", "ETO", "Ratings", "Catering"];
   const modes = [
-    { key: "cards", title: "Карточки" },
-    { key: "training", title: "Тренировка" },
-    { key: "prepare", title: "Подготовка" }
+    { id: "cards", title: "Карточки" },
+    { id: "training", title: "Тренировка" },
+    { id: "preparation", title: "Подготовка" }
   ];
 
   ensureVettingSessionId();
 
   aiPage.innerHTML = `
     <section class="ai-shell vetting-shell">
-      <div class="ai-topline">
+      <div class="ai-topline vetting-topline">
         <button id="backAiHubBtn" class="back-btn ai-back-btn" type="button" title="Назад">←</button>
         <div class="ai-title-block">
           <div class="ai-title">Vetting Inspector</div>
-          <div class="ai-subtitle">английский для проверки судна</div>
+          <div class="ai-subtitle">тренажёр подготовки к проверке</div>
         </div>
       </div>
 
-      <div class="vetting-main-card compact">
-        <div class="vetting-chip-row">
+      <div class="vetting-main-card vetting-main-card-clean">
+        <div class="vetting-chip-row vetting-role-row">
           ${crewGroups.map((item) => `
-            <button class="vetting-chip ${item === "ETO" ? "active" : ""}" type="button" data-vetting-chip="${escapeHTML(item)}">${escapeHTML(item)}</button>
+            <button class="vetting-chip ${item === vettingActiveRole ? "active" : ""}" type="button" data-vetting-chip="${escapeHTML(item)}">${escapeHTML(item)}</button>
           `).join("")}
         </div>
 
         <div class="vetting-mode-row">
           ${modes.map((item) => `
-            <button class="vetting-mode-btn ${item.key === vettingActiveMode ? "active" : ""}" type="button" data-vetting-mode="${item.key}">${escapeHTML(item.title)}</button>
+            <button class="vetting-mode-btn ${item.id === vettingActiveMode ? "active" : ""}" type="button" data-vetting-mode="${escapeHTML(item.id)}">${escapeHTML(item.title)}</button>
           `).join("")}
         </div>
 
-        <div id="vettingWorkCard" class="vetting-work-card"></div>
+        <div id="vettingWorkspace" class="vetting-workspace"></div>
       </div>
     </section>
   `;
@@ -6754,9 +6798,10 @@ function renderVettingInspectorPage() {
 
   aiPage.querySelectorAll("[data-vetting-chip]").forEach((btn) => {
     btn.onclick = () => {
+      vettingActiveRole = btn.dataset.vettingChip || "ETO";
       aiPage.querySelectorAll("[data-vetting-chip]").forEach((item) => item.classList.remove("active"));
       btn.classList.add("active");
-      renderVettingModeContent();
+      renderVettingWorkspace();
     };
   });
 
@@ -6765,60 +6810,92 @@ function renderVettingInspectorPage() {
       vettingActiveMode = btn.dataset.vettingMode || "cards";
       aiPage.querySelectorAll("[data-vetting-mode]").forEach((item) => item.classList.remove("active"));
       btn.classList.add("active");
-      renderVettingModeContent();
+      renderVettingWorkspace();
     };
   });
 
-  renderVettingModeContent();
+  renderVettingWorkspace();
 }
 
-function renderVettingModeContent() {
-  const card = document.getElementById("vettingWorkCard");
-  if (!card) return;
+function renderVettingWorkspace() {
+  const workspace = document.getElementById("vettingWorkspace");
+  if (!workspace) return;
 
   if (vettingActiveMode === "training") {
-    card.innerHTML = `
-      <div class="vetting-work-title">Тренировка</div>
-      <div class="vetting-work-subtitle">Вопрос с вариантами ответа. Сначала сгенерируй вопрос, потом выбери A/B/C/D.</div>
-      <div id="vettingWorkText" class="vetting-work-text">Нажми «Новый тест», и VetAI подготовит вопрос для выбранной роли.</div>
-      <div class="vetting-option-grid">
-        <button class="vetting-action-btn" type="button" data-vetting-choice="A">A</button>
-        <button class="vetting-action-btn" type="button" data-vetting-choice="B">B</button>
-        <button class="vetting-action-btn" type="button" data-vetting-choice="C">C</button>
-        <button class="vetting-action-btn" type="button" data-vetting-choice="D">D</button>
-      </div>
-      <div class="vetting-button-row single">
-        <button class="vetting-action-btn primary" type="button" data-vetting-action="new-test">Новый тест</button>
+    workspace.innerHTML = `
+      <div class="vetting-work-card">
+        <div class="vetting-work-head">
+          <div class="vetting-work-kicker">Training mode</div>
+          <div class="vetting-work-title">Вопрос с вариантами ответа</div>
+          <div class="vetting-work-note">Здесь будет тест: вопрос, варианты A/B/C/D и проверка выбранного ответа.</div>
+        </div>
+
+        <div id="vettingQuestionBox" class="vetting-question-box">
+          <div class="vetting-empty-state">Нажми «Новый тест», когда подключим режимную логику в Worker.</div>
+        </div>
+
+        <div class="vetting-options-grid">
+          ${["A", "B", "C", "D"].map((label) => `
+            <button class="vetting-option-btn" type="button" data-vetting-option="${label}" disabled>
+              <span>${label}</span>
+              <em>вариант ответа</em>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="vetting-action-row single">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="new_test">Новый тест</button>
+        </div>
+
+        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
-  } else if (vettingActiveMode === "prepare") {
-    card.innerHTML = `
-      <div class="vetting-work-title">Подготовка</div>
-      <div class="vetting-work-subtitle">Введи тему, систему или оборудование. VetAI составит checklist перед vetting.</div>
-      <textarea id="vettingTopicInput" class="vetting-textarea" rows="4" placeholder="Например: emergency generator, fire detection, steering gear, UPS batteries..."></textarea>
-      <div id="vettingWorkText" class="vetting-work-text">Здесь появится checklist подготовки.</div>
-      <div class="vetting-button-row single">
-        <button class="vetting-action-btn primary" type="button" data-vetting-action="prepare">Составить checklist</button>
+  } else if (vettingActiveMode === "preparation") {
+    workspace.innerHTML = `
+      <div class="vetting-work-card">
+        <div class="vetting-work-head">
+          <div class="vetting-work-kicker">Preparation mode</div>
+          <div class="vetting-work-title">Подготовка к инспекции</div>
+          <div class="vetting-work-note">Здесь будет checklist по роли и теме: что проверить, что подготовить, что показать инспектору.</div>
+        </div>
+
+        <label class="vetting-field compact">
+          <span>Тема / система</span>
+          <textarea id="vettingTopicInput" rows="3" placeholder="Например: emergency generator, fire detection, UPS, batteries..."></textarea>
+        </label>
+
+        <div class="vetting-action-row single">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="make_checklist">Составить checklist</button>
+        </div>
+
+        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
   } else {
-    card.innerHTML = `
-      <div class="vetting-work-title">Карточки</div>
-      <div class="vetting-work-subtitle">Вопрос → ответ. Быстрое повторение перед инспекцией.</div>
-      <div id="vettingWorkText" class="vetting-work-text">Нажми «Следующий вопрос», и VetAI задаст вопрос по выбранной роли на английском и русском.</div>
-      <div class="vetting-button-row">
-        <button class="vetting-action-btn primary" type="button" data-vetting-action="next-card">Следующий вопрос</button>
-        <button class="vetting-action-btn" type="button" data-vetting-action="show-answer">Показать ответ</button>
+    workspace.innerHTML = `
+      <div class="vetting-work-card">
+        <div class="vetting-work-head">
+          <div class="vetting-work-kicker">Cards mode</div>
+          <div class="vetting-work-title">Вопрос → ответ</div>
+          <div class="vetting-work-note">Здесь будет карточка: вопрос EN/RU, затем правильный ответ EN/RU и ожидания инспектора.</div>
+        </div>
+
+        <div id="vettingQuestionBox" class="vetting-question-box">
+          <div class="vetting-empty-state">Нажми «Следующий вопрос», когда подключим режимную логику в Worker.</div>
+        </div>
+
+        <div class="vetting-action-row">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="next_question">Следующий вопрос</button>
+          <button class="vetting-action-btn" type="button" data-vetting-action="show_answer">Показать ответ</button>
+        </div>
+
+        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
   }
 
-  card.querySelectorAll("[data-vetting-action]").forEach((btn) => {
-    btn.onclick = () => sendVettingModeCommand(btn.dataset.vettingAction || "next-card");
-  });
-
-  card.querySelectorAll("[data-vetting-choice]").forEach((btn) => {
-    btn.onclick = () => sendVettingChoice(btn.dataset.vettingChoice || "A");
+  workspace.querySelectorAll("[data-vetting-action]").forEach((btn) => {
+    btn.onclick = () => sendVettingAction(btn.dataset.vettingAction || "");
   });
 
   setVettingBusy(vettingBusy);
@@ -6834,176 +6911,71 @@ function ensureVettingSessionId() {
 
 function getActiveVettingRole() {
   const active = aiPage?.querySelector("[data-vetting-chip].active");
-  return active?.dataset?.vettingChip || "ETO";
+  return active?.dataset?.vettingChip || vettingActiveRole || "ETO";
 }
 
-function setVettingWork(text, state = "ready") {
-  const box = document.getElementById("vettingWorkText");
+function getVettingTopicValue() {
+  const topicInput = document.getElementById("vettingTopicInput");
+  return String(topicInput?.value || "").trim();
+}
+
+function setVettingAnswer(text, state = "ready") {
+  const box = document.getElementById("vettingAnswerBox");
   if (!box) return;
 
+  box.classList.add("visible");
   box.classList.toggle("loading", state === "loading");
   box.textContent = String(text || "").trim();
 }
 
 function setVettingBusy(isBusy) {
   vettingBusy = !!isBusy;
-  aiPage?.querySelectorAll("[data-vetting-action], [data-vetting-choice]").forEach((btn) => {
+  aiPage?.querySelectorAll("[data-vetting-action]").forEach((btn) => {
     btn.disabled = vettingBusy;
   });
 }
 
-function incrementVettingQuestionCounter() {
-  vettingQuestionCounter += 1;
-  localStorage.setItem("vetai_question_counter", String(vettingQuestionCounter));
-  return vettingQuestionCounter;
-}
-
-async function sendVettingModeCommand(action = "next-card") {
+async function sendVettingAction(action = "") {
   if (vettingBusy) return;
   if (!ensureAccessToken()) return;
 
   const role = getActiveVettingRole();
-  let message = "";
-
-  if (action === "next-card") {
-    const number = incrementVettingQuestionCounter();
-    message = [
-      `Mode: cards`,
-      `Role/group: ${role}`,
-      `Task: Generate ONE new SIRE/vetting inspection training question for this role.`,
-      `Return only the question, not the answer.`,
-      `Format exactly:`,
-      `Question #${number}`,
-      `EN: ...`,
-      `RU: ...`,
-      `Use the uploaded SIRE documents via file search. Avoid repeating recent questions.`
-    ].join("\n");
-  } else if (action === "show-answer") {
-    if (!vettingCurrentQuestion) {
-      showAiNotice("Сначала нажми «Следующий вопрос».");
-      return;
-    }
-
-    message = [
-      `Mode: cards_answer`,
-      `Role/group: ${role}`,
-      `Question to answer:`,
-      vettingCurrentQuestion,
-      `Task: Give the expected answer for vetting preparation.`,
-      `Format clearly with: EN answer, RU answer, Inspector expects, Common mistakes.`,
-      `Use the uploaded SIRE documents via file search. If exact information is not found, say so.`
-    ].join("\n");
-  } else if (action === "new-test") {
-    message = [
-      `Mode: multiple_choice_test`,
-      `Role/group: ${role}`,
-      `Task: Generate ONE SIRE/vetting multiple-choice question for this role.`,
-      `Use uploaded SIRE documents via file search.`,
-      `Return format:`,
-      `Question`,
-      `EN: ...`,
-      `RU: ...`,
-      `A) ...`,
-      `B) ...`,
-      `C) ...`,
-      `D) ...`,
-      `Do NOT reveal the correct answer yet.`
-    ].join("\n");
-  } else if (action === "prepare") {
-    const topic = String(document.getElementById("vettingTopicInput")?.value || "").trim();
-    if (!topic) {
-      showAiNotice("Напиши тему подготовки: например emergency generator или UPS batteries.");
-      return;
-    }
-
-    message = [
-      `Mode: preparation_checklist`,
-      `Role/group: ${role}`,
-      `Topic: ${topic}`,
-      `Task: Create a practical vetting preparation checklist.`,
-      `Use uploaded SIRE documents via file search.`,
-      `Write bilingual output: EN and RU.`,
-      `Include what to check, what records to prepare, what the inspector may ask, and common negative observations.`
-    ].join("\n");
-  }
+  const mode = vettingActiveMode || "cards";
+  const topic = getVettingTopicValue();
 
   setVettingBusy(true);
-  setVettingWork("Обработка данных...", "loading");
+  setVettingAnswer("Связь с VetAI Worker...", "loading");
 
   try {
-    const answer = await requestVetAi(message, action, role);
+    const response = await fetch(`${VETAI_API_BASE}/api/vetai-chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({
+        sessionId: ensureVettingSessionId(),
+        mode,
+        role,
+        action,
+        topic,
+        message: action || mode
+      }),
+    });
 
-    if (action === "next-card") {
-      vettingCurrentQuestion = answer;
-    }
-    if (action === "new-test") {
-      vettingCurrentTrainingQuestion = answer;
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.ok) {
+      const err = data?.error || `HTTP ${response.status}`;
+      throw new Error(err);
     }
 
-    setVettingWork(answer, "ready");
+    const answer = data.answer || data.result || "Пустой ответ от VetAI.";
+    setVettingAnswer(answer, "ready");
   } catch (error) {
-    setVettingWork(`Ошибка связи с VetAI Worker: ${error?.message || error}`, "ready");
+    setVettingAnswer(`Ошибка связи с VetAI Worker: ${error?.message || error}`, "ready");
   } finally {
     setVettingBusy(false);
   }
-}
-
-async function sendVettingChoice(choice = "A") {
-  if (vettingBusy) return;
-  if (!ensureAccessToken()) return;
-
-  const role = getActiveVettingRole();
-
-  if (!vettingCurrentTrainingQuestion) {
-    showAiNotice("Сначала нажми «Новый тест».");
-    return;
-  }
-
-  const message = [
-    `Mode: multiple_choice_check`,
-    `Role/group: ${role}`,
-    `Question:`,
-    vettingCurrentTrainingQuestion,
-    `User selected: ${choice}`,
-    `Task: Check the answer. Say correct or incorrect, then show the correct answer in EN and RU, with short explanation and inspector expectation.`,
-    `Use uploaded SIRE documents via file search.`
-  ].join("\n");
-
-  setVettingBusy(true);
-  setVettingWork("Проверка ответа...", "loading");
-
-  try {
-    const answer = await requestVetAi(message, "multiple_choice_check", role);
-    setVettingWork(`${vettingCurrentTrainingQuestion}\n\n${answer}`, "ready");
-  } catch (error) {
-    setVettingWork(`Ошибка связи с VetAI Worker: ${error?.message || error}`, "ready");
-  } finally {
-    setVettingBusy(false);
-  }
-}
-
-async function requestVetAi(message, mode = "cards", role = "ETO") {
-  const response = await fetch(`${VETAI_API_BASE}/api/vetai-chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify({
-      sessionId: ensureVettingSessionId(),
-      message,
-      mode,
-      role,
-    }),
-  });
-
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data?.ok) {
-    const err = data?.error || `HTTP ${response.status}`;
-    throw new Error(err);
-  }
-
-  return data.answer || data.result || "Пустой ответ от VetAI.";
 }
 
 function showAiNotice(message) {
@@ -7014,7 +6986,7 @@ function showAiNotice(message) {
 
   overlay.innerHTML = `
     <div class="ai-notice-card">
-      <div class="ai-notice-title">Lexicon</div>
+      <div class="ai-notice-title">ИИ ассистент</div>
       <div class="ai-notice-text">${escapeHTML(text)}</div>
       <button class="ai-notice-btn" type="button">Понятно</button>
     </div>
