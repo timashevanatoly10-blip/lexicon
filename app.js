@@ -3102,6 +3102,263 @@ function ensureDictionaryPickerStyles() {
       .text-bottom-icon-btn { width: 37px; height: 37px; }
     }
 
+
+    /* VetAI compact clean cockpit v102 */
+    body.vetting-page-open {
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open #aiPage {
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open .app {
+      padding-top: max(0px, env(safe-area-inset-top)) !important;
+    }
+
+    body.vetting-page-open .ai-shell.vetting-shell {
+      height: calc(100dvh - max(0px, env(safe-area-inset-top)) - 2px) !important;
+      padding: 0 4px 4px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-topline {
+      flex: 0 0 auto !important;
+      min-height: 34px !important;
+      padding: 0 6px 1px !important;
+      grid-template-columns: 30px minmax(0, 1fr) !important;
+      gap: 5px !important;
+      align-items: center !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-back-btn {
+      width: 30px !important;
+      min-width: 30px !important;
+      height: 30px !important;
+      font-size: 24px !important;
+      transform: translateY(0) !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-title-block {
+      transform: translateY(0) !important;
+      gap: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-title {
+      font-size: clamp(18px, 4.8vw, 26px) !important;
+      line-height: 1 !important;
+      letter-spacing: -0.045em !important;
+      white-space: nowrap !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-subtitle {
+      display: none !important;
+    }
+
+    body.vetting-page-open .vetting-main-card-clean {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 7px !important;
+      padding: 0 2px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-role-row {
+      flex: 0 0 auto !important;
+      display: grid !important;
+      grid-template-columns: 1.05fr 1.15fr 0.72fr 0.98fr 1.05fr !important;
+      gap: 4px !important;
+      flex-wrap: nowrap !important;
+      justify-content: stretch !important;
+      padding: 0 1px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-role-row .vetting-chip {
+      min-width: 0 !important;
+      width: 100% !important;
+      min-height: 28px !important;
+      padding: 0 2px !important;
+      font-size: clamp(8px, 2.05vw, 11px) !important;
+      font-weight: 730 !important;
+      letter-spacing: -0.035em !important;
+      overflow: hidden !important;
+      text-overflow: clip !important;
+      white-space: nowrap !important;
+    }
+
+    body.vetting-page-open .vetting-mode-row {
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      align-self: stretch !important;
+      display: grid !important;
+      grid-template-columns: 1fr 1.18fr 1fr !important;
+      min-height: 30px !important;
+      gap: 0 !important;
+      padding: 1px !important;
+      border-radius: 15px !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%) !important;
+      border: 2px solid rgba(255,255,255,0.90) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06) !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-mode-btn {
+      min-height: 26px !important;
+      height: 26px !important;
+      padding: 0 5px !important;
+      border-radius: 14px !important;
+      border: 2px solid transparent !important;
+      background: transparent !important;
+      color: #777a77 !important;
+      font-size: clamp(10px, 2.45vw, 14px) !important;
+      font-weight: 560 !important;
+      line-height: 1 !important;
+      letter-spacing: 0.01em !important;
+      box-shadow: none !important;
+    }
+
+    body.vetting-page-open .vetting-mode-btn.active {
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
+      border-color: rgba(255,255,255,0.94) !important;
+      color: #5f9962 !important;
+      border-radius: 14px !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 2px 2px 4px rgba(255,255,255,0.70),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055) !important;
+    }
+
+    body.vetting-page-open .vetting-workspace {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open .vetting-work-card {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 7px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open .vetting-work-head,
+    body.vetting-page-open .vetting-work-kicker,
+    body.vetting-page-open .vetting-work-title,
+    body.vetting-page-open .vetting-work-note {
+      display: none !important;
+    }
+
+    body.vetting-page-open .vetting-compact-input {
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      min-height: 48px !important;
+      max-height: 70px !important;
+      resize: none !important;
+      box-sizing: border-box !important;
+      border-radius: 19px !important;
+      border: 2px solid rgba(255,255,255,0.86) !important;
+      background: rgba(255,255,255,0.58) !important;
+      color: #1f211f !important;
+      font-size: clamp(12.5px, 2.9vw, 16px) !important;
+      font-weight: 470 !important;
+      line-height: 1.25 !important;
+      padding: 9px 12px !important;
+      outline: none !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10) !important;
+    }
+
+    body.vetting-page-open .vetting-question-box {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      border-radius: 22px !important;
+      border: 1px solid rgba(226,231,224,0.74) !important;
+      background: rgba(255,255,255,0.62) !important;
+      padding: 16px 16px 18px !important;
+      color: rgba(31,33,31,0.78) !important;
+      font-size: clamp(14px, 3.25vw, 18px) !important;
+      font-weight: 440 !important;
+      line-height: 1.42 !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.46),
+        0 1px 4px rgba(180,188,178,0.035) !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.loading {
+      color: #1f6f56 !important;
+      font-weight: 680 !important;
+      text-align: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    body.vetting-page-open .vetting-action-row {
+      flex: 0 0 auto !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 10px !important;
+      padding: 0 34px max(10px, env(safe-area-inset-bottom)) !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-action-btn {
+      min-height: 33px !important;
+      height: 33px !important;
+      padding: 0 10px !important;
+      font-size: clamp(10.5px, 2.5vw, 13.5px) !important;
+      font-weight: 760 !important;
+      border-radius: 999px !important;
+      border: 2px solid rgba(255,255,255,0.92) !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
+      color: var(--ai-green) !important;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.78),
+        inset -3px -3px 7px rgba(205,214,204,0.15),
+        0 2px 5px rgba(186,193,184,0.08) !important;
+    }
+
+    body.vetting-page-open .vetting-action-btn.primary {
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%) !important;
+    }
+
     @media (max-width: 390px) {
       .text-mode-actions-compact { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 6px; min-height: 43px; padding-top: 2px; padding-bottom: 2px; }
       .text-add-lex-btn, .text-translate-compact-btn { width: 35px; min-width: 35px; height: 35px; font-size: 22px; }
