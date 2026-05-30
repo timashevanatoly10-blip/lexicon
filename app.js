@@ -2712,6 +2712,20 @@ function ensureDictionaryPickerStyles() {
 
 
 
+    body.vetting-page-open #brandBtn {
+      display: none !important;
+    }
+
+    body.vetting-page-open .brand,
+    body.vetting-page-open .brand-title,
+    body.vetting-page-open .app-brand {
+      display: none !important;
+    }
+
+    body.vetting-page-open .ai-shell.vetting-shell {
+      padding-top: 0 !important;
+    }
+
     .vetting-topline .ai-title {
       white-space: normal;
     }
@@ -6669,6 +6683,8 @@ function refreshFileElements() {
 
 // ===== NAVIGATION =====
 function showPage(page) {
+  document.body.classList.remove("vetting-page-open");
+
   hidePage(homePage);
   hidePage(filesPage);
   hidePage(aiPage);
@@ -6701,6 +6717,8 @@ function showAiPage() {
 
 function renderAiHubPage() {
   if (!aiPage) return;
+
+  document.body.classList.remove("vetting-page-open");
 
   const assistants = [
     { title: "Сбор словаря", subtitle: "создание карточек", action: "soon" },
@@ -6755,6 +6773,8 @@ function renderAiHubPage() {
 
 function renderVettingInspectorPage() {
   if (!aiPage) return;
+
+  document.body.classList.add("vetting-page-open");
 
   const crewGroups = ["Officers", "Engineers", "ETO", "Ratings", "Catering"];
   const modes = [
@@ -6831,7 +6851,7 @@ function renderVettingWorkspace() {
         </div>
 
         <div id="vettingQuestionBox" class="vetting-question-box">
-          <div class="vetting-empty-state">Нажми «Новый тест», когда подключим режимную логику в Worker.</div>
+          <div class="vetting-empty-state">Нажми «Новый тест», когда режим будет подключён.</div>
         </div>
 
         <div class="vetting-options-grid">
@@ -6881,7 +6901,7 @@ function renderVettingWorkspace() {
         </div>
 
         <div id="vettingQuestionBox" class="vetting-question-box">
-          <div class="vetting-empty-state">Нажми «Следующий вопрос», когда подключим режимную логику в Worker.</div>
+          <div class="vetting-empty-state">Нажми «Следующий вопрос», когда режим будет подключён.</div>
         </div>
 
         <div class="vetting-action-row">
