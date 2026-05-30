@@ -6779,8 +6779,8 @@ function renderVettingInspectorPage() {
   const crewGroups = ["Officers", "Engineers", "ETO", "Ratings", "Catering"];
   const modes = [
     { id: "cards", title: "Карточки" },
-    { id: "training", title: "Тренировка" },
-    { id: "preparation", title: "Подготовка" }
+    { id: "prepare", title: "Подготовка" },
+    { id: "search", title: "Вопрос" }
   ];
 
   ensureVettingSessionId();
@@ -6841,42 +6841,13 @@ function renderVettingWorkspace() {
   const workspace = document.getElementById("vettingWorkspace");
   if (!workspace) return;
 
-  if (vettingActiveMode === "training") {
-    workspace.innerHTML = `
-      <div class="vetting-work-card">
-        <div class="vetting-work-head">
-          <div class="vetting-work-kicker">Training mode</div>
-          <div class="vetting-work-title">Вопрос с вариантами ответа</div>
-          <div class="vetting-work-note">Здесь будет тест: вопрос, варианты A/B/C/D и проверка выбранного ответа.</div>
-        </div>
-
-        <div id="vettingQuestionBox" class="vetting-question-box">
-          <div class="vetting-empty-state">Нажми «Новый тест», когда режим будет подключён.</div>
-        </div>
-
-        <div class="vetting-options-grid">
-          ${["A", "B", "C", "D"].map((label) => `
-            <button class="vetting-option-btn" type="button" data-vetting-option="${label}" disabled>
-              <span>${label}</span>
-              <em>вариант ответа</em>
-            </button>
-          `).join("")}
-        </div>
-
-        <div class="vetting-action-row single">
-          <button class="vetting-action-btn primary" type="button" data-vetting-action="new_test">Новый тест</button>
-        </div>
-
-        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
-      </div>
-    `;
-  } else if (vettingActiveMode === "preparation") {
+  if (vettingActiveMode === "prepare") {
     workspace.innerHTML = `
       <div class="vetting-work-card">
         <div class="vetting-work-head">
           <div class="vetting-work-kicker">Preparation mode</div>
           <div class="vetting-work-title">Подготовка к инспекции</div>
-          <div class="vetting-work-note">Здесь будет checklist по роли и теме: что проверить, что подготовить, что показать инспектору.</div>
+          <div class="vetting-work-note">Чеклист по выбранной роли и теме: что проверить, что подготовить и что показать инспектору.</div>
         </div>
 
         <label class="vetting-field compact">
@@ -6885,7 +6856,28 @@ function renderVettingWorkspace() {
         </label>
 
         <div class="vetting-action-row single">
-          <button class="vetting-action-btn primary" type="button" data-vetting-action="make_checklist">Составить checklist</button>
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="prepare">Подготовить checklist</button>
+        </div>
+
+        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
+      </div>
+    `;
+  } else if (vettingActiveMode === "search") {
+    workspace.innerHTML = `
+      <div class="vetting-work-card">
+        <div class="vetting-work-head">
+          <div class="vetting-work-kicker">Search mode</div>
+          <div class="vetting-work-title">Вопрос по базе SIRE</div>
+          <div class="vetting-work-note">Свободный вопрос по загруженным SIRE-документам и базе VetAI.</div>
+        </div>
+
+        <label class="vetting-field compact">
+          <span>Вопрос</span>
+          <textarea id="vettingTextInput" rows="4" placeholder="Например: What does SIRE say about emergency generator testing?"></textarea>
+        </label>
+
+        <div class="vetting-action-row single">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="ask">Задать вопрос</button>
         </div>
 
         <div id="vettingAnswerBox" class="vetting-answer-card"></div>
@@ -6897,11 +6889,11 @@ function renderVettingWorkspace() {
         <div class="vetting-work-head">
           <div class="vetting-work-kicker">Cards mode</div>
           <div class="vetting-work-title">Вопрос → ответ</div>
-          <div class="vetting-work-note">Здесь будет карточка: вопрос EN/RU, затем правильный ответ EN/RU и ожидания инспектора.</div>
+          <div class="vetting-work-note">Карточка подготовки: вопрос EN/RU, правильный ответ EN/RU и ожидания инспектора.</div>
         </div>
 
         <div id="vettingQuestionBox" class="vetting-question-box">
-          <div class="vetting-empty-state">Нажми «Следующий вопрос», когда режим будет подключён.</div>
+          <div class="vetting-empty-state">Нажми «Следующий вопрос», чтобы получить карточку.</div>
         </div>
 
         <div class="vetting-action-row">
@@ -6939,6 +6931,11 @@ function getVettingTopicValue() {
   return String(topicInput?.value || "").trim();
 }
 
+function getVettingTextValue() {
+  const textInput = document.getElementById("vettingTextInput");
+  return String(textInput?.value || "").trim();
+}
+
 function setVettingAnswer(text, state = "ready") {
   const box = document.getElementById("vettingAnswerBox");
   if (!box) return;
@@ -6962,6 +6959,7 @@ async function sendVettingAction(action = "") {
   const role = getActiveVettingRole();
   const mode = vettingActiveMode || "cards";
   const topic = getVettingTopicValue();
+  const text = getVettingTextValue();
 
   setVettingBusy(true);
   setVettingAnswer("Связь с VetAI Worker...", "loading");
@@ -6979,7 +6977,8 @@ async function sendVettingAction(action = "") {
         role,
         action,
         topic,
-        message: action || mode
+        text,
+        message: text || topic || action || mode
       }),
     });
 
