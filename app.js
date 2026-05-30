@@ -2893,6 +2893,203 @@ function ensureDictionaryPickerStyles() {
     }
 
 
+    body.vetting-page-open {
+      overflow: hidden;
+    }
+
+    body.vetting-page-open #aiPage {
+      overflow: hidden;
+    }
+
+    body.vetting-page-open .app {
+      padding-top: max(6px, env(safe-area-inset-top)) !important;
+    }
+
+    body.vetting-page-open .ai-shell.vetting-shell {
+      height: calc(100dvh - max(6px, env(safe-area-inset-top)) - 8px);
+      display: flex;
+      flex-direction: column;
+      padding: 0 4px 8px !important;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    body.vetting-page-open .vetting-topline {
+      min-height: 42px !important;
+      padding: 0 8px 4px !important;
+      grid-template-columns: 34px minmax(0, 1fr) !important;
+      gap: 6px !important;
+      flex: 0 0 auto;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-back-btn {
+      width: 32px !important;
+      min-width: 32px !important;
+      height: 32px !important;
+      font-size: 25px !important;
+      transform: translateY(-1px) !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-title-block {
+      transform: translateY(0) !important;
+      gap: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-title {
+      font-size: clamp(19px, 5vw, 27px) !important;
+      line-height: 1.02 !important;
+      letter-spacing: -0.04em !important;
+      white-space: nowrap !important;
+    }
+
+    body.vetting-page-open .vetting-topline .ai-subtitle {
+      display: none !important;
+    }
+
+    body.vetting-page-open .vetting-main-card-clean {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px !important;
+      padding: 7px !important;
+      border-radius: 24px !important;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    body.vetting-page-open .vetting-role-row {
+      flex: 0 0 auto;
+      display: grid !important;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px !important;
+      flex-wrap: nowrap !important;
+      justify-content: stretch !important;
+    }
+
+    body.vetting-page-open .vetting-role-row .vetting-chip {
+      min-width: 0 !important;
+      min-height: 28px !important;
+      padding: 0 4px !important;
+      font-size: clamp(8.8px, 2.25vw, 12px) !important;
+      font-weight: 720 !important;
+      letter-spacing: -0.02em !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    body.vetting-page-open .vetting-mode-row {
+      flex: 0 0 auto;
+      width: 72%;
+      align-self: center;
+      min-height: 30px;
+      gap: 3px !important;
+      padding: 2px !important;
+      border-radius: 999px !important;
+    }
+
+    body.vetting-page-open .vetting-mode-btn {
+      min-height: 26px !important;
+      font-size: clamp(9.5px, 2.35vw, 12.5px) !important;
+      font-weight: 740 !important;
+      padding: 0 4px !important;
+    }
+
+    body.vetting-page-open .vetting-workspace {
+      flex: 1 1 auto;
+      min-height: 0 !important;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    body.vetting-page-open .vetting-work-card {
+      flex: 1 1 auto;
+      min-height: 0 !important;
+      display: flex;
+      flex-direction: column;
+      gap: 8px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: hidden;
+    }
+
+    body.vetting-page-open .vetting-work-head,
+    body.vetting-page-open .vetting-work-kicker,
+    body.vetting-page-open .vetting-work-title,
+    body.vetting-page-open .vetting-work-note {
+      display: none !important;
+    }
+
+    body.vetting-page-open .vetting-compact-input {
+      flex: 0 0 auto;
+      width: 100%;
+      min-height: 54px;
+      max-height: 82px;
+      resize: none;
+      box-sizing: border-box;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,0.86);
+      background: rgba(255,255,255,0.58);
+      color: #1f211f;
+      font-size: clamp(12.5px, 2.9vw, 16px);
+      font-weight: 470;
+      line-height: 1.28;
+      padding: 10px 12px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10);
+    }
+
+    body.vetting-page-open .vetting-compact-input::placeholder {
+      color: rgba(119,122,119,0.42);
+    }
+
+    body.vetting-page-open .vetting-question-box {
+      flex: 1 1 auto;
+      min-height: 0 !important;
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 22px !important;
+      padding: 13px 14px 16px !important;
+      font-size: clamp(13.5px, 3.2vw, 17.5px) !important;
+      line-height: 1.42 !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.loading {
+      color: #1f6f56;
+      font-weight: 680;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.vetting-page-open .vetting-action-row {
+      flex: 0 0 auto;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+      padding: 0 18px 2px;
+    }
+
+    body.vetting-page-open .vetting-action-btn {
+      min-height: 34px !important;
+      padding: 0 10px !important;
+      font-size: clamp(10.5px, 2.5vw, 13.5px) !important;
+      font-weight: 760 !important;
+      border-radius: 999px !important;
+    }
+
+
     @media (max-width: 520px) {
       .text-mode-shell { gap: 8px; }
       .text-mode-actions-compact { grid-template-columns: 43px minmax(0, 1fr) 43px; min-height: 46px; gap: 7px; padding: 3px 6px; border-radius: 24px; }
@@ -6790,8 +6987,7 @@ function renderVettingInspectorPage() {
       <div class="ai-topline vetting-topline">
         <button id="backAiHubBtn" class="back-btn ai-back-btn" type="button" title="Назад">←</button>
         <div class="ai-title-block">
-          <div class="ai-title">Vetting Inspector</div>
-          <div class="ai-subtitle">тренажёр подготовки к проверке</div>
+          <div class="ai-title">Ветинг-Инспектор AI</div>
         </div>
       </div>
 
@@ -6844,70 +7040,57 @@ function renderVettingWorkspace() {
   if (vettingActiveMode === "prepare") {
     workspace.innerHTML = `
       <div class="vetting-work-card">
-        <div class="vetting-work-head">
-          <div class="vetting-work-kicker">Preparation mode</div>
-          <div class="vetting-work-title">Подготовка к инспекции</div>
-          <div class="vetting-work-note">Чеклист по выбранной роли и теме: что проверить, что подготовить и что показать инспектору.</div>
+        <textarea id="vettingTopicInput" class="vetting-compact-input" rows="2" placeholder="Тема подготовки: emergency generator, fire detection, UPS..."></textarea>
+
+        <div id="vettingOutputBox" class="vetting-question-box">
+          <div class="vetting-empty-state">Введите тему и нажмите «Подготовить».</div>
         </div>
 
-        <label class="vetting-field compact">
-          <span>Тема / система</span>
-          <textarea id="vettingTopicInput" rows="3" placeholder="Например: emergency generator, fire detection, UPS, batteries..."></textarea>
-        </label>
-
-        <div class="vetting-action-row single">
-          <button class="vetting-action-btn primary" type="button" data-vetting-action="prepare">Подготовить checklist</button>
+        <div class="vetting-action-row">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="prepare">Подготовить</button>
+          <button class="vetting-action-btn" type="button" data-vetting-action="clear">Очистить</button>
         </div>
-
-        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
   } else if (vettingActiveMode === "search") {
     workspace.innerHTML = `
       <div class="vetting-work-card">
-        <div class="vetting-work-head">
-          <div class="vetting-work-kicker">Search mode</div>
-          <div class="vetting-work-title">Вопрос по базе SIRE</div>
-          <div class="vetting-work-note">Свободный вопрос по загруженным SIRE-документам и базе VetAI.</div>
+        <textarea id="vettingTextInput" class="vetting-compact-input" rows="2" placeholder="Задай вопрос по базе SIRE / VetAI"></textarea>
+
+        <div id="vettingOutputBox" class="vetting-question-box">
+          <div class="vetting-empty-state">Введите вопрос и нажмите «Спросить».</div>
         </div>
 
-        <label class="vetting-field compact">
-          <span>Вопрос</span>
-          <textarea id="vettingTextInput" rows="4" placeholder="Например: What does SIRE say about emergency generator testing?"></textarea>
-        </label>
-
-        <div class="vetting-action-row single">
-          <button class="vetting-action-btn primary" type="button" data-vetting-action="ask">Задать вопрос</button>
+        <div class="vetting-action-row">
+          <button class="vetting-action-btn primary" type="button" data-vetting-action="ask">Спросить</button>
+          <button class="vetting-action-btn" type="button" data-vetting-action="clear">Очистить</button>
         </div>
-
-        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
   } else {
     workspace.innerHTML = `
       <div class="vetting-work-card">
-        <div class="vetting-work-head">
-          <div class="vetting-work-kicker">Cards mode</div>
-          <div class="vetting-work-title">Вопрос → ответ</div>
-          <div class="vetting-work-note">Карточка подготовки: вопрос EN/RU, правильный ответ EN/RU и ожидания инспектора.</div>
-        </div>
-
-        <div id="vettingQuestionBox" class="vetting-question-box">
-          <div class="vetting-empty-state">Нажми «Следующий вопрос», чтобы получить карточку.</div>
+        <div id="vettingOutputBox" class="vetting-question-box">
+          <div class="vetting-empty-state">Нажмите «Следующий вопрос».</div>
         </div>
 
         <div class="vetting-action-row">
           <button class="vetting-action-btn primary" type="button" data-vetting-action="next_question">Следующий вопрос</button>
           <button class="vetting-action-btn" type="button" data-vetting-action="show_answer">Показать ответ</button>
         </div>
-
-        <div id="vettingAnswerBox" class="vetting-answer-card"></div>
       </div>
     `;
   }
 
   workspace.querySelectorAll("[data-vetting-action]").forEach((btn) => {
-    btn.onclick = () => sendVettingAction(btn.dataset.vettingAction || "");
+    btn.onclick = () => {
+      const action = btn.dataset.vettingAction || "";
+      if (action === "clear") {
+        clearVettingOutput();
+        return;
+      }
+      sendVettingAction(action);
+    };
   });
 
   setVettingBusy(vettingBusy);
@@ -6936,29 +7119,50 @@ function getVettingTextValue() {
   return String(textInput?.value || "").trim();
 }
 
-function setVettingAnswer(text, state = "ready") {
-  const box = document.getElementById("vettingAnswerBox");
+function getVettingOutputBox() {
+  return document.getElementById("vettingOutputBox") || document.getElementById("vettingQuestionBox") || document.getElementById("vettingAnswerBox");
+}
+
+function normalizeVettingTextForDisplay(value) {
+  return String(value || "")
+    .replace(/\\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function setVettingOutput(text, state = "ready") {
+  const box = getVettingOutputBox();
   if (!box) return;
 
-  box.classList.add("visible");
   box.classList.toggle("loading", state === "loading");
-  box.textContent = String(text || "").trim();
+  box.innerHTML = "";
+  box.textContent = normalizeVettingTextForDisplay(text);
+}
+
+function clearVettingOutput() {
+  const box = getVettingOutputBox();
+  if (!box) return;
+
+  box.classList.remove("loading");
+  if (vettingActiveMode === "prepare") {
+    box.innerHTML = `<div class="vetting-empty-state">Введите тему и нажмите «Подготовить».</div>`;
+  } else if (vettingActiveMode === "search") {
+    box.innerHTML = `<div class="vetting-empty-state">Введите вопрос и нажмите «Спросить».</div>`;
+  } else {
+    box.innerHTML = `<div class="vetting-empty-state">Нажмите «Следующий вопрос».</div>`;
+  }
+}
+
+function setVettingAnswer(text, state = "ready") {
+  setVettingOutput(text, state);
 }
 
 function setVettingQuestion(text, state = "ready") {
-  const box = document.getElementById("vettingQuestionBox");
-  if (!box) return;
-
-  box.classList.toggle("loading", state === "loading");
-  box.textContent = String(text || "").trim();
+  setVettingOutput(text, state);
 }
 
 function clearVettingAnswer() {
-  const box = document.getElementById("vettingAnswerBox");
-  if (!box) return;
-
-  box.classList.remove("visible", "loading");
-  box.textContent = "";
+  clearVettingOutput();
 }
 
 function setVettingBusy(isBusy) {
