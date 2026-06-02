@@ -9,6 +9,7 @@ let vettingSessionId = localStorage.getItem("vetai_session_id") || "";
 let vettingBusy = false;
 let vettingActiveRole = "ETO";
 let vettingActiveMode = "cards";
+let vettingCardLang = "en";
 
 let currentDocumentId = "";
 let currentDocumentKey = "";
@@ -3369,6 +3370,179 @@ function ensureDictionaryPickerStyles() {
       .text-bottom-icon-btn { width: 35px; height: 35px; }
     }
 
+
+
+    /* VetAI cards structured EN/RU swipe */
+    body.vetting-page-open .vetting-question-box.structured {
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .vetting-card-shell {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .vetting-lang-tabs {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin: 8px 9px 0;
+      padding: 1px;
+      border-radius: 15px;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
+      border: 2px solid rgba(255,255,255,0.90);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06);
+    }
+
+    .vetting-lang-btn {
+      height: 25px;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: #777a77;
+      font-size: clamp(10px, 2.35vw, 13px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .vetting-lang-btn.active {
+      color: #5f9962;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.80) 0%, rgba(249,250,247,0.94) 56%, rgba(255,255,255,0.99) 100%);
+      border-color: rgba(255,255,255,0.94);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 2px 2px 4px rgba(255,255,255,0.70),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055);
+    }
+
+    .vetting-lang-frame {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      touch-action: pan-y;
+    }
+
+    .vetting-lang-track {
+      height: 100%;
+      width: 200%;
+      display: flex;
+      transition: transform 0.24s ease;
+      will-change: transform;
+    }
+
+    .vetting-card-shell.lang-ru .vetting-lang-track {
+      transform: translateX(-50%);
+    }
+
+    .vetting-card-panel {
+      width: 50%;
+      flex: 0 0 50%;
+      min-width: 0;
+      height: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 15px 14px 18px;
+      box-sizing: border-box;
+    }
+
+    .vetting-card-topic {
+      display: inline-flex;
+      max-width: 100%;
+      margin: 0 0 12px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(95,153,98,0.09);
+      color: #1f6f56;
+      font-size: clamp(10px, 2.3vw, 12.5px);
+      font-weight: 720;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vetting-card-label {
+      color: rgba(31,33,31,0.50);
+      font-size: clamp(10px, 2.25vw, 12.5px);
+      font-weight: 780;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+
+    .vetting-card-main-text {
+      color: rgba(31,33,31,0.84);
+      font-size: clamp(17px, 4.15vw, 24px);
+      font-weight: 620;
+      line-height: 1.30;
+      letter-spacing: -0.025em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .vetting-card-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(224,228,222,0.68);
+    }
+
+    .vetting-card-section-title {
+      color: #1f6f56;
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 760;
+      line-height: 1.15;
+      margin: 0 0 7px;
+    }
+
+    .vetting-card-list {
+      margin: 0;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: rgba(31,33,31,0.76);
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 470;
+      line-height: 1.34;
+    }
+
+    .vetting-card-small-text {
+      color: rgba(31,33,31,0.72);
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 470;
+      line-height: 1.34;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .vetting-card-warning {
+      margin-top: 13px;
+      padding: 10px 11px;
+      border-radius: 16px;
+      background: rgba(150,48,45,0.055);
+      color: rgba(120,42,39,0.88);
+      font-size: clamp(12.5px, 2.85vw, 16px);
+      font-weight: 520;
+      line-height: 1.32;
+    }
 
     /* VetAI v103 final polish: raise header and align bottom buttons */
     body.vetting-page-open .app {
@@ -7474,11 +7648,76 @@ function normalizeVettingTextForDisplay(value) {
     .trim();
 }
 
+function getVettingResponseText(data) {
+  if (!data) return "";
+
+  if (data.card && typeof data.card === "object") {
+    return JSON.stringify(data.card);
+  }
+
+  if (data.payload && typeof data.payload === "object") {
+    return JSON.stringify(data.payload);
+  }
+
+  return String(data.answer || data.result || data.raw || "").trim();
+}
+
+function parseVettingJsonResponse(dataOrText) {
+  if (!dataOrText) return null;
+
+  if (typeof dataOrText === "object" && !Array.isArray(dataOrText)) {
+    const direct = dataOrText.card || dataOrText.payload || dataOrText.result || dataOrText.answer || dataOrText.raw || dataOrText;
+    if (direct && typeof direct === "object" && !Array.isArray(direct)) return direct;
+    return parseVettingJsonResponse(String(direct || ""));
+  }
+
+  const raw = String(dataOrText || "").trim();
+  if (!raw) return null;
+
+  const parsed = parseJsonObject(raw);
+  if (parsed) return parsed;
+
+  const first = raw.indexOf("{");
+  const last = raw.lastIndexOf("}");
+  if (first >= 0 && last > first) {
+    const slice = raw.slice(first, last + 1);
+    try {
+      const obj = JSON.parse(stripJsonCodeFence(slice));
+      return obj && typeof obj === "object" && !Array.isArray(obj) ? obj : null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function normalizeVettingArray(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const text = String(value || "").trim();
+  return text ? [text] : [];
+}
+
+function isVettingCardPayload(payload) {
+  const type = String(payload?.type || "").trim();
+  return type === "card_question" || type === "card_answer" || Boolean(payload?.question_en || payload?.question_ru || payload?.answer_en || payload?.answer_ru);
+}
+
+function getVettingCardType(payload) {
+  const type = String(payload?.type || "").trim();
+  if (type === "card_answer" || payload?.answer_en || payload?.answer_ru) return "card_answer";
+  return "card_question";
+}
+
 function setVettingOutput(text, state = "ready") {
   const box = getVettingOutputBox();
   if (!box) return;
 
   box.classList.toggle("loading", state === "loading");
+  box.classList.remove("structured");
   box.innerHTML = "";
   box.textContent = normalizeVettingTextForDisplay(text);
 }
@@ -7487,7 +7726,7 @@ function clearVettingOutput() {
   const box = getVettingOutputBox();
   if (!box) return;
 
-  box.classList.remove("loading");
+  box.classList.remove("loading", "structured");
   if (vettingActiveMode === "prepare") {
     box.innerHTML = `<div class="vetting-empty-state">Введите тему и нажмите «Подготовить».</div>`;
   } else if (vettingActiveMode === "search") {
@@ -7503,6 +7742,148 @@ function setVettingAnswer(text, state = "ready") {
 
 function setVettingQuestion(text, state = "ready") {
   setVettingOutput(text, state);
+}
+
+function renderVettingCardResponse(dataOrText, action = "") {
+  const payload = parseVettingJsonResponse(dataOrText);
+
+  if (!payload || !isVettingCardPayload(payload)) {
+    setVettingQuestion(getVettingResponseText(dataOrText) || String(dataOrText || "Пустой ответ от VetAI."), "ready");
+    return;
+  }
+
+  const box = getVettingOutputBox();
+  if (!box) return;
+
+  const type = getVettingCardType(payload);
+  const html = buildVettingCardSwipeHtml(payload, type);
+
+  box.classList.remove("loading");
+  box.classList.add("structured");
+  box.innerHTML = html;
+  bindVettingCardSwipe(box);
+}
+
+function buildVettingCardSwipeHtml(payload, type) {
+  const isAnswer = type === "card_answer";
+  const topic = String(payload.topic || "").trim();
+  const role = String(payload.role || getActiveVettingRole() || "").trim();
+
+  const enHtml = isAnswer
+    ? buildVettingAnswerPanelHtml(payload, "en", topic, role)
+    : buildVettingQuestionPanelHtml(payload, "en", topic, role);
+
+  const ruHtml = isAnswer
+    ? buildVettingAnswerPanelHtml(payload, "ru", topic, role)
+    : buildVettingQuestionPanelHtml(payload, "ru", topic, role);
+
+  const langClass = vettingCardLang === "ru" ? "lang-ru" : "lang-en";
+
+  return `
+    <div id="vettingCardShell" class="vetting-card-shell ${langClass}" data-vetting-card-shell="1">
+      <div class="vetting-lang-tabs">
+        <button class="vetting-lang-btn ${vettingCardLang === "ru" ? "" : "active"}" type="button" data-vetting-lang-btn="en">EN</button>
+        <button class="vetting-lang-btn ${vettingCardLang === "ru" ? "active" : ""}" type="button" data-vetting-lang-btn="ru">RU</button>
+      </div>
+
+      <div class="vetting-lang-frame" id="vettingLangFrame">
+        <div class="vetting-lang-track" id="vettingLangTrack">
+          <section class="vetting-card-panel" data-vetting-panel="en">${enHtml}</section>
+          <section class="vetting-card-panel" data-vetting-panel="ru">${ruHtml}</section>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildVettingQuestionPanelHtml(payload, lang, topic, role) {
+  const isRu = lang === "ru";
+  const question = String(isRu ? payload.question_ru : payload.question_en || "").trim();
+  const label = isRu ? "Вопрос инспектора" : "Inspector question";
+  const safeTopic = topic || (isRu ? "карточка SIRE / Vetting" : "SIRE / Vetting card");
+
+  return `
+    <div class="vetting-card-topic">${escapeHTML(role ? `${role} · ${safeTopic}` : safeTopic)}</div>
+    <div class="vetting-card-label">${escapeHTML(label)}</div>
+    <div class="vetting-card-main-text">${escapeHTML(question || (isRu ? "Вопрос не пришёл в JSON." : "No question in JSON."))}</div>
+  `;
+}
+
+function buildVettingAnswerPanelHtml(payload, lang, topic, role) {
+  const isRu = lang === "ru";
+  const answer = String(isRu ? payload.answer_ru : payload.answer_en || "").trim();
+  const expects = normalizeVettingArray(isRu ? payload.inspector_expects_ru : payload.inspector_expects_en);
+  const evidence = normalizeVettingArray(isRu ? payload.evidence_ru : payload.evidence_en);
+  const warning = String(isRu ? payload.weak_answer_warning_ru : payload.weak_answer_warning_en || "").trim();
+  const safeTopic = topic || (isRu ? "ответ по карточке" : "card answer");
+
+  return `
+    <div class="vetting-card-topic">${escapeHTML(role ? `${role} · ${safeTopic}` : safeTopic)}</div>
+    <div class="vetting-card-label">${escapeHTML(isRu ? "Ответ" : "Answer")}</div>
+    <div class="vetting-card-main-text">${escapeHTML(answer || (isRu ? "Ответ не пришёл в JSON." : "No answer in JSON."))}</div>
+    ${buildVettingCardListSection(isRu ? "Что ожидает инспектор" : "Inspector expects", expects)}
+    ${buildVettingCardListSection(isRu ? "Подтверждения / записи" : "Evidence / records", evidence)}
+    ${warning ? `<div class="vetting-card-warning">${escapeHTML(warning)}</div>` : ""}
+  `;
+}
+
+function buildVettingCardListSection(title, items) {
+  const values = normalizeVettingArray(items);
+  if (!values.length) return "";
+
+  return `
+    <div class="vetting-card-section">
+      <div class="vetting-card-section-title">${escapeHTML(title)}</div>
+      <ul class="vetting-card-list">
+        ${values.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function bindVettingCardSwipe(root) {
+  const shell = root.querySelector("[data-vetting-card-shell]");
+  const frame = root.querySelector("#vettingLangFrame");
+
+  const setLang = (lang) => {
+    vettingCardLang = lang === "ru" ? "ru" : "en";
+    shell?.classList.toggle("lang-ru", vettingCardLang === "ru");
+    shell?.classList.toggle("lang-en", vettingCardLang !== "ru");
+    root.querySelectorAll("[data-vetting-lang-btn]").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.vettingLangBtn === vettingCardLang);
+    });
+  };
+
+  root.querySelectorAll("[data-vetting-lang-btn]").forEach((btn) => {
+    btn.onclick = () => setLang(btn.dataset.vettingLangBtn || "en");
+  });
+
+  if (!frame || frame.dataset.vettingSwipeBound === "1") return;
+  frame.dataset.vettingSwipeBound = "1";
+
+  let startX = 0;
+  let startY = 0;
+  let started = false;
+
+  frame.addEventListener("touchstart", (event) => {
+    if (!event.touches || !event.touches.length) return;
+    started = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  frame.addEventListener("touchend", (event) => {
+    if (!started || !event.changedTouches || !event.changedTouches.length) return;
+    started = false;
+
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0) setLang("ru");
+    else setLang("en");
+  }, { passive: true });
 }
 
 function clearVettingAnswer() {
@@ -7557,10 +7938,10 @@ async function sendVettingAction(action = "") {
       throw new Error(err);
     }
 
-    const answer = data.answer || data.result || "Пустой ответ от VetAI.";
+    const answer = getVettingResponseText(data) || "Пустой ответ от VetAI.";
 
     if (mode === "cards") {
-      setVettingQuestion(answer, "ready");
+      renderVettingCardResponse(data, action);
     } else {
       setVettingAnswer(answer, "ready");
     }
