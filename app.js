@@ -3630,6 +3630,86 @@ function ensureDictionaryPickerStyles() {
       line-height: 1.05 !important;
       white-space: normal !important;
     }
+    /* VetAI v106 hard snap: EN/RU is the fixed header of the result window */
+    body.vetting-page-open .vetting-question-box.structured {
+      position: relative !important;
+      display: block !important;
+      align-items: initial !important;
+      justify-content: initial !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      border-radius: 22px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-shell {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      display: block !important;
+      overflow: hidden !important;
+      background: transparent !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-tabs {
+      position: absolute !important;
+      top: -1px !important;
+      left: -1px !important;
+      right: -1px !important;
+      z-index: 20 !important;
+      margin: 0 !important;
+      padding: 1px !important;
+      height: 34px !important;
+      min-height: 34px !important;
+      box-sizing: border-box !important;
+      border-radius: 22px 22px 15px 15px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-btn {
+      height: 28px !important;
+      min-height: 28px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1 !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-frame {
+      position: absolute !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 34px !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-track {
+      height: 100% !important;
+      min-height: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-panel {
+      height: 100% !important;
+      min-height: 0 !important;
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 8px 14px 18px !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-topic {
+      margin: 0 0 8px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-label {
+      display: none !important;
+    }
+
   `;
 
   document.head.appendChild(style);
