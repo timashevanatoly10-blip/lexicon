@@ -3392,17 +3392,17 @@ function ensureDictionaryPickerStyles() {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
-      margin: 8px 9px 0;
+      margin: -1px -1px 0;
       padding: 1px;
-      border-radius: 15px;
+      border-radius: 22px 22px 15px 15px;
       background:
-        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
-      border: 2px solid rgba(255,255,255,0.90);
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.78) 0%, rgba(248,249,246,0.91) 58%, rgba(255,255,255,0.99) 100%);
+      border: 2px solid rgba(255,255,255,0.92);
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.36),
-        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 2px 2px 4px rgba(255,255,255,0.64),
         inset -2px -2px 5px rgba(205,214,204,0.08),
-        0 1px 4px rgba(186,193,184,0.06);
+        0 1px 4px rgba(186,193,184,0.05);
     }
 
     .vetting-lang-btn {
@@ -3437,6 +3437,7 @@ function ensureDictionaryPickerStyles() {
       width: 100%;
       overflow: hidden;
       touch-action: pan-y;
+      margin-top: 0;
     }
 
     .vetting-lang-track {
@@ -3458,19 +3459,19 @@ function ensureDictionaryPickerStyles() {
       height: 100%;
       overflow: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 15px 14px 18px;
+      padding: 9px 14px 18px;
       box-sizing: border-box;
     }
 
     .vetting-card-topic {
       display: inline-flex;
       max-width: 100%;
-      margin: 0 0 12px;
-      padding: 4px 9px;
+      margin: 0 0 8px;
+      padding: 3px 9px;
       border-radius: 999px;
       background: rgba(95,153,98,0.09);
       color: #1f6f56;
-      font-size: clamp(10px, 2.3vw, 12.5px);
+      font-size: clamp(10px, 2.25vw, 12.2px);
       font-weight: 720;
       line-height: 1.1;
       white-space: nowrap;
@@ -7799,12 +7800,10 @@ function buildVettingCardSwipeHtml(payload, type) {
 function buildVettingQuestionPanelHtml(payload, lang, topic, role) {
   const isRu = lang === "ru";
   const question = String(isRu ? payload.question_ru : payload.question_en || "").trim();
-  const label = isRu ? "Вопрос инспектора" : "Inspector question";
   const safeTopic = topic || (isRu ? "карточка SIRE / Vetting" : "SIRE / Vetting card");
 
   return `
-    <div class="vetting-card-topic">${escapeHTML(role ? `${role} · ${safeTopic}` : safeTopic)}</div>
-    <div class="vetting-card-label">${escapeHTML(label)}</div>
+    ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
     <div class="vetting-card-main-text">${escapeHTML(question || (isRu ? "Вопрос не пришёл в JSON." : "No question in JSON."))}</div>
   `;
 }
@@ -7818,8 +7817,7 @@ function buildVettingAnswerPanelHtml(payload, lang, topic, role) {
   const safeTopic = topic || (isRu ? "ответ по карточке" : "card answer");
 
   return `
-    <div class="vetting-card-topic">${escapeHTML(role ? `${role} · ${safeTopic}` : safeTopic)}</div>
-    <div class="vetting-card-label">${escapeHTML(isRu ? "Ответ" : "Answer")}</div>
+    ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
     <div class="vetting-card-main-text">${escapeHTML(answer || (isRu ? "Ответ не пришёл в JSON." : "No answer in JSON."))}</div>
     ${buildVettingCardListSection(isRu ? "Что ожидает инспектор" : "Inspector expects", expects)}
     ${buildVettingCardListSection(isRu ? "Подтверждения / записи" : "Evidence / records", evidence)}
