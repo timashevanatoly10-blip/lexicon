@@ -10,6 +10,7 @@ let vettingBusy = false;
 let vettingActiveRole = "ETO";
 let vettingActiveMode = "cards";
 let vettingCardLang = "en";
+let vettingLastCardPayload = null;
 
 let currentDocumentId = "";
 let currentDocumentKey = "";
@@ -3704,6 +3705,95 @@ function ensureDictionaryPickerStyles() {
 
     body.vetting-page-open .vetting-question-box.structured .vetting-card-topic {
       margin: 0 0 8px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-label {
+      display: none !important;
+    }
+
+
+    /* VetAI v107 structural fix: no top void, clean frame, fixed EN/RU header */
+    body.vetting-page-open .vetting-question-box.structured {
+      position: relative !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      border-radius: 22px !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-shell {
+      position: relative !important;
+      inset: auto !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      background: transparent !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-tabs {
+      position: relative !important;
+      top: auto !important;
+      left: auto !important;
+      right: auto !important;
+      z-index: 20 !important;
+      flex: 0 0 auto !important;
+      width: calc(100% + 2px) !important;
+      margin: -1px -1px 0 !important;
+      padding: 1px !important;
+      height: 34px !important;
+      min-height: 34px !important;
+      box-sizing: border-box !important;
+      border-radius: 22px 22px 15px 15px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-frame {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      top: auto !important;
+      bottom: auto !important;
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-track {
+      height: 100% !important;
+      min-height: 0 !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-panel {
+      height: 100% !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 7px 14px 18px !important;
+      box-sizing: border-box !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-topic {
+      display: inline-flex !important;
+      margin: 0 0 7px !important;
+      max-width: 100% !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-main-text {
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: clamp(16px, 3.85vw, 22px) !important;
+      line-height: 1.28 !important;
     }
 
     body.vetting-page-open .vetting-question-box.structured .vetting-card-label {
@@ -7614,6 +7704,7 @@ function renderVettingInspectorPage() {
   aiPage.querySelectorAll("[data-vetting-chip]").forEach((btn) => {
     btn.onclick = () => {
       vettingActiveRole = btn.dataset.vettingChip || "ETO";
+      vettingLastCardPayload = null;
       aiPage.querySelectorAll("[data-vetting-chip]").forEach((item) => item.classList.remove("active"));
       btn.classList.add("active");
       renderVettingWorkspace();
@@ -7623,6 +7714,7 @@ function renderVettingInspectorPage() {
   aiPage.querySelectorAll("[data-vetting-mode]").forEach((btn) => {
     btn.onclick = () => {
       vettingActiveMode = btn.dataset.vettingMode || "cards";
+      vettingLastCardPayload = null;
       aiPage.querySelectorAll("[data-vetting-mode]").forEach((item) => item.classList.remove("active"));
       btn.classList.add("active");
       renderVettingWorkspace();
@@ -7808,6 +7900,7 @@ function clearVettingOutput() {
   if (!box) return;
 
   box.classList.remove("loading", "structured");
+  if (vettingActiveMode === "cards") vettingLastCardPayload = null;
   if (vettingActiveMode === "prepare") {
     box.innerHTML = `<div class="vetting-empty-state">Введите тему и нажмите «Подготовить».</div>`;
   } else if (vettingActiveMode === "search") {
@@ -7837,6 +7930,9 @@ function renderVettingCardResponse(dataOrText, action = "") {
   if (!box) return;
 
   const type = getVettingCardType(payload);
+  if (type === "card_question") {
+    vettingLastCardPayload = payload;
+  }
   const html = buildVettingCardSwipeHtml(payload, type);
 
   box.classList.remove("loading");
@@ -7880,7 +7976,7 @@ function buildVettingCardSwipeHtml(payload, type) {
 function buildVettingQuestionPanelHtml(payload, lang, topic, role) {
   const isRu = lang === "ru";
   const question = String(isRu ? payload.question_ru : payload.question_en || "").trim();
-  const safeTopic = topic || (isRu ? "карточка SIRE / Vetting" : "SIRE / Vetting card");
+  const safeTopic = topic;
 
   return `
     ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
@@ -7894,7 +7990,7 @@ function buildVettingAnswerPanelHtml(payload, lang, topic, role) {
   const expects = normalizeVettingArray(isRu ? payload.inspector_expects_ru : payload.inspector_expects_en);
   const evidence = normalizeVettingArray(isRu ? payload.evidence_ru : payload.evidence_en);
   const warning = String(isRu ? payload.weak_answer_warning_ru : payload.weak_answer_warning_en || "").trim();
-  const safeTopic = topic || (isRu ? "ответ по карточке" : "card answer");
+  const safeTopic = topic;
 
   return `
     ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
@@ -8006,7 +8102,8 @@ async function sendVettingAction(action = "") {
         role,
         action,
         topic,
-        text
+        text,
+        lastCard: mode === "cards" ? vettingLastCardPayload : null
       }),
     });
 
