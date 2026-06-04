@@ -3800,6 +3800,41 @@ function ensureDictionaryPickerStyles() {
       display: none !important;
     }
 
+
+    /* VetAI v108 fixes: keep last card for answer and remove top void under EN/RU */
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-tabs {
+      flex: 0 0 34px !important;
+      height: 34px !important;
+      min-height: 34px !important;
+      margin: -1px -1px 0 !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-lang-frame {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-panel {
+      display: block !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      padding: 0 14px 18px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-topic {
+      margin: 7px 0 7px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-main-text {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
   `;
 
   document.head.appendChild(style);
@@ -8079,11 +8114,24 @@ async function sendVettingAction(action = "") {
   const mode = vettingActiveMode || "cards";
   const topic = getVettingTopicValue();
   const text = getVettingTextValue();
+  const normalizedAction = String(action || "").trim();
+  const isCardsMode = mode === "cards";
+  const isNextQuestion = isCardsMode && (normalizedAction === "next_question" || normalizedAction === "question");
+  const isShowAnswer = isCardsMode && (normalizedAction === "show_answer" || normalizedAction === "answer");
+  const lastCardForRequest = isShowAnswer ? vettingLastCardPayload : null;
+
+  if (isShowAnswer && !lastCardForRequest) {
+    setVettingQuestion("Сначала нажмите «Следующий вопрос».", "ready");
+    return;
+  }
+
+  if (isNextQuestion) {
+    vettingLastCardPayload = null;
+  }
 
   setVettingBusy(true);
 
-  if (mode === "cards") {
-    clearVettingAnswer();
+  if (isCardsMode) {
     setVettingQuestion("Связь с VetAI Worker...", "loading");
   } else {
     setVettingAnswer("Связь с VetAI Worker...", "loading");
@@ -8100,10 +8148,10 @@ async function sendVettingAction(action = "") {
         sessionId: ensureVettingSessionId(),
         mode,
         role,
-        action,
+        action: normalizedAction,
         topic,
         text,
-        lastCard: mode === "cards" ? vettingLastCardPayload : null
+        lastCard: isCardsMode ? lastCardForRequest : null
       }),
     });
 
