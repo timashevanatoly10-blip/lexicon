@@ -3835,6 +3835,34 @@ function ensureDictionaryPickerStyles() {
       padding: 0 !important;
     }
 
+
+    /* VetAI v110 answer cleanup: smaller answer text, clean missing state, no escaped newline look */
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-answer-text {
+      font-size: clamp(13.5px, 3.05vw, 17.5px) !important;
+      font-weight: 500 !important;
+      line-height: 1.38 !important;
+      letter-spacing: -0.01em !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-missing {
+      margin-top: 8px !important;
+      color: rgba(31,33,31,0.58) !important;
+      font-size: clamp(12.5px, 2.85vw, 15.5px) !important;
+      font-weight: 520 !important;
+      line-height: 1.34 !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-section {
+      margin-top: 12px !important;
+      padding-top: 10px !important;
+    }
+
+    body.vetting-page-open .vetting-question-box.structured .vetting-card-list {
+      font-size: clamp(12.5px, 2.85vw, 16px) !important;
+      line-height: 1.32 !important;
+      gap: 5px !important;
+    }
+
   `;
 
   document.head.appendChild(style);
@@ -7851,8 +7879,19 @@ function getVettingOutputBox() {
 
 function normalizeVettingTextForDisplay(value) {
   return String(value || "")
+    .replace(/\\r\\n/g, "\n")
     .replace(/\\n/g, "\n")
+    .replace(/\\t/g, " ")
+    .replace(/\r\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function normalizeVettingCardText(value) {
+  return normalizeVettingTextForDisplay(value)
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
 
@@ -7961,21 +8000,21 @@ function normalizeVettingCardPayload(payload) {
     return "";
   };
 
-  out.type = String(pick("type") || (pick("answer_en", "answer_ru", "answer", "answerEnglish", "answerRu") ? "card_answer" : "card_question")).trim();
-  out.role = String(pick("role") || getActiveVettingRole() || "").trim();
-  out.topic = String(pick("topic", "title", "subject") || "").trim();
+  out.type = normalizeVettingCardText(pick("type") || (pick("answer_en", "answer_ru", "answer", "answerEnglish", "answerRu") ? "card_answer" : "card_question"));
+  out.role = normalizeVettingCardText(pick("role") || getActiveVettingRole() || "");
+  out.topic = normalizeVettingCardText(pick("topic", "title", "subject") || "");
 
-  out.question_en = String(pick("question_en", "questionEn", "question_english", "questionEnglish", "question") || "").trim();
-  out.question_ru = String(pick("question_ru", "questionRu", "question_russian", "questionRussian") || "").trim();
-  out.answer_en = String(pick("answer_en", "answerEn", "answer_english", "answerEnglish", "answer") || "").trim();
-  out.answer_ru = String(pick("answer_ru", "answerRu", "answer_russian", "answerRussian") || "").trim();
+  out.question_en = normalizeVettingCardText(pick("question_en", "questionEn", "question_english", "questionEnglish", "question") || "");
+  out.question_ru = normalizeVettingCardText(pick("question_ru", "questionRu", "question_russian", "questionRussian") || "");
+  out.answer_en = normalizeVettingCardText(pick("answer_en", "answerEn", "answer_english", "answerEnglish", "answer") || "");
+  out.answer_ru = normalizeVettingCardText(pick("answer_ru", "answerRu", "answer_russian", "answerRussian") || "");
 
   out.inspector_expects_en = normalizeVettingArray(source.inspector_expects_en || source.inspectorExpectsEn || source.inspector_expects || source.expects_en || source.expects || []);
   out.inspector_expects_ru = normalizeVettingArray(source.inspector_expects_ru || source.inspectorExpectsRu || source.expects_ru || []);
   out.evidence_en = normalizeVettingArray(source.evidence_en || source.evidenceEn || source.evidence || source.records_en || source.records || []);
   out.evidence_ru = normalizeVettingArray(source.evidence_ru || source.evidenceRu || source.records_ru || []);
-  out.weak_answer_warning_en = String(pick("weak_answer_warning_en", "weakAnswerWarningEn", "warning_en", "warning") || "").trim();
-  out.weak_answer_warning_ru = String(pick("weak_answer_warning_ru", "weakAnswerWarningRu", "warning_ru") || "").trim();
+  out.weak_answer_warning_en = normalizeVettingCardText(pick("weak_answer_warning_en", "weakAnswerWarningEn", "warning_en", "warning") || "");
+  out.weak_answer_warning_ru = normalizeVettingCardText(pick("weak_answer_warning_ru", "weakAnswerWarningRu", "warning_ru") || "");
 
   return out;
 }
@@ -8031,10 +8070,10 @@ function extractLooseVettingCardPayload(rawText) {
 
 function normalizeVettingArray(value) {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item || "").trim()).filter(Boolean);
+    return value.map((item) => normalizeVettingCardText(item)).filter(Boolean);
   }
 
-  const text = String(value || "").trim();
+  const text = normalizeVettingCardText(value);
   return text ? [text] : [];
 }
 
@@ -8106,6 +8145,25 @@ function renderVettingCardResponse(dataOrText, action = "") {
   box.classList.add("structured");
   box.innerHTML = html;
   bindVettingCardSwipe(box);
+  resetVettingCardScroll(box);
+}
+
+function resetVettingCardScroll(root) {
+  const reset = () => {
+    root.querySelectorAll(".vetting-card-panel").forEach((panel) => {
+      panel.scrollTop = 0;
+    });
+
+    const frame = root.querySelector("#vettingLangFrame");
+    if (frame) frame.scrollTop = 0;
+
+    const box = getVettingOutputBox();
+    if (box) box.scrollTop = 0;
+  };
+
+  reset();
+  requestAnimationFrame(reset);
+  setTimeout(reset, 60);
 }
 
 function buildVettingCardSwipeHtml(payload, type) {
@@ -8142,8 +8200,8 @@ function buildVettingCardSwipeHtml(payload, type) {
 
 function buildVettingQuestionPanelHtml(payload, lang, topic, role) {
   const isRu = lang === "ru";
-  const question = String(isRu ? payload.question_ru : payload.question_en || "").trim();
-  const safeTopic = topic;
+  const question = normalizeVettingCardText(isRu ? payload.question_ru : payload.question_en);
+  const safeTopic = normalizeVettingCardText(topic);
 
   return `
     ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
@@ -8153,18 +8211,21 @@ function buildVettingQuestionPanelHtml(payload, lang, topic, role) {
 
 function buildVettingAnswerPanelHtml(payload, lang, topic, role) {
   const isRu = lang === "ru";
-  const answer = String(isRu ? payload.answer_ru : payload.answer_en || "").trim();
+  const answer = normalizeVettingCardText(isRu ? payload.answer_ru : payload.answer_en);
   const expects = normalizeVettingArray(isRu ? payload.inspector_expects_ru : payload.inspector_expects_en);
   const evidence = normalizeVettingArray(isRu ? payload.evidence_ru : payload.evidence_en);
-  const warning = String(isRu ? payload.weak_answer_warning_ru : payload.weak_answer_warning_en || "").trim();
-  const safeTopic = topic;
+  const warning = normalizeVettingCardText(isRu ? payload.weak_answer_warning_ru : payload.weak_answer_warning_en);
+  const safeTopic = normalizeVettingCardText(topic);
   const missingText = isRu
-    ? "Русская версия ответа не пришла в JSON. Нужно поправить PROMPT_VETAI_CARDS, чтобы answer_ru был обязательным."
-    : "No English answer in JSON.";
+    ? "Русская версия ответа не пришла. Проверь PROMPT_VETAI_CARDS: поле answer_ru должно быть обязательным."
+    : "English answer is missing. Check PROMPT_VETAI_CARDS: answer_en must be mandatory.";
 
   return `
     ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
-    <div class="vetting-card-main-text">${escapeHTML(answer || missingText)}</div>
+    ${answer
+      ? `<div class="vetting-card-main-text vetting-card-answer-text">${escapeHTML(answer)}</div>`
+      : `<div class="vetting-card-small-text vetting-card-missing">${escapeHTML(missingText)}</div>`
+    }
     ${buildVettingCardListSection(isRu ? "Что ожидает инспектор" : "Inspector expects", expects)}
     ${buildVettingCardListSection(isRu ? "Подтверждения / записи" : "Evidence / records", evidence)}
     ${warning ? `<div class="vetting-card-warning">${escapeHTML(warning)}</div>` : ""}
