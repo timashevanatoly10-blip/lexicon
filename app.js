@@ -7873,31 +7873,160 @@ function getVettingResponseText(data) {
 function parseVettingJsonResponse(dataOrText) {
   if (!dataOrText) return null;
 
+  const candidates = [];
+  const addCandidate = (value) => {
+    if (value === undefined || value === null) return;
+    candidates.push(value);
+  };
+
   if (typeof dataOrText === "object" && !Array.isArray(dataOrText)) {
-    const direct = dataOrText.card || dataOrText.payload || dataOrText.result || dataOrText.answer || dataOrText.raw || dataOrText;
-    if (direct && typeof direct === "object" && !Array.isArray(direct)) return direct;
-    return parseVettingJsonResponse(String(direct || ""));
+    addCandidate(dataOrText.card);
+    addCandidate(dataOrText.payload);
+    addCandidate(dataOrText.result);
+    addCandidate(dataOrText.answer);
+    addCandidate(dataOrText.raw);
+    addCandidate(dataOrText);
+  } else {
+    addCandidate(dataOrText);
   }
 
-  const raw = String(dataOrText || "").trim();
-  if (!raw) return null;
+  for (const candidate of candidates) {
+    const parsed = parseOneVettingJsonCandidate(candidate);
+    const normalized = normalizeVettingCardPayload(parsed);
+    if (normalized && isVettingCardPayload(normalized)) return normalized;
+  }
 
-  const parsed = parseJsonObject(raw);
-  if (parsed) return parsed;
-
-  const first = raw.indexOf("{");
-  const last = raw.lastIndexOf("}");
-  if (first >= 0 && last > first) {
-    const slice = raw.slice(first, last + 1);
-    try {
-      const obj = JSON.parse(stripJsonCodeFence(slice));
-      return obj && typeof obj === "object" && !Array.isArray(obj) ? obj : null;
-    } catch {
-      return null;
-    }
+  for (const candidate of candidates) {
+    const loose = extractLooseVettingCardPayload(String(candidate || ""));
+    const normalized = normalizeVettingCardPayload(loose);
+    if (normalized && isVettingCardPayload(normalized)) return normalized;
   }
 
   return null;
+}
+
+function parseOneVettingJsonCandidate(candidate) {
+  if (!candidate) return null;
+
+  if (typeof candidate === "object" && !Array.isArray(candidate)) {
+    return candidate;
+  }
+
+  const raw = String(candidate || "").trim();
+  if (!raw) return null;
+
+  const variants = [];
+  const clean = stripJsonCodeFence(raw);
+  variants.push(clean);
+
+  const first = clean.indexOf("{");
+  const last = clean.lastIndexOf("}");
+  if (first >= 0 && last > first) {
+    variants.push(clean.slice(first, last + 1));
+  }
+
+  for (const value of variants) {
+    const fixed = value
+      .replace(/[\u201c\u201d]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/,\s*([}\]])/g, "$1")
+      .trim();
+
+    if (!fixed || !fixed.startsWith("{")) continue;
+
+    try {
+      const parsed = JSON.parse(fixed);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+    } catch {}
+  }
+
+  return null;
+}
+
+function normalizeVettingCardPayload(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+
+  const source = payload.card && typeof payload.card === "object" && !Array.isArray(payload.card)
+    ? payload.card
+    : payload.payload && typeof payload.payload === "object" && !Array.isArray(payload.payload)
+      ? payload.payload
+      : payload;
+
+  const out = { ...source };
+  const pick = (...keys) => {
+    for (const key of keys) {
+      const value = source[key];
+      if (value !== undefined && value !== null && String(value).trim()) return value;
+    }
+    return "";
+  };
+
+  out.type = String(pick("type") || (pick("answer_en", "answer_ru", "answer", "answerEnglish", "answerRu") ? "card_answer" : "card_question")).trim();
+  out.role = String(pick("role") || getActiveVettingRole() || "").trim();
+  out.topic = String(pick("topic", "title", "subject") || "").trim();
+
+  out.question_en = String(pick("question_en", "questionEn", "question_english", "questionEnglish", "question") || "").trim();
+  out.question_ru = String(pick("question_ru", "questionRu", "question_russian", "questionRussian") || "").trim();
+  out.answer_en = String(pick("answer_en", "answerEn", "answer_english", "answerEnglish", "answer") || "").trim();
+  out.answer_ru = String(pick("answer_ru", "answerRu", "answer_russian", "answerRussian") || "").trim();
+
+  out.inspector_expects_en = normalizeVettingArray(source.inspector_expects_en || source.inspectorExpectsEn || source.inspector_expects || source.expects_en || source.expects || []);
+  out.inspector_expects_ru = normalizeVettingArray(source.inspector_expects_ru || source.inspectorExpectsRu || source.expects_ru || []);
+  out.evidence_en = normalizeVettingArray(source.evidence_en || source.evidenceEn || source.evidence || source.records_en || source.records || []);
+  out.evidence_ru = normalizeVettingArray(source.evidence_ru || source.evidenceRu || source.records_ru || []);
+  out.weak_answer_warning_en = String(pick("weak_answer_warning_en", "weakAnswerWarningEn", "warning_en", "warning") || "").trim();
+  out.weak_answer_warning_ru = String(pick("weak_answer_warning_ru", "weakAnswerWarningRu", "warning_ru") || "").trim();
+
+  return out;
+}
+
+function extractLooseVettingCardPayload(rawText) {
+  const raw = String(rawText || "").trim();
+  if (!raw || !raw.includes('"type"')) return null;
+
+  const getString = (key) => {
+    const re = new RegExp('"' + key + '"\\s*:\\s*"([\\s\\S]*?)"\\s*(?:,|\\n|})', "m");
+    const match = raw.match(re);
+    if (!match) return "";
+
+    return match[1]
+      .replace(/\\n/g, "\n")
+      .replace(/\\"/g, '"')
+      .trim();
+  };
+
+  const getArray = (key) => {
+    const re = new RegExp('"' + key + '"\\s*:\\s*\\[([\\s\\S]*?)\\]', "m");
+    const match = raw.match(re);
+    if (!match) return [];
+
+    const items = [];
+    const itemRe = /"([\s\S]*?)"\s*(?:,|$)/g;
+    let itemMatch;
+    while ((itemMatch = itemRe.exec(match[1])) !== null) {
+      const item = itemMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').trim();
+      if (item) items.push(item);
+    }
+    return items;
+  };
+
+  const payload = {
+    type: getString("type"),
+    role: getString("role"),
+    topic: getString("topic"),
+    question_en: getString("question_en"),
+    question_ru: getString("question_ru"),
+    answer_en: getString("answer_en"),
+    answer_ru: getString("answer_ru"),
+    inspector_expects_en: getArray("inspector_expects_en"),
+    inspector_expects_ru: getArray("inspector_expects_ru"),
+    evidence_en: getArray("evidence_en"),
+    evidence_ru: getArray("evidence_ru"),
+    weak_answer_warning_en: getString("weak_answer_warning_en"),
+    weak_answer_warning_ru: getString("weak_answer_warning_ru")
+  };
+
+  return payload;
 }
 
 function normalizeVettingArray(value) {
@@ -7957,7 +8086,10 @@ function renderVettingCardResponse(dataOrText, action = "") {
   const payload = parseVettingJsonResponse(dataOrText);
 
   if (!payload || !isVettingCardPayload(payload)) {
-    setVettingQuestion(getVettingResponseText(dataOrText) || String(dataOrText || "Пустой ответ от VetAI."), "ready");
+    const fallback = getVettingResponseText(dataOrText) || String(dataOrText || "Пустой ответ от VetAI.");
+    const cleanFallback = String(fallback || "").trim();
+    const looksLikeJson = cleanFallback.startsWith("{") || cleanFallback.includes('"type"');
+    setVettingQuestion(looksLikeJson ? "Ответ пришёл в JSON, но App.js не смог его разобрать. Проверь PROMPT_VETAI_CARDS: JSON должен быть валидным и без лишнего текста." : cleanFallback, "ready");
     return;
   }
 
@@ -8026,10 +8158,13 @@ function buildVettingAnswerPanelHtml(payload, lang, topic, role) {
   const evidence = normalizeVettingArray(isRu ? payload.evidence_ru : payload.evidence_en);
   const warning = String(isRu ? payload.weak_answer_warning_ru : payload.weak_answer_warning_en || "").trim();
   const safeTopic = topic;
+  const missingText = isRu
+    ? "Русская версия ответа не пришла в JSON. Нужно поправить PROMPT_VETAI_CARDS, чтобы answer_ru был обязательным."
+    : "No English answer in JSON.";
 
   return `
     ${safeTopic ? `<div class="vetting-card-topic">${escapeHTML(safeTopic)}</div>` : ""}
-    <div class="vetting-card-main-text">${escapeHTML(answer || (isRu ? "Ответ не пришёл в JSON." : "No answer in JSON."))}</div>
+    <div class="vetting-card-main-text">${escapeHTML(answer || missingText)}</div>
     ${buildVettingCardListSection(isRu ? "Что ожидает инспектор" : "Inspector expects", expects)}
     ${buildVettingCardListSection(isRu ? "Подтверждения / записи" : "Evidence / records", evidence)}
     ${warning ? `<div class="vetting-card-warning">${escapeHTML(warning)}</div>` : ""}
