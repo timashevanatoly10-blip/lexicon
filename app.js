@@ -6605,7 +6605,11 @@ function handleTextAttachMenu(event) {
     event.stopPropagation();
   }
 
-  handleTextImageExtractSource("gallery");
+  const anchorBtn = event?.currentTarget || event?.target || document.querySelector(".text-attach-btn");
+
+  if (anchorBtn && typeof anchorBtn.getBoundingClientRect === "function") {
+    openTextAttachMenu(anchorBtn);
+  }
 }
 
 function openTextAttachMenu(anchorBtn) {
@@ -6716,38 +6720,11 @@ async function handleTextImageExtractSource(sourceType = "camera") {
 function handleTextFileExtractSource() {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = [
-    "text/plain",
-    ".txt",
-    ".md",
-    ".csv",
-    ".json",
-    ".html",
-    ".htm",
-    ".srt",
-    ".vtt",
-    "audio/*",
-    ".mp3",
-    ".m4a",
-    ".mp4",
-    ".mpeg",
-    ".mpga",
-    ".wav",
-    ".webm",
-    ".ogg",
-    ".pdf",
-    ".doc",
-    ".docx",
-    "audio/mpeg",
-    "audio/mp4",
-    "audio/m4a",
-    "audio/wav",
-    "audio/webm",
-    "audio/ogg",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ].join(",");
+  // В файловом режиме специально не ставим accept-фильтр.
+  // На iOS Safari/PWA строгий accept часто "замутняет" аудио из Files/Voice Memos,
+  // даже если расширение формально разрешено. Поэтому даём выбрать любой файл,
+  // а тип уже разбираем ниже в handleTextPickedFile().
+  input.removeAttribute("accept");
 
   input.style.position = "fixed";
   input.style.left = "-9999px";
