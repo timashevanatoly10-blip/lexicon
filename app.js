@@ -6726,9 +6726,24 @@ function handleTextFileExtractSource() {
     ".htm",
     ".srt",
     ".vtt",
+    "audio/*",
+    ".mp3",
+    ".m4a",
+    ".mp4",
+    ".mpeg",
+    ".mpga",
+    ".wav",
+    ".webm",
+    ".ogg",
     ".pdf",
     ".doc",
     ".docx",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/m4a",
+    "audio/wav",
+    "audio/webm",
+    "audio/ogg",
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -6765,6 +6780,31 @@ async function handleTextPickedFile(file) {
     const isTextLike =
       mime.startsWith("text/") ||
       [".txt", ".md", ".csv", ".json", ".html", ".htm", ".srt", ".vtt"].some((ext) => name.endsWith(ext));
+
+    const isAudioLike =
+      mime.startsWith("audio/") ||
+      [".mp3", ".m4a", ".mp4", ".mpeg", ".mpga", ".wav", ".webm", ".ogg"].some((ext) => name.endsWith(ext));
+
+    if (isAudioLike) {
+      const transcript = await requestAudioTranscribe(file);
+      const cleanText = String(transcript || "").trim();
+
+      if (!cleanText) {
+        alert("Аудио не распознано.");
+        return;
+      }
+
+      insertExtractedTextIntoTextSource(cleanText);
+      setTextWordMiniDisplay("Текст добавлен", "ready");
+
+      window.setTimeout(() => {
+        if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
+          setTextWordMiniDisplay("");
+        }
+      }, 900);
+
+      return;
+    }
 
     if (isTextLike) {
       const content = await readTextFile(file);
