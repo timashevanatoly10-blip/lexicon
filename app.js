@@ -53,6 +53,13 @@ const textPanelScroll = {
   translation: 0
 };
 
+let textAudioRecorder = null;
+let textAudioStream = null;
+let textAudioChunks = [];
+let textAudioRecordingStartedAt = 0;
+let textAudioIsRecording = false;
+let textAudioIsProcessing = false;
+
 // ===== PAGES =====
 const homePage = document.getElementById("homePage");
 const filesPage = document.getElementById("filesPage");
@@ -617,6 +624,22 @@ function ensureDictionaryPickerStyles() {
       opacity: 0.42;
       color: rgba(95, 153, 98, 0.58);
       filter: saturate(0.78);
+    }
+
+    .text-mic-btn.recording {
+      color: #ffffff !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(95,153,98,0.92) 0%, rgba(73,137,90,0.94) 58%, rgba(31,111,86,0.98) 100%) !important;
+      box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,0.20),
+        inset 2px 2px 5px rgba(255,255,255,0.22),
+        0 0 0 4px rgba(95,153,98,0.10),
+        0 8px 20px rgba(31,111,86,0.18) !important;
+    }
+
+    .text-mic-btn.processing {
+      opacity: 0.62;
+      pointer-events: none;
     }
 
     .text-bottom-icon-btn.copied {
@@ -6923,6 +6946,7 @@ function setTextDataBusy(isBusy) {
   });
 
   setTextProcessingOverlay(busy, "Обработка данных...");
+  updateTextMicButtonsUI();
 }
 
 function bindTextInlineClearButtons() {
@@ -6945,8 +6969,10 @@ function bindTextInlineClearButtons() {
   });
 
   document.querySelectorAll(".text-mic-btn").forEach((btn) => {
-    btn.onclick = () => {};
+    btn.onclick = handleTextMicToggle;
   });
+
+  updateTextMicButtonsUI();
 
   document.querySelectorAll(".text-copy-btn").forEach((btn) => {
     btn.onclick = copyActiveTextPanel;
@@ -6954,6 +6980,236 @@ function bindTextInlineClearButtons() {
 
   updateTextCopyFeedback();
   updateTextInlineClearVisibility();
+}
+
+
+async function handleTextMicToggle(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (textAudioIsProcessing) return;
+
+  if (textAudioIsRecording) {
+    stopTextAudioRecording();
+    return;
+  }
+
+  await startTextAudioRecording();
+}
+
+async function startTextAudioRecording() {
+  if (!ensureAccessToken()) return;
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Микрофон недоступен в этом браузере.");
+    return;
+  }
+
+  if (typeof MediaRecorder === "undefined") {
+    alert("Запись голоса не поддерживается в этом браузере.");
+    return;
+  }
+
+  try {
+    closeTextAttachMenu();
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const options = getTextAudioRecorderOptions();
+    const recorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+
+    textAudioStream = stream;
+    textAudioRecorder = recorder;
+    textAudioChunks = [];
+    textAudioRecordingStartedAt = Date.now();
+    textAudioIsRecording = true;
+    textAudioIsProcessing = false;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        textAudioChunks.push(event.data);
+      }
+    };
+
+    recorder.onerror = () => {
+      finishTextAudioStream();
+      textAudioIsRecording = false;
+      textAudioIsProcessing = false;
+      setTextWordMiniDisplay("Ошибка записи", "ready");
+      setTextProcessingOverlay(false);
+      updateTextMicButtonsUI();
+    };
+
+    recorder.onstop = async () => {
+      const chunks = textAudioChunks.slice();
+      const mimeType = recorder.mimeType || options?.mimeType || "audio/webm";
+
+      finishTextAudioStream();
+      textAudioIsRecording = false;
+      textAudioRecorder = null;
+      textAudioChunks = [];
+      updateTextMicButtonsUI();
+
+      await processRecordedTextAudio(chunks, mimeType);
+    };
+
+    recorder.start();
+    setTextWordMiniDisplay("Идёт запись...", "ready");
+    setTextProcessingOverlay(true, "Идёт запись...");
+    updateTextMicButtonsUI();
+  } catch (err) {
+    finishTextAudioStream();
+    textAudioIsRecording = false;
+    textAudioIsProcessing = false;
+    textAudioRecorder = null;
+    textAudioChunks = [];
+    setTextProcessingOverlay(false);
+    updateTextMicButtonsUI();
+    alert("Не удалось включить микрофон:\n" + (err?.message || err));
+  }
+}
+
+function stopTextAudioRecording() {
+  if (!textAudioRecorder || textAudioRecorder.state === "inactive") {
+    finishTextAudioStream();
+    textAudioIsRecording = false;
+    updateTextMicButtonsUI();
+    return;
+  }
+
+  try {
+    textAudioRecorder.stop();
+  } catch {
+    finishTextAudioStream();
+    textAudioIsRecording = false;
+    textAudioRecorder = null;
+    updateTextMicButtonsUI();
+  }
+}
+
+async function processRecordedTextAudio(chunks, mimeType) {
+  if (!chunks || !chunks.length) {
+    setTextProcessingOverlay(false);
+    setTextWordMiniDisplay("Запись пустая", "ready");
+    updateTextMicButtonsUI();
+    return;
+  }
+
+  textAudioIsProcessing = true;
+  setTextDataBusy(true);
+  setTextWordMiniDisplay("Обработка данных...", "loading");
+  resetTextCopyState();
+  clearSelectedTextWord();
+  updateTextMicButtonsUI();
+
+  try {
+    const audioBlob = new Blob(chunks, { type: mimeType || "audio/webm" });
+
+    if (!audioBlob.size) {
+      alert("Запись пустая.");
+      return;
+    }
+
+    const fileName = makeTextAudioFileName(mimeType);
+    const audioFile = new File([audioBlob], fileName, { type: audioBlob.type || mimeType || "audio/webm" });
+    const transcript = await requestAudioTranscribe(audioFile);
+    const cleanText = String(transcript || "").trim();
+
+    if (!cleanText) {
+      alert("Голос не распознан.");
+      return;
+    }
+
+    insertExtractedTextIntoTextSource(cleanText);
+    setTextWordMiniDisplay("Текст добавлен", "ready");
+
+    window.setTimeout(() => {
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Текст добавлен") {
+        setTextWordMiniDisplay("");
+      }
+    }, 900);
+  } catch (err) {
+    alert("Не удалось обработать голос:\n" + (err?.message || err));
+  } finally {
+    textAudioIsProcessing = false;
+    setTextDataBusy(false);
+    setTextProcessingOverlay(false);
+    updateTextMicButtonsUI();
+    updateTextCopyFeedback();
+    updateTextInlineClearVisibility();
+  }
+}
+
+async function requestAudioTranscribe(file) {
+  const formData = new FormData();
+  formData.append("file", file, file.name || "recording.webm");
+
+  const res = await fetch(`${API_BASE}/api/audio/transcribe`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData
+  });
+
+  const data = await readJsonOrThrow(res);
+
+  return String(data.text || data.result || "").trim();
+}
+
+function getTextAudioRecorderOptions() {
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/wav"
+  ];
+
+  if (!window.MediaRecorder || typeof MediaRecorder.isTypeSupported !== "function") {
+    return null;
+  }
+
+  const supported = candidates.find((type) => MediaRecorder.isTypeSupported(type));
+
+  return supported ? { mimeType: supported } : null;
+}
+
+function makeTextAudioFileName(mimeType = "") {
+  const clean = String(mimeType || "").toLowerCase();
+
+  if (clean.includes("mp4")) return "recording.m4a";
+  if (clean.includes("mpeg") || clean.includes("mp3")) return "recording.mp3";
+  if (clean.includes("wav")) return "recording.wav";
+  if (clean.includes("ogg")) return "recording.ogg";
+  if (clean.includes("webm")) return "recording.webm";
+
+  return "recording.webm";
+}
+
+function finishTextAudioStream() {
+  if (textAudioStream) {
+    textAudioStream.getTracks().forEach((track) => {
+      try { track.stop(); } catch {}
+    });
+  }
+
+  textAudioStream = null;
+}
+
+function updateTextMicButtonsUI() {
+  document.querySelectorAll(".text-mic-btn").forEach((btn) => {
+    btn.classList.toggle("recording", textAudioIsRecording);
+    btn.classList.toggle("processing", textAudioIsProcessing);
+    btn.disabled = textAudioIsProcessing;
+
+    if (textAudioIsRecording) {
+      btn.title = "Остановить запись";
+    } else if (textAudioIsProcessing) {
+      btn.title = "Обработка данных...";
+    } else {
+      btn.title = "Голос";
+    }
+  });
 }
 
 async function copyActiveTextPanel(event) {
