@@ -6686,12 +6686,36 @@ async function handleTextImageExtractSource(sourceType = "camera") {
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = "image/*";
   input.multiple = false;
 
   if (sourceType === "camera") {
+    input.accept = "image/*";
     input.setAttribute("capture", "environment");
   } else {
+    input.accept = [
+      "image/*",
+      "audio/*",
+      "text/plain",
+      ".txt",
+      ".md",
+      ".csv",
+      ".json",
+      ".html",
+      ".htm",
+      ".srt",
+      ".vtt",
+      ".mp3",
+      ".m4a",
+      ".mp4",
+      ".mpeg",
+      ".mpga",
+      ".wav",
+      ".webm",
+      ".ogg",
+      ".pdf",
+      ".doc",
+      ".docx"
+    ].join(",");
     input.removeAttribute("capture");
   }
 
@@ -6706,7 +6730,14 @@ async function handleTextImageExtractSource(sourceType = "camera") {
 
     if (!file) return;
 
-    await extractTextFromPhotoToTextMode(file);
+    const mime = String(file.type || "").toLowerCase();
+
+    if (mime.startsWith("image/")) {
+      await extractTextFromPhotoToTextMode(file);
+      return;
+    }
+
+    await handleTextPickedFile(file);
   };
 
   document.body.appendChild(input);
@@ -6716,38 +6747,6 @@ async function handleTextImageExtractSource(sourceType = "camera") {
 function handleTextFileExtractSource() {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = [
-    "text/plain",
-    ".txt",
-    ".md",
-    ".csv",
-    ".json",
-    ".html",
-    ".htm",
-    ".srt",
-    ".vtt",
-    "audio/*",
-    ".mp3",
-    ".m4a",
-    ".mp4",
-    ".mpeg",
-    ".mpga",
-    ".wav",
-    ".webm",
-    ".ogg",
-    ".pdf",
-    ".doc",
-    ".docx",
-    "audio/mpeg",
-    "audio/mp4",
-    "audio/m4a",
-    "audio/wav",
-    "audio/webm",
-    "audio/ogg",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ].join(",");
 
   input.style.position = "fixed";
   input.style.left = "-9999px";
