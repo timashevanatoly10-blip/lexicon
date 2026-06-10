@@ -69,6 +69,7 @@ let inboxPage = document.getElementById("inboxPage");
 let openInboxBtn = document.getElementById("openInboxBtn");
 let inboxItems = [];
 let inboxBusy = false;
+let activeInboxItemId = "";
 
 // ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
@@ -112,6 +113,7 @@ ensureWordModeMarkup();
 ensureTextModeMarkup();
 ensureFilesPageMarkup();
 ensureInboxShellMarkup();
+ensureHomeNavCompact();
 refreshFileElements();
 bindEvents();
 ensureDictionaryPickerStyles();
@@ -4203,6 +4205,134 @@ function ensureDictionaryPickerStyles() {
 
   `;
 
+
+  style.textContent += `
+    /* Inbox/nav polish v117 */
+    .home-main-nav-compact {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, 1.12fr) 54px 54px 54px !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-wrap: nowrap !important;
+      justify-content: stretch !important;
+    }
+
+    .home-main-nav-compact > button {
+      min-width: 0 !important;
+      max-width: 100% !important;
+      white-space: nowrap !important;
+    }
+
+    .home-main-nav-compact .home-icon-nav-btn {
+      width: 54px !important;
+      min-width: 54px !important;
+      max-width: 54px !important;
+      height: 54px !important;
+      padding: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 0 !important;
+      line-height: 1 !important;
+    }
+
+    .home-main-nav-compact .home-icon-nav-btn svg {
+      width: 22px !important;
+      height: 22px !important;
+      stroke: currentColor !important;
+      stroke-width: 2.25 !important;
+      fill: none !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+    }
+
+    .home-main-nav-compact #openAiBtn {
+      min-width: 54px !important;
+      padding-left: 13px !important;
+      padding-right: 13px !important;
+    }
+
+    .inbox-detail-card {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 30px;
+      background: rgba(250,251,248,0.94);
+      border: 2px solid rgba(255,255,255,0.76);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.62),
+        inset -2px -2px 6px rgba(197,207,196,0.12),
+        0 1px 5px rgba(180,186,176,0.06);
+      padding: 15px 14px 22px;
+      min-height: min(62dvh, 620px);
+      max-height: calc(100dvh - 186px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .inbox-detail-section {
+      padding: 0 2px 17px;
+      margin-bottom: 17px;
+      border-bottom: 1px solid rgba(224,228,222,0.70);
+    }
+
+    .inbox-detail-section:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .inbox-detail-label {
+      color: #1f6f56;
+      font-size: clamp(12px, 2.75vw, 15px);
+      font-weight: 760;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      letter-spacing: -0.006em;
+    }
+
+    .inbox-detail-text {
+      color: rgba(31,33,31,0.86);
+      font-size: clamp(15px, 3.55vw, 21px);
+      font-weight: 460;
+      line-height: 1.38;
+      letter-spacing: -0.018em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .inbox-detail-meta {
+      margin-top: 3px;
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(11.5px, 2.65vw, 14px);
+      font-weight: 560;
+      line-height: 1.18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 390px) {
+      .home-main-nav-compact {
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.08fr) 48px 48px 48px !important;
+        gap: 6px !important;
+      }
+      .home-main-nav-compact .home-icon-nav-btn {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+        height: 48px !important;
+      }
+      .home-main-nav-compact #openAiBtn {
+        min-width: 48px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+    }
+  `;
+
   document.head.appendChild(style);
 }
 
@@ -7888,6 +8018,11 @@ function askInboxSaveTitle(defaultTitle, typeLabel) {
       </div>
     `;
 
+    const activeElement = document.activeElement;
+    if (activeElement && typeof activeElement.blur === "function") {
+      activeElement.blur();
+    }
+
     document.body.appendChild(overlay);
 
     const input = overlay.querySelector("#inboxSaveTitleInput");
@@ -7900,8 +8035,6 @@ function askInboxSaveTitle(defaultTitle, typeLabel) {
     };
 
     if (input) {
-      input.focus();
-      input.select();
       input.onkeydown = (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -8407,6 +8540,32 @@ function ensureInboxShellMarkup() {
   }
 }
 
+function ensureHomeNavCompact() {
+  const navParent = openFilesBtn?.parentElement || openAiBtn?.parentElement || wordModeBtn?.parentElement || null;
+
+  if (navParent) {
+    navParent.classList.add("home-main-nav-compact");
+  }
+
+  if (openFilesBtn) {
+    openFilesBtn.classList.add("home-icon-nav-btn");
+    openFilesBtn.title = "Файлы";
+    openFilesBtn.setAttribute("aria-label", "Файлы");
+    openFilesBtn.innerHTML = iconFileText();
+  }
+
+  if (openInboxBtn) {
+    openInboxBtn.classList.add("home-icon-nav-btn", "home-inbox-nav-btn");
+    openInboxBtn.title = "Inbox";
+    openInboxBtn.setAttribute("aria-label", "Inbox");
+    openInboxBtn.innerHTML = iconInboxTray();
+  }
+
+  if (openAiBtn) {
+    openAiBtn.title = "ИИ";
+  }
+}
+
 async function inboxApi(path, options = {}) {
   if (!ensureAccessToken()) {
     throw new Error("Нет токена доступа.");
@@ -8471,6 +8630,7 @@ function showInboxPage() {
 }
 
 function renderInboxPage(isLoading = false) {
+  activeInboxItemId = "";
   if (!inboxPage) return;
 
   const count = inboxItems.length;
@@ -8569,7 +8729,68 @@ function showInboxItemPreview(id) {
 
   if (!item) return;
 
-  alert(`${item.title}\n\n${item.savedText || item.sourceText || item.translatedText || ""}`);
+  activeInboxItemId = id;
+  renderInboxItemDetailPage(item);
+}
+
+function renderInboxItemDetailPage(item) {
+  if (!inboxPage || !item) return;
+
+  const typeLabel = getInboxContentTypeLabel(item.contentType);
+  const dateLabel = formatInboxDate(item.updatedAt || item.createdAt);
+  const sourceText = String(item.sourceText || "").trim();
+  const translatedText = String(item.translatedText || "").trim();
+  const savedText = String(item.savedText || "").trim();
+  const type = String(item.contentType || "source").toLowerCase();
+  const showSource = Boolean(sourceText && (type === "source" || type === "both"));
+  const showTranslation = Boolean(translatedText && (type === "translation" || type === "both"));
+  const fallbackText = !showSource && !showTranslation ? savedText : "";
+
+  inboxPage.innerHTML = `
+    <section class="inbox-shell">
+      <div class="inbox-topline">
+        <button id="backToInboxListBtn" class="back-btn inbox-back-btn" type="button" title="Назад">←</button>
+        <div class="inbox-title-block">
+          <div class="inbox-title">${escapeHTML(item.title || "Без названия")}</div>
+          <div class="inbox-detail-meta">${escapeHTML(typeLabel)} · ${escapeHTML(dateLabel)}</div>
+        </div>
+        <button id="inboxDetailMenuBtn" class="inbox-menu-btn" type="button" title="Меню">⋯</button>
+      </div>
+
+      <div class="inbox-detail-card">
+        ${showSource ? `
+          <section class="inbox-detail-section">
+            <div class="inbox-detail-label">Оригинал</div>
+            <div class="inbox-detail-text">${escapeHTML(sourceText)}</div>
+          </section>
+        ` : ""}
+
+        ${showTranslation ? `
+          <section class="inbox-detail-section">
+            <div class="inbox-detail-label">Перевод</div>
+            <div class="inbox-detail-text">${escapeHTML(translatedText)}</div>
+          </section>
+        ` : ""}
+
+        ${fallbackText ? `
+          <section class="inbox-detail-section">
+            <div class="inbox-detail-label">Текст</div>
+            <div class="inbox-detail-text">${escapeHTML(fallbackText)}</div>
+          </section>
+        ` : ""}
+      </div>
+    </section>
+  `;
+
+  const backBtn = document.getElementById("backToInboxListBtn");
+  const menuBtn = document.getElementById("inboxDetailMenuBtn");
+
+  on(backBtn, "click", () => {
+    activeInboxItemId = "";
+    renderInboxPage(false);
+  });
+
+  on(menuBtn, "click", () => showInboxItemActions(item.id));
 }
 
 async function showInboxItemActions(id) {
