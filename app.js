@@ -65,6 +65,10 @@ const homePage = document.getElementById("homePage");
 const filesPage = document.getElementById("filesPage");
 const aiPage = document.getElementById("aiPage");
 const lexiconPage = document.getElementById("lexiconPage");
+let inboxPage = document.getElementById("inboxPage");
+let openInboxBtn = document.getElementById("openInboxBtn");
+let inboxItems = [];
+let inboxBusy = false;
 
 // ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
@@ -107,6 +111,7 @@ if (initialPublicDictionaryShareId) {
 ensureWordModeMarkup();
 ensureTextModeMarkup();
 ensureFilesPageMarkup();
+ensureInboxShellMarkup();
 refreshFileElements();
 bindEvents();
 ensureDictionaryPickerStyles();
@@ -133,6 +138,7 @@ function bindEvents() {
   on(manualCheckBtn, "click", checkManual);
 
   on(openFilesBtn, "click", () => showPage("files"));
+  on(openInboxBtn, "click", () => showPage("inbox"));
   on(openAiBtn, "click", () => showPage("ai"));
   on(brandBtn, "click", () => showPage("lexicon"));
 
@@ -651,6 +657,315 @@ function ensureDictionaryPickerStyles() {
         inset 2px 2px 5px rgba(255,255,255,0.82),
         inset -3px -3px 7px rgba(143,177,147,0.16),
         0 2px 5px rgba(143,177,147,0.10);
+    }
+
+    .text-inbox-save-btn.saved {
+      color: #2f7d59;
+    }
+
+    .text-inbox-save-btn.inactive {
+      opacity: 0.38;
+      color: rgba(95,153,98,0.46);
+      filter: saturate(0.72);
+    }
+
+    .home-inbox-nav-btn {
+      white-space: nowrap;
+    }
+
+    .inbox-shell {
+      --inbox-green: #1f6f56;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 4px 10px;
+    }
+
+    .inbox-topline {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 4px 8px 9px;
+      box-sizing: border-box;
+    }
+
+    .inbox-back-btn {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--inbox-green) !important;
+      font-size: 27px !important;
+      font-weight: 500 !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transform: translateY(-4px) !important;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inbox-title-block {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .inbox-title {
+      color: var(--inbox-green);
+      font-size: clamp(18px, 4.3vw, 26px);
+      font-weight: 760;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .inbox-subtitle {
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(11.5px, 2.75vw, 15px);
+      font-weight: 560;
+      line-height: 1.15;
+    }
+
+    .inbox-menu-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.92);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%);
+      color: var(--inbox-green);
+      font-size: 22px;
+      font-weight: 760;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.68),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055);
+    }
+
+    .inbox-card {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 30px;
+      background: rgba(250,251,248,0.94);
+      border: 2px solid rgba(255,255,255,0.76);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.42),
+        inset 2px 2px 5px rgba(255,255,255,0.62),
+        inset -2px -2px 6px rgba(197,207,196,0.12),
+        0 1px 5px rgba(180,186,176,0.06);
+      padding: 10px;
+      min-height: min(62dvh, 620px);
+    }
+
+    .inbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .inbox-row {
+      width: 100%;
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 28px;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 8px;
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.90);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
+      color: #1f211f;
+      text-align: left;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.62),
+        inset -2px -2px 5px rgba(205,214,204,0.08),
+        0 1px 4px rgba(186,193,184,0.06);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inbox-row-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--inbox-green);
+      background: rgba(95,153,98,0.09);
+      border: 1px solid rgba(95,153,98,0.15);
+    }
+
+    .inbox-row-icon svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .inbox-row-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .inbox-row-title {
+      color: #1f211f;
+      font-size: clamp(13.5px, 3.1vw, 18px);
+      font-weight: 720;
+      line-height: 1.12;
+      letter-spacing: -0.016em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .inbox-row-meta,
+    .inbox-row-preview {
+      color: rgba(31,33,31,0.56);
+      font-size: clamp(10.5px, 2.4vw, 13px);
+      font-weight: 560;
+      line-height: 1.18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .inbox-row-preview {
+      color: rgba(31,33,31,0.44);
+      font-weight: 450;
+    }
+
+    .inbox-row-menu {
+      justify-self: end;
+      width: 25px;
+      height: 25px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--inbox-green);
+      font-size: 25px;
+      line-height: 1;
+      transform: translateY(-3px);
+    }
+
+    .inbox-empty {
+      padding: 28px 16px;
+      color: rgba(31,33,31,0.58);
+      font-size: clamp(13px, 3vw, 17px);
+      font-weight: 520;
+      line-height: 1.38;
+      text-align: center;
+    }
+
+    .inbox-save-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10002;
+      background: rgba(10,20,15,0.28);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+      animation: textAttachBackdropIn 0.12s ease-out;
+    }
+
+    .inbox-save-card {
+      width: min(420px, 100%);
+      border-radius: 26px;
+      background: rgba(255,255,252,0.98);
+      border: 1px solid rgba(226,231,224,0.84);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 18px 46px rgba(20,40,30,0.20);
+      padding: 18px 16px 14px;
+      animation: dictionaryPickerRise 0.16s ease-out;
+    }
+
+    .inbox-save-title {
+      color: var(--inbox-green, #1f6f56);
+      font-size: 20px;
+      font-weight: 780;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .inbox-save-type {
+      color: rgba(31,33,31,0.54);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .inbox-save-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: rgba(31,33,31,0.58);
+      font-size: 12px;
+      font-weight: 720;
+      margin-bottom: 14px;
+    }
+
+    .inbox-save-field input {
+      width: 100%;
+      height: 42px;
+      box-sizing: border-box;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.62);
+      color: #1f211f;
+      font-size: 16px;
+      font-weight: 520;
+      padding: 0 13px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10);
+    }
+
+    .inbox-save-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .inbox-save-actions button {
+      min-height: 40px;
+      border-radius: 999px;
+      border: 0;
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .inbox-save-cancel {
+      background: rgba(243,247,244,0.92);
+      color: rgba(31,33,31,0.62);
+    }
+
+    .inbox-save-confirm {
+      background: rgba(95,153,98,0.90);
+      color: #ffffff;
     }
 
     .word-panel {
@@ -6127,6 +6442,10 @@ function iconCopy() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 16V6.8C5 5.8 5.8 5 6.8 5H16"/></svg>`;
 }
 
+function iconInboxTray() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v8.2"/><path d="M8.7 9.5 12 12.8l3.3-3.3"/><path d="M5.2 13.2h3.1l1.2 2.2h5l1.2-2.2h3.1l1.2 6.1H4l1.2-6.1Z"/></svg>`;
+}
+
 function iconCheck() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 12.4 10 16.8 18.6 7.2"/></svg>`;
 }
@@ -6140,6 +6459,7 @@ function renderTextBottomToolbar(clearButtonId = "textInlineClearBtn", panelName
     <div class="text-bottom-toolbar">
       <button class="text-bottom-icon-btn text-attach-btn" type="button" title="Добавить фото или файл">${iconCamera()}</button>
       <button class="text-bottom-icon-btn text-mic-btn" type="button" title="Голос">${iconMic()}</button>
+      <button class="text-bottom-icon-btn text-inbox-save-btn inactive" type="button" title="Сначала нажмите Copy">${iconInboxTray()}</button>
       <button class="text-bottom-icon-btn text-copy-btn" type="button" data-copy-panel="${panelName}" title="Копировать">${iconCopy()}</button>
       <button id="${clearButtonId}" class="text-bottom-icon-btn text-bottom-clear inactive" type="button" title="Очистить">${iconClose()}</button>
     </div>
@@ -7017,6 +7337,10 @@ function bindTextInlineClearButtons() {
     btn.onclick = copyActiveTextPanel;
   });
 
+  document.querySelectorAll(".text-inbox-save-btn").forEach((btn) => {
+    btn.onclick = handleSaveCopiedTextToInbox;
+  });
+
   updateTextCopyFeedback();
   updateTextInlineClearVisibility();
 }
@@ -7403,6 +7727,206 @@ function updateTextCopyFeedback() {
       btn.title = isCopied ? "Скопировано" : "Копировать";
     }
   });
+
+  updateTextInboxButtonsUI();
+}
+
+function getCurrentTextCopySelectionForInbox() {
+  const selectedPanels = normalizeCopyPanelOrder(textCopiedPanels);
+
+  if (!selectedPanels.length || !textCopiedSignature) return [];
+  if (buildCopySignature(selectedPanels) !== textCopiedSignature) return [];
+
+  return selectedPanels.filter((panelName) => Boolean(getTextPanelCopyValue(panelName).trim()));
+}
+
+function updateTextInboxButtonsUI(saved = false) {
+  const selectedPanels = getCurrentTextCopySelectionForInbox();
+  const isActive = Boolean(selectedPanels.length && !inboxBusy);
+
+  document.querySelectorAll(".text-inbox-save-btn").forEach((btn) => {
+    btn.disabled = !isActive;
+    btn.classList.toggle("inactive", !isActive);
+    btn.classList.toggle("copied", isActive || saved);
+    btn.classList.toggle("saved", Boolean(saved));
+    btn.innerHTML = saved ? iconCheck() : iconInboxTray();
+    btn.title = saved
+      ? "Сохранено в Inbox"
+      : isActive
+        ? `Сохранить в Inbox: ${getInboxContentTypeLabelFromPanels(selectedPanels)}`
+        : "Сначала нажмите Copy";
+  });
+}
+
+function getInboxContentTypeFromPanels(panels) {
+  const selected = normalizeCopyPanelOrder(panels);
+  const hasSource = selected.includes("source") || selected.includes("reading");
+  const hasTranslation = selected.includes("translation");
+
+  if (hasSource && hasTranslation) return "both";
+  if (hasTranslation) return "translation";
+  return "source";
+}
+
+function getInboxContentTypeLabelFromPanels(panels) {
+  const type = getInboxContentTypeFromPanels(panels);
+
+  if (type === "both") return "Оригинал + перевод";
+  if (type === "translation") return "Перевод";
+  return "Оригинал";
+}
+
+function buildInboxPayloadFromCopiedPanels(panels, title) {
+  const selected = normalizeCopyPanelOrder(panels);
+  const contentType = getInboxContentTypeFromPanels(selected);
+  const sourceText = selected.includes("source")
+    ? getTextPanelCopyValue("source").trim()
+    : selected.includes("reading")
+      ? getTextPanelCopyValue("reading").trim()
+      : "";
+  const translatedText = selected.includes("translation")
+    ? getTextPanelCopyValue("translation").trim()
+    : "";
+  const savedText = buildCombinedCopyText(selected).trim();
+
+  return {
+    title: String(title || "").trim() || formatInboxLocalDefaultTitle(new Date()),
+    contentType,
+    sourceText,
+    translatedText,
+    savedText
+  };
+}
+
+async function handleSaveCopiedTextToInbox(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (inboxBusy) return;
+  if (!ensureAccessToken()) return;
+
+  const selectedPanels = getCurrentTextCopySelectionForInbox();
+
+  if (!selectedPanels.length) {
+    setTextWordMiniDisplay("Сначала Copy", "ready");
+    window.setTimeout(() => {
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Сначала Copy") {
+        setTextWordMiniDisplay("");
+      }
+    }, 1100);
+    return;
+  }
+
+  const defaultTitle = formatInboxLocalDefaultTitle(new Date());
+  const title = await askInboxSaveTitle(defaultTitle, getInboxContentTypeLabelFromPanels(selectedPanels));
+
+  if (title === null) return;
+
+  inboxBusy = true;
+  updateTextInboxButtonsUI();
+  setTextWordMiniDisplay("Сохраняю...", "loading");
+
+  try {
+    const payload = buildInboxPayloadFromCopiedPanels(selectedPanels, title);
+    const data = await inboxApi("/api/inbox", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const saved = normalizeInboxItem(data.item || data.inboxItem || data.inbox_item || payload);
+
+    if (saved && saved.id) {
+      inboxItems = [saved, ...inboxItems.filter((item) => item.id !== saved.id)];
+    }
+
+    if (inboxPage && inboxPage.classList.contains("active")) {
+      renderInboxPage();
+    }
+
+    setTextWordMiniDisplay("Сохранено в Inbox", "ready");
+    updateTextInboxButtonsUI(true);
+
+    window.setTimeout(() => {
+      updateTextInboxButtonsUI();
+      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Сохранено в Inbox") {
+        setTextWordMiniDisplay("");
+      }
+    }, 1100);
+  } catch (err) {
+    alert("Не удалось сохранить в Inbox:\n" + (err?.message || err));
+  } finally {
+    inboxBusy = false;
+    updateTextInboxButtonsUI();
+  }
+}
+
+function askInboxSaveTitle(defaultTitle, typeLabel) {
+  return new Promise((resolve) => {
+    closeInboxSaveModal();
+
+    const overlay = document.createElement("div");
+    overlay.id = "inboxSaveOverlay";
+    overlay.className = "inbox-save-overlay";
+
+    overlay.innerHTML = `
+      <div class="inbox-save-card" role="dialog" aria-modal="true">
+        <div class="inbox-save-title">Сохранить в Inbox</div>
+        <div class="inbox-save-type">${escapeHTML(typeLabel || "Текст")}</div>
+        <label class="inbox-save-field">
+          <span>Название</span>
+          <input id="inboxSaveTitleInput" type="text" value="${escapeHTML(defaultTitle || "")}" autocomplete="off" />
+        </label>
+        <div class="inbox-save-actions">
+          <button id="inboxSaveCancelBtn" type="button" class="inbox-save-cancel">Отмена</button>
+          <button id="inboxSaveConfirmBtn" type="button" class="inbox-save-confirm">Сохранить</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector("#inboxSaveTitleInput");
+    const cancelBtn = overlay.querySelector("#inboxSaveCancelBtn");
+    const confirmBtn = overlay.querySelector("#inboxSaveConfirmBtn");
+
+    const finish = (value) => {
+      closeInboxSaveModal();
+      resolve(value);
+    };
+
+    if (input) {
+      input.focus();
+      input.select();
+      input.onkeydown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          finish(input.value.trim() || defaultTitle);
+        }
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          finish(null);
+        }
+      };
+    }
+
+    if (cancelBtn) cancelBtn.onclick = () => finish(null);
+    if (confirmBtn) confirmBtn.onclick = () => finish(input?.value?.trim() || defaultTitle);
+
+    overlay.onclick = (event) => {
+      if (event.target === overlay) finish(null);
+    };
+  });
+}
+
+function closeInboxSaveModal() {
+  const overlay = document.getElementById("inboxSaveOverlay");
+  if (overlay) overlay.remove();
 }
 
 function bindTextInputAfterReset() {
@@ -7842,6 +8366,302 @@ function syncTextModeVisibility(mode) {
 }
 
 
+
+// ===== INBOX =====
+function ensureInboxShellMarkup() {
+  if (!inboxPage) {
+    inboxPage = document.createElement("main");
+    inboxPage.id = "inboxPage";
+    inboxPage.className = filesPage?.className || "page hidden";
+    inboxPage.classList.add("hidden");
+
+    const parent = filesPage?.parentNode || aiPage?.parentNode || lexiconPage?.parentNode || homePage?.parentNode || document.body;
+
+    if (aiPage && aiPage.parentNode === parent) {
+      parent.insertBefore(inboxPage, aiPage);
+    } else {
+      parent.appendChild(inboxPage);
+    }
+  }
+
+  if (!openInboxBtn) {
+    const navParent = openFilesBtn?.parentElement || openAiBtn?.parentElement || brandBtn?.parentElement;
+
+    if (navParent) {
+      openInboxBtn = document.createElement("button");
+      openInboxBtn.id = "openInboxBtn";
+      openInboxBtn.type = "button";
+      openInboxBtn.className = openFilesBtn?.className || openAiBtn?.className || "";
+      openInboxBtn.classList.add("home-inbox-nav-btn");
+      openInboxBtn.title = "Inbox";
+      openInboxBtn.textContent = "Inbox";
+
+      if (openFilesBtn && openFilesBtn.parentNode === navParent) {
+        openFilesBtn.insertAdjacentElement("afterend", openInboxBtn);
+      } else if (openAiBtn && openAiBtn.parentNode === navParent) {
+        openAiBtn.insertAdjacentElement("beforebegin", openInboxBtn);
+      } else {
+        navParent.appendChild(openInboxBtn);
+      }
+    }
+  }
+}
+
+async function inboxApi(path, options = {}) {
+  if (!ensureAccessToken()) {
+    throw new Error("Нет токена доступа.");
+  }
+
+  const headers = {
+    ...authHeaders(),
+    ...(options.headers || {})
+  };
+
+  let res;
+
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    });
+  } catch (err) {
+    throw new Error("Не удалось связаться с Worker/D1. Проверь деплой Worker, CORS и интернет.\n" + err.message);
+  }
+
+  return await readJsonOrThrow(res);
+}
+
+function normalizeInboxItem(item) {
+  if (!item || typeof item !== "object") return null;
+
+  return {
+    id: String(item.id || uid("inbox")),
+    title: String(item.title || "Без названия"),
+    contentType: String(item.contentType || item.content_type || "source"),
+    sourceText: String(item.sourceText ?? item.source_text ?? ""),
+    translatedText: String(item.translatedText ?? item.translated_text ?? ""),
+    savedText: String(item.savedText ?? item.saved_text ?? ""),
+    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.updated_at || item.createdAt || item.created_at || new Date().toISOString()
+  };
+}
+
+async function loadInboxItemsFromCloud() {
+  const data = await inboxApi("/api/inbox", { method: "GET" });
+  const rawItems = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.inbox)
+      ? data.inbox
+      : [];
+
+  inboxItems = rawItems.map(normalizeInboxItem).filter(Boolean);
+  return inboxItems;
+}
+
+function showInboxPage() {
+  if (!inboxPage) ensureInboxShellMarkup();
+  if (!inboxPage) return;
+
+  renderInboxPage(true);
+  showExistingPage(inboxPage);
+
+  loadInboxItemsFromCloud()
+    .then(() => renderInboxPage(false))
+    .catch((err) => renderInboxError(err));
+}
+
+function renderInboxPage(isLoading = false) {
+  if (!inboxPage) return;
+
+  const count = inboxItems.length;
+
+  inboxPage.innerHTML = `
+    <section class="inbox-shell">
+      <div class="inbox-topline">
+        <button id="backHomeFromInboxBtn" class="back-btn inbox-back-btn" type="button" title="Назад">←</button>
+        <div class="inbox-title-block">
+          <div class="inbox-title">Inbox</div>
+          <div class="inbox-subtitle">${isLoading ? "Загружаю..." : formatInboxCountRu(count)}</div>
+        </div>
+        <button id="inboxMenuBtn" class="inbox-menu-btn" type="button" title="Экспорт скоро">⋯</button>
+      </div>
+
+      <div class="inbox-card">
+        <div id="inboxList" class="inbox-list">
+          ${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}
+        </div>
+      </div>
+    </section>
+  `;
+
+  const backBtn = document.getElementById("backHomeFromInboxBtn");
+  const menuBtn = document.getElementById("inboxMenuBtn");
+
+  on(backBtn, "click", () => showPage("home"));
+  on(menuBtn, "click", () => alert("Экспорт и объединение добавим следующим этапом."));
+
+  bindInboxListEvents();
+}
+
+function renderInboxError(err) {
+  if (!inboxPage) return;
+
+  const list = document.getElementById("inboxList");
+
+  if (list) {
+    list.innerHTML = `<div class="inbox-empty">Не удалось загрузить Inbox.<br>${escapeHTML(err?.message || err)}</div>`;
+  }
+}
+
+function buildInboxLoadingHtml() {
+  return `<div class="inbox-empty">Загружаю Inbox...</div>`;
+}
+
+function buildInboxListHtml() {
+  if (!inboxItems.length) {
+    return `
+      <div class="inbox-empty">
+        Inbox пока пустой.<br>
+        В режиме текста нажми Copy, затем кнопку Inbox.
+      </div>
+    `;
+  }
+
+  return inboxItems.map((item) => {
+    const typeLabel = getInboxContentTypeLabel(item.contentType);
+    const dateLabel = formatInboxDate(item.updatedAt || item.createdAt);
+    const preview = String(item.savedText || item.sourceText || item.translatedText || "").replace(/\s+/g, " ").trim();
+
+    return `
+      <button class="inbox-row" type="button" data-inbox-id="${escapeHTML(item.id)}">
+        <span class="inbox-row-icon">${iconInboxTray()}</span>
+        <span class="inbox-row-main">
+          <span class="inbox-row-title">${escapeHTML(item.title || "Без названия")}</span>
+          <span class="inbox-row-meta">${escapeHTML(typeLabel)} · ${escapeHTML(dateLabel)}</span>
+          ${preview ? `<span class="inbox-row-preview">${escapeHTML(preview)}</span>` : ""}
+        </span>
+        <span class="inbox-row-menu" data-inbox-menu="${escapeHTML(item.id)}">•</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function bindInboxListEvents() {
+  document.querySelectorAll(".inbox-row").forEach((row) => {
+    row.onclick = (event) => {
+      const menuTarget = event.target.closest("[data-inbox-menu]");
+      const id = row.dataset.inboxId || "";
+
+      if (menuTarget) {
+        event.preventDefault();
+        event.stopPropagation();
+        showInboxItemActions(id);
+        return;
+      }
+
+      showInboxItemPreview(id);
+    };
+  });
+}
+
+function showInboxItemPreview(id) {
+  const item = inboxItems.find((entry) => entry.id === id);
+
+  if (!item) return;
+
+  alert(`${item.title}\n\n${item.savedText || item.sourceText || item.translatedText || ""}`);
+}
+
+async function showInboxItemActions(id) {
+  const item = inboxItems.find((entry) => entry.id === id);
+
+  if (!item) return;
+
+  const action = prompt(`Inbox: ${item.title}\n\nrename = переименовать\ndelete = удалить\n\nПока это временное меню.`, "");
+
+  if (action === null) return;
+
+  const clean = action.trim().toLowerCase();
+
+  if (clean === "delete" || clean === "удалить") {
+    if (!confirm("Удалить запись из Inbox?")) return;
+    await deleteInboxItem(id);
+    return;
+  }
+
+  if (clean === "rename" || clean === "переименовать") {
+    const nextTitle = prompt("Новое название:", item.title || "");
+    if (nextTitle === null) return;
+    await renameInboxItem(id, nextTitle.trim() || item.title);
+  }
+}
+
+async function deleteInboxItem(id) {
+  try {
+    await inboxApi(`/api/inbox/${encodeURIComponent(id)}`, { method: "DELETE" });
+    inboxItems = inboxItems.filter((item) => item.id !== id);
+    renderInboxPage(false);
+  } catch (err) {
+    alert("Не удалось удалить запись:\n" + (err?.message || err));
+  }
+}
+
+async function renameInboxItem(id, title) {
+  try {
+    const data = await inboxApi(`/api/inbox/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title })
+    });
+
+    const updated = normalizeInboxItem(data.item || data.inboxItem || data.inbox_item);
+
+    if (updated) {
+      inboxItems = inboxItems.map((item) => item.id === id ? updated : item);
+      renderInboxPage(false);
+    }
+  } catch (err) {
+    alert("Не удалось переименовать запись:\n" + (err?.message || err));
+  }
+}
+
+function getInboxContentTypeLabel(type) {
+  const clean = String(type || "").toLowerCase();
+
+  if (clean === "both") return "Оригинал + перевод";
+  if (clean === "translation") return "Перевод";
+  return "Оригинал";
+}
+
+function formatInboxCountRu(count) {
+  const value = Math.max(0, Number(count) || 0);
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return `${value} запись`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${value} записи`;
+  return `${value} записей`;
+}
+
+function formatInboxLocalDefaultTitle(dateValue) {
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue || Date.now());
+  const pad = (value) => String(value).padStart(2, "0");
+
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
+
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatInboxDate(value) {
+  const date = new Date(value || Date.now());
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return formatInboxLocalDefaultTitle(date);
+}
+
 // ===== FILES MARKUP RESTORE =====
 function ensureFilesPageMarkup() {
   if (!filesPage) return;
@@ -7931,11 +8751,13 @@ function showPage(page) {
 
   hidePage(homePage);
   hidePage(filesPage);
+  hidePage(inboxPage);
   hidePage(aiPage);
   hidePage(lexiconPage);
 
   if (page === "home") showExistingPage(homePage);
   if (page === "files") showExistingPage(filesPage);
+  if (page === "inbox") showInboxPage();
   if (page === "ai") showAiPage();
   if (page === "lexicon") showLexiconPage();
 }
