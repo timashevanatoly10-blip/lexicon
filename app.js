@@ -1,4 +1,4 @@
-const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
+ const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
 const VETAI_API_BASE = "https://gpt24-test.timashevanatoly10.workers.dev";
 const TOKEN_STORAGE_KEY = "lexicon_access_token";
 const LEXICON_STORAGE_KEY = "lexicon_dictionaries_v1";
