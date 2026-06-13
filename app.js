@@ -1,4 +1,4 @@
- const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
+const API_BASE = "https://lexicon-worker.timashevanatoly10.workers.dev";
 const VETAI_API_BASE = "https://gpt24-test.timashevanatoly10.workers.dev";
 const TOKEN_STORAGE_KEY = "lexicon_access_token";
 const LEXICON_STORAGE_KEY = "lexicon_dictionaries_v1";
@@ -70,6 +70,7 @@ let openInboxBtn = document.getElementById("openInboxBtn");
 let inboxItems = [];
 let inboxBusy = false;
 let activeInboxItemId = "";
+const selectedInboxItemIds = new Set();
 
 // ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
@@ -4329,6 +4330,229 @@ function ensureDictionaryPickerStyles() {
         min-width: 48px !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
+      }
+    }
+  `;
+
+
+
+  style.textContent += `
+    /* Inbox list and home nav polish v119 */
+    .home-main-nav-compact {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: 1fr 1fr 0.74fr 0.74fr 0.74fr !important;
+      align-items: center !important;
+      gap: 7px !important;
+      flex-wrap: nowrap !important;
+      justify-content: stretch !important;
+    }
+
+    .home-main-nav-compact > button,
+    .home-main-nav-compact .home-icon-nav-btn,
+    .home-main-nav-compact #openAiBtn {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: 43px !important;
+      min-height: 43px !important;
+      padding: 0 8px !important;
+      border-radius: 20px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      font-size: clamp(14px, 3.2vw, 18px) !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
+    .home-main-nav-compact .home-icon-nav-btn {
+      font-size: 0 !important;
+      padding: 0 !important;
+    }
+
+    .home-main-nav-compact .home-icon-nav-btn svg {
+      width: 19px !important;
+      height: 19px !important;
+      stroke: currentColor !important;
+      stroke-width: 2.15 !important;
+      fill: none !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+    }
+
+    .home-main-nav-compact #openAiBtn {
+      font-size: clamp(13px, 3.05vw, 17px) !important;
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+    }
+
+    .inbox-list-shell {
+      padding: 0 4px 12px !important;
+    }
+
+    .inbox-list-topline {
+      grid-template-columns: 42px minmax(0, 1fr) auto !important;
+      padding-bottom: 10px !important;
+    }
+
+    .inbox-top-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .inbox-combine-btn {
+      height: 34px;
+      min-width: 92px;
+      padding: 0 13px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.92);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.92) 56%, rgba(255,255,255,0.99) 100%);
+      color: var(--inbox-green);
+      font-size: clamp(11px, 2.5vw, 13.5px);
+      font-weight: 760;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.36),
+        inset 2px 2px 4px rgba(255,255,255,0.68),
+        inset -2px -2px 5px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.055);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inbox-combine-btn.inactive {
+      opacity: 0.34;
+      filter: saturate(0.72);
+      pointer-events: none;
+    }
+
+    .inbox-combine-btn.active {
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(95,153,98,0.92) 0%, rgba(73,137,90,0.94) 58%, rgba(31,111,86,0.98) 100%);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.22),
+        inset 2px 2px 4px rgba(255,255,255,0.26),
+        0 2px 7px rgba(31,111,86,0.12);
+    }
+
+    .inbox-list-flat {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 6px !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .inbox-card {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+    }
+
+    .inbox-row {
+      min-height: 46px !important;
+      grid-template-columns: 28px minmax(0, 1fr) 24px !important;
+      gap: 7px !important;
+      padding: 6px 8px !important;
+      border-radius: 22px !important;
+    }
+
+    .inbox-row.selected {
+      background:
+        radial-gradient(circle at 50% 52%, rgba(226,239,227,0.84) 0%, rgba(245,249,244,0.93) 58%, rgba(255,255,255,0.99) 100%) !important;
+      border-color: rgba(255,255,255,0.95) !important;
+    }
+
+    .inbox-row-marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border: 2px solid rgba(31,111,86,0.28);
+      background: rgba(255,255,255,0.58);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.36),
+        0 1px 3px rgba(180,188,178,0.05);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inbox-row-marker.selected {
+      border-color: rgba(31,111,86,0.92);
+      background: #1f6f56;
+      box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,0.88),
+        0 1px 3px rgba(31,111,86,0.12);
+    }
+
+    .inbox-row-icon,
+    .inbox-row-meta,
+    .inbox-row-preview {
+      display: none !important;
+    }
+
+    .inbox-row-main {
+      gap: 0 !important;
+      justify-content: center !important;
+    }
+
+    .inbox-row-title {
+      font-size: clamp(13.5px, 3.18vw, 18px) !important;
+      font-weight: 700 !important;
+      line-height: 1.05 !important;
+      letter-spacing: -0.014em !important;
+    }
+
+    .inbox-row-menu {
+      width: 21px !important;
+      height: 21px !important;
+      font-size: 22px !important;
+      transform: translateY(-2px) !important;
+    }
+
+    .inbox-empty {
+      padding: 26px 16px !important;
+    }
+
+    @media (max-width: 390px) {
+      .home-main-nav-compact {
+        grid-template-columns: 1fr 1fr 0.70fr 0.70fr 0.70fr !important;
+        gap: 6px !important;
+      }
+
+      .home-main-nav-compact > button,
+      .home-main-nav-compact .home-icon-nav-btn,
+      .home-main-nav-compact #openAiBtn {
+        height: 40px !important;
+        min-height: 40px !important;
+        border-radius: 18px !important;
+        font-size: clamp(12.8px, 3vw, 16px) !important;
+      }
+
+      .home-main-nav-compact .home-icon-nav-btn svg {
+        width: 18px !important;
+        height: 18px !important;
+      }
+
+      .inbox-combine-btn {
+        min-width: 82px;
+        padding: 0 10px;
+        font-size: 11px;
       }
     }
   `;
@@ -8634,31 +8858,43 @@ function renderInboxPage(isLoading = false) {
   if (!inboxPage) return;
 
   const count = inboxItems.length;
+  const selectedCount = selectedInboxItemIds.size;
+  const subtitle = isLoading
+    ? "Загружаю..."
+    : selectedCount
+      ? `Выбрано: ${selectedCount}`
+      : formatInboxCountRu(count);
 
   inboxPage.innerHTML = `
-    <section class="inbox-shell">
-      <div class="inbox-topline">
+    <section class="inbox-shell inbox-list-shell">
+      <div class="inbox-topline inbox-list-topline">
         <button id="backHomeFromInboxBtn" class="back-btn inbox-back-btn" type="button" title="Назад">←</button>
         <div class="inbox-title-block">
           <div class="inbox-title">Inbox</div>
-          <div class="inbox-subtitle">${isLoading ? "Загружаю..." : formatInboxCountRu(count)}</div>
+          <div class="inbox-subtitle">${escapeHTML(subtitle)}</div>
         </div>
-        <button id="inboxMenuBtn" class="inbox-menu-btn" type="button" title="Экспорт скоро">⋯</button>
+        <div class="inbox-top-actions">
+          <button id="inboxCombineBtn" class="inbox-combine-btn ${selectedCount ? "active" : "inactive"}" type="button" title="Объединить выбранные">Объединить</button>
+          <button id="inboxMenuBtn" class="inbox-menu-btn" type="button" title="Экспорт скоро">⋯</button>
+        </div>
       </div>
 
-      <div class="inbox-card">
-        <div id="inboxList" class="inbox-list">
-          ${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}
-        </div>
+      <div id="inboxList" class="inbox-list inbox-list-flat">
+        ${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}
       </div>
     </section>
   `;
 
   const backBtn = document.getElementById("backHomeFromInboxBtn");
   const menuBtn = document.getElementById("inboxMenuBtn");
+  const combineBtn = document.getElementById("inboxCombineBtn");
 
   on(backBtn, "click", () => showPage("home"));
   on(menuBtn, "click", () => alert("Экспорт и объединение добавим следующим этапом."));
+  on(combineBtn, "click", () => {
+    if (!selectedInboxItemIds.size) return;
+    alert(`Объединение выбранных записей добавим следующим этапом. Выбрано: ${selectedInboxItemIds.size}`);
+  });
 
   bindInboxListEvents();
 }
@@ -8688,17 +8924,15 @@ function buildInboxListHtml() {
   }
 
   return inboxItems.map((item) => {
-    const typeLabel = getInboxContentTypeLabel(item.contentType);
     const dateLabel = formatInboxDate(item.updatedAt || item.createdAt);
-    const preview = String(item.savedText || item.sourceText || item.translatedText || "").replace(/\s+/g, " ").trim();
+    const title = String(item.title || "").trim() || dateLabel || "Без названия";
+    const selected = selectedInboxItemIds.has(item.id);
 
     return `
-      <button class="inbox-row" type="button" data-inbox-id="${escapeHTML(item.id)}">
-        <span class="inbox-row-icon">${iconInboxTray()}</span>
+      <button class="inbox-row ${selected ? "selected" : ""}" type="button" data-inbox-id="${escapeHTML(item.id)}">
+        <span class="inbox-row-marker ${selected ? "selected" : ""}" data-inbox-select="${escapeHTML(item.id)}" aria-label="Выбрать запись"></span>
         <span class="inbox-row-main">
-          <span class="inbox-row-title">${escapeHTML(item.title || "Без названия")}</span>
-          <span class="inbox-row-meta">${escapeHTML(typeLabel)} · ${escapeHTML(dateLabel)}</span>
-          ${preview ? `<span class="inbox-row-preview">${escapeHTML(preview)}</span>` : ""}
+          <span class="inbox-row-title">${escapeHTML(title)}</span>
         </span>
         <span class="inbox-row-menu" data-inbox-menu="${escapeHTML(item.id)}">•</span>
       </button>
@@ -8710,7 +8944,15 @@ function bindInboxListEvents() {
   document.querySelectorAll(".inbox-row").forEach((row) => {
     row.onclick = (event) => {
       const menuTarget = event.target.closest("[data-inbox-menu]");
+      const selectTarget = event.target.closest("[data-inbox-select]");
       const id = row.dataset.inboxId || "";
+
+      if (selectTarget) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleInboxItemSelection(id);
+        return;
+      }
 
       if (menuTarget) {
         event.preventDefault();
@@ -8722,6 +8964,18 @@ function bindInboxListEvents() {
       showInboxItemPreview(id);
     };
   });
+}
+
+function toggleInboxItemSelection(id) {
+  if (!id) return;
+
+  if (selectedInboxItemIds.has(id)) {
+    selectedInboxItemIds.delete(id);
+  } else {
+    selectedInboxItemIds.add(id);
+  }
+
+  renderInboxPage(false);
 }
 
 function showInboxItemPreview(id) {
@@ -8821,6 +9075,7 @@ async function deleteInboxItem(id) {
   try {
     await inboxApi(`/api/inbox/${encodeURIComponent(id)}`, { method: "DELETE" });
     inboxItems = inboxItems.filter((item) => item.id !== id);
+    selectedInboxItemIds.delete(id);
     renderInboxPage(false);
   } catch (err) {
     alert("Не удалось удалить запись:\n" + (err?.message || err));
