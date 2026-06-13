@@ -115,6 +115,7 @@ ensureTextModeMarkup();
 ensureFilesPageMarkup();
 ensureInboxShellMarkup();
 ensureHomeNavCompact();
+ensureTokenSwitchButton();
 refreshFileElements();
 bindEvents();
 ensureDictionaryPickerStyles();
@@ -4557,6 +4558,148 @@ function ensureDictionaryPickerStyles() {
     }
   `;
 
+
+  style.textContent += `
+    /* Token switcher v121 */
+    .token-switch-btn {
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+      z-index: 9995;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255,255,255,0.90);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.74) 0%, rgba(249,250,247,0.90) 56%, rgba(255,255,255,0.98) 100%);
+      color: #1f6f56;
+      font-size: 16px;
+      font-weight: 620;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0 1px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        inset 1px 1px 3px rgba(255,255,255,0.68),
+        inset -1px -1px 4px rgba(205,214,204,0.10),
+        0 1px 4px rgba(186,193,184,0.08);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .token-switch-btn:active {
+      transform: scale(0.94);
+    }
+
+    .token-switch-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10004;
+      background: rgba(10,20,15,0.28);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+      animation: textAttachBackdropIn 0.12s ease-out;
+    }
+
+    .token-switch-card {
+      width: min(420px, 100%);
+      border-radius: 26px;
+      background: rgba(255,255,252,0.98);
+      border: 1px solid rgba(226,231,224,0.84);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 18px 46px rgba(20,40,30,0.20);
+      padding: 18px 16px 14px;
+      animation: dictionaryPickerRise 0.16s ease-out;
+    }
+
+    .token-switch-title {
+      color: #1f6f56;
+      font-size: 20px;
+      font-weight: 780;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 5px;
+    }
+
+    .token-switch-note {
+      color: rgba(31,33,31,0.58);
+      font-size: 13px;
+      font-weight: 560;
+      line-height: 1.28;
+      margin-bottom: 13px;
+    }
+
+    .token-switch-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: rgba(31,33,31,0.58);
+      font-size: 12px;
+      font-weight: 720;
+      margin-bottom: 14px;
+    }
+
+    .token-switch-field input {
+      width: 100%;
+      height: 42px;
+      box-sizing: border-box;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.62);
+      color: #1f211f;
+      font-size: 15px;
+      font-weight: 520;
+      padding: 0 13px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10);
+    }
+
+    .token-switch-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .token-switch-actions button {
+      min-height: 40px;
+      border-radius: 999px;
+      border: 0;
+      font-size: 14px;
+      font-weight: 760;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .token-switch-cancel {
+      background: rgba(243,247,244,0.92);
+      color: rgba(31,33,31,0.62);
+    }
+
+    .token-switch-confirm {
+      background: rgba(95,153,98,0.90);
+      color: #ffffff;
+    }
+
+    @media (max-width: 390px) {
+      .token-switch-btn {
+        top: max(8px, env(safe-area-inset-top));
+        right: max(8px, env(safe-area-inset-right));
+        width: 27px;
+        height: 27px;
+        font-size: 15px;
+      }
+    }
+  `;
+
   document.head.appendChild(style);
 }
 
@@ -8790,6 +8933,155 @@ function ensureHomeNavCompact() {
   }
 }
 
+function ensureTokenSwitchButton() {
+  if (publicDictionaryMode) return;
+
+  let btn = document.getElementById("tokenSwitchBtn");
+
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "tokenSwitchBtn";
+    btn.type = "button";
+    btn.className = "token-switch-btn";
+    btn.title = "Сменить токен";
+    btn.setAttribute("aria-label", "Сменить токен");
+    btn.textContent = "@";
+    document.body.appendChild(btn);
+  }
+
+  btn.onclick = showTokenSwitchModal;
+}
+
+function showTokenSwitchModal() {
+  if (publicDictionaryMode) return;
+
+  closeTokenSwitchModal();
+
+  if (document.activeElement && typeof document.activeElement.blur === "function") {
+    document.activeElement.blur();
+  }
+
+  const currentToken = getAccessToken();
+  const overlay = document.createElement("div");
+  overlay.id = "tokenSwitchOverlay";
+  overlay.className = "token-switch-overlay";
+  overlay.innerHTML = `
+    <div class="token-switch-card" role="dialog" aria-modal="true">
+      <div class="token-switch-title">Токен доступа</div>
+      <div class="token-switch-note">Смена токена переключает Lexicon на другой аккаунт.</div>
+      <label class="token-switch-field">
+        <span>Токен</span>
+        <input id="tokenSwitchInput" type="text" value="${escapeHTML(currentToken)}" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      </label>
+      <div class="token-switch-actions">
+        <button id="tokenSwitchCancelBtn" type="button" class="token-switch-cancel">Отмена</button>
+        <button id="tokenSwitchConfirmBtn" type="button" class="token-switch-confirm">Войти</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const input = overlay.querySelector("#tokenSwitchInput");
+  const cancelBtn = overlay.querySelector("#tokenSwitchCancelBtn");
+  const confirmBtn = overlay.querySelector("#tokenSwitchConfirmBtn");
+
+  const close = () => closeTokenSwitchModal();
+
+  if (cancelBtn) cancelBtn.onclick = close;
+
+  if (confirmBtn) {
+    confirmBtn.onclick = async () => {
+      const nextToken = String(input?.value || "").trim();
+      await switchAccessToken(nextToken);
+    };
+  }
+
+  if (input) {
+    input.onkeydown = async (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const nextToken = String(input.value || "").trim();
+        await switchAccessToken(nextToken);
+      }
+    };
+  }
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) close();
+  });
+}
+
+function closeTokenSwitchModal() {
+  const overlay = document.getElementById("tokenSwitchOverlay");
+  if (overlay) overlay.remove();
+}
+
+async function switchAccessToken(nextToken) {
+  const cleanToken = String(nextToken || "").trim();
+
+  if (!cleanToken) {
+    alert("Токен не должен быть пустым.");
+    return;
+  }
+
+  const currentToken = getAccessToken();
+
+  if (cleanToken === currentToken) {
+    closeTokenSwitchModal();
+    return;
+  }
+
+  localStorage.setItem(TOKEN_STORAGE_KEY, cleanToken);
+  localStorage.removeItem(LEXICON_STORAGE_KEY);
+  resetAccountScopedState();
+  closeTokenSwitchModal();
+
+  if (!publicDictionaryMode) {
+    initAccessToken();
+    bootstrapDictionaries();
+  }
+
+  if (lexiconPage && lexiconPage.classList.contains("active")) {
+    renderLexiconPage();
+  }
+
+  if (inboxPage && inboxPage.classList.contains("active")) {
+    showInboxPage();
+  }
+}
+
+function resetAccountScopedState() {
+  dictionaries = [];
+  expandedDictionaryId = null;
+  dictionaryEditModeId = null;
+  expandedDictionaryWordKey = null;
+  dictionaryWordActivePanel = "center";
+  dictionaryWordPartIndex = 0;
+  dictionaryWordExamplesExpanded = false;
+  selectedDictionaryWordIds.clear();
+
+  inboxItems = [];
+  inboxBusy = false;
+  activeInboxItemId = "";
+  selectedInboxItemIds.clear();
+
+  currentWordTranslationCard = null;
+  currentWordPartIndex = 0;
+  wordExamplesExpanded = false;
+  wordActivePanel = "center";
+  wordSideRequestId += 1;
+  wordLeftPanelHtml = "";
+  wordRightPanelHtml = "";
+  wordLeftPanelPayload = null;
+  wordRightPanelPayload = null;
+
+  textTranslationReady = false;
+  textCopiedPanels = [];
+  textCopiedSignature = "";
+  wordCopiedValue = "";
+}
+
 async function inboxApi(path, options = {}) {
   if (!ensureAccessToken()) {
     throw new Error("Нет токена доступа.");
@@ -10123,9 +10415,29 @@ function showLexiconPage() {
 }
 
 // ===== LEXICON =====
+function getLexiconStorageKey() {
+  const token = getAccessToken();
+
+  if (!token) {
+    return `${LEXICON_STORAGE_KEY}_no_token`;
+  }
+
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(token)))
+      .replaceAll("=", "")
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .slice(0, 42);
+
+    return `${LEXICON_STORAGE_KEY}_${encoded}`;
+  } catch {
+    return `${LEXICON_STORAGE_KEY}_${encodeURIComponent(token).slice(0, 42)}`;
+  }
+}
+
 function loadDictionaries() {
   try {
-    const raw = localStorage.getItem(LEXICON_STORAGE_KEY);
+    const raw = localStorage.getItem(getLexiconStorageKey());
     const parsed = raw ? JSON.parse(raw) : null;
     if (Array.isArray(parsed)) {
       return parsed.map(normalizeDictionaryFromApi);
@@ -10137,7 +10449,7 @@ function loadDictionaries() {
 
 function saveDictionaries() {
   try {
-    localStorage.setItem(LEXICON_STORAGE_KEY, JSON.stringify(dictionaries));
+    localStorage.setItem(getLexiconStorageKey(), JSON.stringify(dictionaries));
   } catch {}
 }
 
