@@ -8859,6 +8859,7 @@ function renderInboxPage(isLoading = false) {
 
   const count = inboxItems.length;
   const selectedCount = selectedInboxItemIds.size;
+  const canMerge = selectedCount >= 2 && !inboxBusy;
   const subtitle = isLoading
     ? "Загружаю..."
     : selectedCount
@@ -8874,7 +8875,7 @@ function renderInboxPage(isLoading = false) {
           <div class="inbox-subtitle">${escapeHTML(subtitle)}</div>
         </div>
         <div class="inbox-top-actions">
-          <button id="inboxCombineBtn" class="inbox-combine-btn ${selectedCount ? "active" : "inactive"}" type="button" title="Объединить выбранные">Объединить</button>
+          <button id="inboxCombineBtn" class="inbox-combine-btn ${canMerge ? "active" : "inactive"}" type="button" title="Объединить выбранные">${inboxBusy ? "Объединяю..." : "Объединить"}</button>
           <button id="inboxMenuBtn" class="inbox-menu-btn" type="button" title="Экспорт скоро">⋯</button>
         </div>
       </div>
@@ -8890,11 +8891,8 @@ function renderInboxPage(isLoading = false) {
   const combineBtn = document.getElementById("inboxCombineBtn");
 
   on(backBtn, "click", () => showPage("home"));
-  on(menuBtn, "click", () => alert("Экспорт и объединение добавим следующим этапом."));
-  on(combineBtn, "click", () => {
-    if (!selectedInboxItemIds.size) return;
-    alert(`Объединение выбранных записей добавим следующим этапом. Выбрано: ${selectedInboxItemIds.size}`);
-  });
+  on(menuBtn, "click", () => alert("Экспорт добавим следующим этапом."));
+  on(combineBtn, "click", handleMergeSelectedInboxItems);
 
   bindInboxListEvents();
 }
@@ -9103,11 +9101,130 @@ async function renameInboxItem(id, title) {
   }
 }
 
+
+async function handleMergeSelectedInboxItems() {
+  if (inboxBusy) return;
+
+  const ids = inboxItems
+    .filter((item) => selectedInboxItemIds.has(item.id))
+    .map((item) => item.id);
+
+  if (ids.length < 2) {
+    alert("Выбери минимум две записи для объединения.");
+    return;
+  }
+
+  const defaultTitle = formatInboxLocalDefaultTitle(new Date());
+  const title = await askInboxMergeTitle(defaultTitle, ids.length);
+
+  if (!title) return;
+
+  inboxBusy = true;
+  renderInboxPage(false);
+
+  try {
+    const data = await inboxApi("/api/inbox/merge", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ids, title })
+    });
+
+    const merged = normalizeInboxItem(data.item || data.inboxItem || data.inbox_item);
+    const deletedIds = Array.isArray(data.deletedIds)
+      ? data.deletedIds.map(String)
+      : Array.isArray(data.deleted_ids)
+        ? data.deleted_ids.map(String)
+        : ids;
+    const deletedSet = new Set(deletedIds);
+
+    inboxItems = inboxItems.filter((item) => !deletedSet.has(item.id));
+
+    if (merged) {
+      inboxItems.unshift(merged);
+    }
+
+    selectedInboxItemIds.clear();
+    activeInboxItemId = "";
+    renderInboxPage(false);
+  } catch (err) {
+    alert("Не удалось объединить записи:\n" + (err?.message || err));
+    renderInboxPage(false);
+  } finally {
+    inboxBusy = false;
+    renderInboxPage(false);
+  }
+}
+
+function askInboxMergeTitle(defaultTitle, count) {
+  return new Promise((resolve) => {
+    closeInboxSaveModal();
+
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "inboxSaveOverlay";
+    overlay.className = "inbox-save-overlay";
+    overlay.innerHTML = `
+      <div class="inbox-save-card" role="dialog" aria-modal="true">
+        <div class="inbox-save-title">Объединить записи</div>
+        <div class="inbox-save-type">Выбрано: ${Number(count) || 0}</div>
+        <label class="inbox-save-field">
+          <span>Название</span>
+          <input id="inboxMergeTitleInput" type="text" value="${escapeHTML(defaultTitle || "")}" autocomplete="off" />
+        </label>
+        <div class="inbox-save-actions">
+          <button id="inboxMergeCancelBtn" type="button" class="inbox-save-cancel">Отмена</button>
+          <button id="inboxMergeConfirmBtn" type="button" class="inbox-save-confirm">Объединить</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector("#inboxMergeTitleInput");
+    const cancelBtn = overlay.querySelector("#inboxMergeCancelBtn");
+    const confirmBtn = overlay.querySelector("#inboxMergeConfirmBtn");
+
+    const finish = (value) => {
+      overlay.remove();
+      resolve(value || "");
+    };
+
+    if (cancelBtn) cancelBtn.onclick = () => finish("");
+
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        const title = String(input?.value || "").trim() || defaultTitle;
+        finish(title);
+      };
+    }
+
+    if (input) {
+      input.onkeydown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const title = String(input.value || "").trim() || defaultTitle;
+          finish(title);
+        }
+      };
+    }
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) finish("");
+    });
+  });
+}
+
 function getInboxContentTypeLabel(type) {
   const clean = String(type || "").toLowerCase();
 
   if (clean === "both") return "Оригинал + перевод";
   if (clean === "translation") return "Перевод";
+  if (clean === "merged") return "Объединённый текст";
   return "Оригинал";
 }
 
