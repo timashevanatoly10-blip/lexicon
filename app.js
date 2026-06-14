@@ -7724,6 +7724,20 @@ async function handleTextImageExtractSource(sourceType = "camera") {
 function handleTextFileExtractSource() {
   const input = document.createElement("input");
   input.type = "file";
+  input.accept = [
+    "text/plain",
+    ".txt",
+    ".md",
+    ".csv",
+    ".json",
+    ".html",
+    ".htm",
+    ".srt",
+    ".vtt",
+    ".docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "audio/*"
+  ].join(",");
 
   input.style.position = "fixed";
   input.style.left = "-9999px";
@@ -7787,7 +7801,7 @@ async function handleTextPickedFile(file) {
       const cleanText = String(content || "").trim();
 
       if (!cleanText) {
-        alert("Файл пустой или текст не прочитан.");
+        insertTextImportMessage("Файл пустой или текст не прочитан.");
         return;
       }
 
@@ -7803,21 +7817,40 @@ async function handleTextPickedFile(file) {
       return;
     }
 
-    setTextWordMiniDisplay("Файл выбран", "ready");
+    const isDocxLike =
+      mime.includes("wordprocessingml.document") ||
+      name.endsWith(".docx");
 
-    window.setTimeout(() => {
-      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "Файл выбран") {
-        setTextWordMiniDisplay("PDF/DOCX — через раздел «Файлы»", "ready");
-      }
-    }, 650);
+    if (isDocxLike) {
+      setTextWordMiniDisplay("Читаю DOCX...", "loading");
+      const importedText = await requestTextDocumentImport(file);
+      const cleanText = String(importedText || "").trim();
 
-    window.setTimeout(() => {
-      if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "PDF/DOCX — через раздел «Файлы»") {
-        setTextWordMiniDisplay("");
+      if (!cleanText) {
+        insertTextImportMessage("DOCX прочитан, но текст не найден. Возможно, внутри только картинки/сканы или нестандартные текстовые блоки.");
+        return;
       }
-    }, 2200);
+
+      insertExtractedTextIntoTextSource(cleanText);
+      setTextWordMiniDisplay("DOCX добавлен", "ready");
+
+      window.setTimeout(() => {
+        if (String(document.getElementById("textWordMiniDisplay")?.textContent || "") === "DOCX добавлен") {
+          setTextWordMiniDisplay("");
+        }
+      }, 1100);
+
+      return;
+    }
+
+    insertTextImportMessage(
+      "Формат не поддерживается.\n\nМожно загрузить:\nTXT / MD / CSV / JSON / HTML / SRT / VTT\nDOCX с обычным текстом\nАудио для расшифровки\nФото через камеру/медиатеку\n\nPDF и старый DOC подключим отдельным этапом. Для сканов используйте фото/камеру."
+    );
+    setTextWordMiniDisplay("Формат не поддержан", "ready");
   } catch (err) {
-    alert("Не удалось обработать данные:\n" + err.message);
+    const message = String(err && err.message ? err.message : err);
+    insertTextImportMessage("Не удалось обработать файл.\n\n" + message);
+    setTextWordMiniDisplay("Ошибка файла", "ready");
   } finally {
     setTextDataBusy(false);
     updateTextCopyFeedback();
@@ -7834,6 +7867,51 @@ function readTextFile(file) {
 
     reader.readAsText(file);
   });
+}
+
+
+async function requestTextDocumentImport(file) {
+  if (!ensureAccessToken()) {
+    throw new Error("Нет токена доступа.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file, file.name || "document.docx");
+
+  const res = await fetch(`${API_BASE}/api/text/import`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData
+  });
+
+  const data = await readJsonOrThrow(res);
+  return String(data.text || data.result || "").trim();
+}
+
+function insertTextImportMessage(message) {
+  const text = String(message || "").trim();
+  if (!text) return;
+
+  let textInput = document.getElementById("textInput");
+
+  if (!textInput) {
+    clearTextMode();
+    requestAnimationFrame(() => insertTextImportMessage(text));
+    return;
+  }
+
+  textInput.value = text;
+  textSourceValue = text;
+  textTranslationReady = false;
+  textTranslatedValue = "";
+  textReadingRequestId += 1;
+  textReadingHtml = "";
+  textReadingRawValue = "";
+  resetTextCopyState();
+  clearSelectedTextWord();
+  updateTextInlineClearVisibility();
+  updateTextCopyFeedback();
+  switchTextPanel("source");
 }
 
 async function extractTextFromPhotoToTextMode(file) {
