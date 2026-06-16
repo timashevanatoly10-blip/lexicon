@@ -68,9 +68,12 @@ const lexiconPage = document.getElementById("lexiconPage");
 let inboxPage = document.getElementById("inboxPage");
 let openInboxBtn = document.getElementById("openInboxBtn");
 let inboxItems = [];
+let inboxFolders = [];
 let inboxBusy = false;
 let activeInboxItemId = "";
 const selectedInboxItemIds = new Set();
+const expandedInboxFolderIds = new Set();
+const expandedInboxFolderFullIds = new Set();
 
 // ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
@@ -4860,6 +4863,48 @@ function ensureDictionaryPickerStyles() {
     }
   `;
 
+
+
+  style.textContent += `
+    /* Inbox folders v125 */
+    .inbox-top-actions { grid-template-columns: 36px 46px 52px 36px !important; }
+    .inbox-folder-btn { width: 36px !important; padding: 0 !important; }
+    .inbox-folder-btn svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2.25; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .inbox-folder-block { display: flex; flex-direction: column; gap: 7px; }
+    .inbox-folder-row {
+      width: 100%; min-height: 58px; display: grid; grid-template-columns: 33px minmax(0, 1fr) auto;
+      align-items: center; gap: 9px; padding: 9px 8px 9px 11px; border-radius: 24px;
+      border: 2px solid rgba(255,255,255,0.90);
+      background: radial-gradient(circle at 50% 52%, rgba(241,244,240,0.74) 0%, rgba(248,249,246,0.88) 58%, rgba(255,255,255,0.98) 100%);
+      color: #1f211f; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.36), inset 2px 2px 4px rgba(255,255,255,0.62), inset -2px -2px 5px rgba(205,214,204,0.08), 0 1px 4px rgba(186,193,184,0.06);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .inbox-folder-icon { width: 28px; height: 28px; color: #1f6f56; display: inline-flex; align-items: center; justify-content: center; }
+    .inbox-folder-icon svg { width: 25px; height: 25px; stroke: currentColor; stroke-width: 2.1; fill: rgba(31,111,86,0.88); stroke-linecap: round; stroke-linejoin: round; }
+    .inbox-folder-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .inbox-folder-title { color: #1f211f; font-size: clamp(14px, 3.25vw, 18.5px); font-weight: 740; line-height: 1.08; letter-spacing: -0.018em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inbox-folder-count { color: rgba(31,33,31,0.52); font-size: clamp(10.8px, 2.45vw, 13.5px); font-weight: 610; line-height: 1.1; }
+    .inbox-folder-actions { justify-self: end; display: inline-flex; align-items: center; gap: 5px; }
+    .inbox-folder-toggle { color: #1f6f56; }
+    .inbox-folder-toggle svg { width: 15px; height: 15px; transition: transform 0.16s ease; }
+    .inbox-folder-block.open .inbox-folder-toggle svg { transform: rotate(180deg); }
+    .inbox-folder-content { margin: -1px 0 7px 0; padding: 7px 7px 9px; border-radius: 24px; background: rgba(250,251,248,0.72); border: 1px solid rgba(225,231,224,0.52); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.36), 0 1px 4px rgba(180,186,176,0.04); display: flex; flex-direction: column; gap: 6px; }
+    .inbox-folder-content .inbox-row { min-height: 45px !important; border-radius: 16px !important; grid-template-columns: 26px minmax(0, 1fr) 58px !important; padding: 6px 7px !important; background: rgba(255,255,255,0.58) !important; border-color: rgba(255,255,255,0.74) !important; }
+    .inbox-folder-show-all { align-self: center; min-height: 30px; border: 0; background: transparent; color: #1f6f56; font-size: clamp(12px, 2.75vw, 15px); font-weight: 700; line-height: 1; padding: 4px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .inbox-folder-empty { padding: 11px 9px; color: rgba(31,33,31,0.52); font-size: clamp(12px, 2.75vw, 15px); font-weight: 560; line-height: 1.25; text-align: center; }
+    .inbox-folder-picker-list { display: flex; flex-direction: column; gap: 8px; margin: 0 0 13px; }
+    .inbox-folder-picker-btn { width: 100%; min-height: 43px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.86); background: rgba(255,255,255,0.62); color: #1f211f; padding: 0 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; font-weight: 700; text-align: left; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.40), inset 2px 2px 5px rgba(255,255,255,0.58), inset -2px -2px 6px rgba(197,207,196,0.10); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .inbox-folder-picker-btn.primary { color: #1f6f56; background: rgba(95,153,98,0.09); }
+    .inbox-folder-picker-btn.muted { color: rgba(31,33,31,0.62); }
+    @media (max-width: 390px) {
+      .inbox-top-actions { grid-template-columns: 33px 42px 48px 33px !important; gap: 5px !important; }
+      .inbox-folder-btn { width: 33px !important; }
+      .inbox-folder-row { grid-template-columns: 31px minmax(0, 1fr) auto; gap: 7px; }
+      .inbox-folder-actions { gap: 4px; }
+      .inbox-folder-content .inbox-row { grid-template-columns: 25px minmax(0, 1fr) 54px !important; }
+    }
+  `;
+
   document.head.appendChild(style);
 }
 
@@ -9300,9 +9345,12 @@ function resetAccountScopedState() {
   selectedDictionaryWordIds.clear();
 
   inboxItems = [];
+  inboxFolders = [];
   inboxBusy = false;
   activeInboxItemId = "";
   selectedInboxItemIds.clear();
+  expandedInboxFolderIds.clear();
+  expandedInboxFolderFullIds.clear();
 
   currentWordTranslationCard = null;
   currentWordPartIndex = 0;
@@ -12269,4 +12317,328 @@ function cssEscape(value) {
     return window.CSS.escape(value);
   }
   return (value || "").toString().replace(/[^a-zA-Z0-9_-]/g, "\\$&");
+}
+
+
+// ===== INBOX FOLDERS OVERRIDE v125 =====
+function normalizeInboxFolder(folder) {
+  if (!folder || typeof folder !== "object") return null;
+  return {
+    id: String(folder.id || uid("inbox_folder")),
+    title: String(folder.title || folder.name || "Без названия"),
+    createdAt: folder.createdAt || folder.created_at || new Date().toISOString(),
+    updatedAt: folder.updatedAt || folder.updated_at || folder.createdAt || folder.created_at || new Date().toISOString()
+  };
+}
+
+normalizeInboxItem = function normalizeInboxItemV125(item) {
+  if (!item || typeof item !== "object") return null;
+  return {
+    id: String(item.id || uid("inbox")),
+    title: String(item.title || "Без названия"),
+    contentType: String(item.contentType || item.content_type || "source"),
+    sourceText: String(item.sourceText ?? item.source_text ?? ""),
+    translatedText: String(item.translatedText ?? item.translated_text ?? ""),
+    savedText: String(item.savedText ?? item.saved_text ?? ""),
+    folderId: String(item.folderId ?? item.folder_id ?? ""),
+    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+    updatedAt: item.updatedAt || item.updated_at || item.createdAt || item.created_at || new Date().toISOString()
+  };
+};
+
+loadInboxItemsFromCloud = async function loadInboxItemsFromCloudV125() {
+  const data = await inboxApi("/api/inbox", { method: "GET" });
+  const rawItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inbox) ? data.inbox : []);
+  const rawFolders = Array.isArray(data.folders) ? data.folders : (Array.isArray(data.inboxFolders) ? data.inboxFolders : []);
+  inboxItems = rawItems.map(normalizeInboxItem).filter(Boolean);
+  inboxFolders = rawFolders.map(normalizeInboxFolder).filter(Boolean);
+  const folderIds = new Set(inboxFolders.map((folder) => folder.id));
+  inboxItems = inboxItems.map((item) => folderIds.has(item.folderId) ? item : { ...item, folderId: "" });
+  return inboxItems;
+};
+
+renderInboxPage = function renderInboxPageV125(isLoading = false) {
+  activeInboxItemId = "";
+  if (!inboxPage) return;
+  const count = inboxItems.length;
+  const selectedCount = selectedInboxItemIds.size;
+  const canMerge = selectedCount >= 2 && !inboxBusy;
+  const canExport = selectedCount >= 1 && !inboxBusy;
+  const canFolder = selectedCount >= 1 && !inboxBusy;
+  const subtitle = isLoading ? "Загружаю..." : (selectedCount ? `Выбрано: ${selectedCount}` : formatInboxCountRu(count));
+  inboxPage.innerHTML = `
+    <section class="inbox-shell inbox-list-shell">
+      <div class="inbox-topline inbox-list-topline">
+        <button id="backHomeFromInboxBtn" class="back-btn inbox-back-btn" type="button" title="Назад">←</button>
+        <div class="inbox-title-block">
+          <div class="inbox-title">Inbox</div>
+          <div class="inbox-subtitle">${escapeHTML(subtitle)}</div>
+        </div>
+        <div class="inbox-top-actions">
+          <button id="inboxCombineBtn" class="inbox-action-btn inbox-sum-btn ${canMerge ? "active" : "inactive"}" type="button" title="Объединить выбранные">Σ</button>
+          <button id="inboxTextExportBtn" class="inbox-action-btn inbox-text-btn ${canExport ? "active" : "inactive"}" type="button" title="Сохранить TXT">TXT</button>
+          <button id="inboxHtmlExportBtn" class="inbox-action-btn inbox-html-btn ${canExport ? "active" : "inactive"}" type="button" title="Сохранить HTML">HTML</button>
+          <button id="inboxFolderBtn" class="inbox-action-btn inbox-folder-btn ${canFolder ? "active" : "inactive"}" type="button" title="В папку">${iconFolderMoveMini()}</button>
+        </div>
+      </div>
+      <div id="inboxList" class="inbox-list inbox-list-flat">
+        ${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}
+      </div>
+    </section>`;
+  on(document.getElementById("backHomeFromInboxBtn"), "click", () => showPage("home"));
+  on(document.getElementById("inboxCombineBtn"), "click", handleMergeSelectedInboxItems);
+  on(document.getElementById("inboxTextExportBtn"), "click", () => handleExportSelectedInboxItems("txt"));
+  on(document.getElementById("inboxHtmlExportBtn"), "click", () => handleExportSelectedInboxItems("html"));
+  on(document.getElementById("inboxFolderBtn"), "click", showInboxFolderPickerModal);
+  bindInboxListEvents();
+};
+
+buildInboxListHtml = function buildInboxListHtmlV125() {
+  if (!inboxItems.length && !inboxFolders.length) {
+    return `<div class="inbox-empty">Inbox пока пустой.<br>В режиме текста нажми Copy, затем кнопку Inbox.</div>`;
+  }
+  const knownFolderIds = new Set(inboxFolders.map((folder) => folder.id));
+  const rootItems = inboxItems.filter((item) => !item.folderId || !knownFolderIds.has(item.folderId));
+  const parts = [];
+  for (const item of rootItems) parts.push(renderInboxRowHtml(item));
+  for (const folder of inboxFolders) parts.push(renderInboxFolderBlockHtml(folder));
+  return parts.join("") || `<div class="inbox-empty">Все записи сейчас внутри папок.</div>`;
+};
+
+function renderInboxRowHtml(item) {
+  const dateLabel = formatInboxDate(item.updatedAt || item.createdAt);
+  const title = String(item.title || "").trim() || dateLabel || "Без названия";
+  const selected = selectedInboxItemIds.has(item.id);
+  return `<div class="inbox-row ${selected ? "selected" : ""}" role="button" tabindex="0" data-inbox-id="${escapeHTML(item.id)}">
+    <span class="inbox-row-marker ${selected ? "selected" : ""}" data-inbox-select="${escapeHTML(item.id)}" aria-label="Выбрать запись"></span>
+    <span class="inbox-row-main"><span class="inbox-row-title">${escapeHTML(title)}</span></span>
+    <span class="inbox-row-side-actions" aria-label="Действия с записью">
+      <button class="inbox-row-action-btn edit" type="button" data-inbox-edit="${escapeHTML(item.id)}" title="Переименовать">${iconEditMini()}</button>
+      <button class="inbox-row-action-btn delete" type="button" data-inbox-delete="${escapeHTML(item.id)}" title="Удалить">${iconTrashMini()}</button>
+    </span>
+  </div>`;
+}
+
+function renderInboxFolderBlockHtml(folder) {
+  const items = inboxItems.filter((item) => item.folderId === folder.id);
+  const isOpen = expandedInboxFolderIds.has(folder.id);
+  const isFull = expandedInboxFolderFullIds.has(folder.id);
+  const visibleItems = isFull ? items : items.slice(0, 3);
+  const hiddenCount = Math.max(0, items.length - visibleItems.length);
+  return `<section class="inbox-folder-block ${isOpen ? "open" : ""}" data-inbox-folder-id="${escapeHTML(folder.id)}">
+    <div class="inbox-folder-row" role="button" tabindex="0" data-inbox-folder-toggle="${escapeHTML(folder.id)}">
+      <span class="inbox-folder-icon">${iconFolderFilledMini()}</span>
+      <span class="inbox-folder-main">
+        <span class="inbox-folder-title">${escapeHTML(folder.title || "Без названия")}</span>
+        <span class="inbox-folder-count">${escapeHTML(formatFolderItemCountRu(items.length))}</span>
+      </span>
+      <span class="inbox-folder-actions">
+        <button class="inbox-row-action-btn edit" type="button" data-inbox-folder-edit="${escapeHTML(folder.id)}" title="Переименовать папку">${iconEditMini()}</button>
+        <button class="inbox-row-action-btn delete" type="button" data-inbox-folder-delete="${escapeHTML(folder.id)}" title="Удалить папку">${iconTrashMini()}</button>
+        <button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="Раскрыть папку">${iconChevronDownMini()}</button>
+      </span>
+    </div>
+    ${isOpen ? `<div class="inbox-folder-content">
+      ${visibleItems.length ? visibleItems.map(renderInboxRowHtml).join("") : `<div class="inbox-folder-empty">Папка пустая</div>`}
+      ${hiddenCount > 0 ? `<button class="inbox-folder-show-all" type="button" data-inbox-folder-show-all="${escapeHTML(folder.id)}">Показать все · ${hiddenCount}</button>` : ""}
+    </div>` : ""}
+  </section>`;
+}
+
+bindInboxListEvents = function bindInboxListEventsV125() {
+  document.querySelectorAll(".inbox-row").forEach((row) => {
+    row.onclick = (event) => {
+      const editTarget = event.target.closest("[data-inbox-edit]");
+      const deleteTarget = event.target.closest("[data-inbox-delete]");
+      const selectTarget = event.target.closest("[data-inbox-select]");
+      const id = row.dataset.inboxId || "";
+      if (selectTarget) { event.preventDefault(); event.stopPropagation(); toggleInboxItemSelection(id); return; }
+      if (editTarget) { event.preventDefault(); event.stopPropagation(); promptRenameInboxItem(id); return; }
+      if (deleteTarget) { event.preventDefault(); event.stopPropagation(); confirmDeleteInboxItem(id); return; }
+      showInboxItemPreview(id);
+    };
+    row.onkeydown = (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showInboxItemPreview(row.dataset.inboxId || ""); }
+    };
+  });
+  document.querySelectorAll("[data-inbox-folder-toggle]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      if (event.target.closest("[data-inbox-folder-edit]") || event.target.closest("[data-inbox-folder-delete]")) return;
+      event.preventDefault(); event.stopPropagation(); toggleInboxFolder(el.getAttribute("data-inbox-folder-toggle") || "");
+    });
+  });
+  document.querySelectorAll("[data-inbox-folder-edit]").forEach((btn) => {
+    btn.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); promptRenameInboxFolder(btn.getAttribute("data-inbox-folder-edit") || ""); });
+  });
+  document.querySelectorAll("[data-inbox-folder-delete]").forEach((btn) => {
+    btn.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); confirmDeleteInboxFolder(btn.getAttribute("data-inbox-folder-delete") || ""); });
+  });
+  document.querySelectorAll("[data-inbox-folder-show-all]").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault(); event.stopPropagation();
+      const folderId = btn.getAttribute("data-inbox-folder-show-all") || "";
+      if (folderId) { expandedInboxFolderFullIds.add(folderId); expandedInboxFolderIds.add(folderId); renderInboxPage(false); }
+    });
+  });
+};
+
+function toggleInboxFolder(folderId) {
+  if (!folderId) return;
+  if (expandedInboxFolderIds.has(folderId)) expandedInboxFolderIds.delete(folderId);
+  else expandedInboxFolderIds.add(folderId);
+  renderInboxPage(false);
+}
+
+getSelectedInboxItemsInListOrder = function getSelectedInboxItemsInListOrderV125() {
+  return inboxItems.filter((item) => selectedInboxItemIds.has(item.id));
+};
+
+async function showInboxFolderPickerModal() {
+  const selectedItems = getSelectedInboxItemsInListOrder();
+  if (!selectedItems.length) { alert("Выбери хотя бы одну запись."); return; }
+  closeInboxSaveModal();
+  if (document.activeElement && typeof document.activeElement.blur === "function") document.activeElement.blur();
+  const overlay = document.createElement("div");
+  overlay.id = "inboxSaveOverlay";
+  overlay.className = "inbox-save-overlay";
+  const folderButtons = inboxFolders.map((folder) => {
+    const count = inboxItems.filter((item) => item.folderId === folder.id).length;
+    return `<button class="inbox-folder-picker-btn" type="button" data-folder-target="${escapeHTML(folder.id)}"><span>${escapeHTML(folder.title || "Без названия")}</span><span>${escapeHTML(String(count))}</span></button>`;
+  }).join("");
+  overlay.innerHTML = `<div class="inbox-save-card" role="dialog" aria-modal="true">
+    <div class="inbox-save-title">В папку</div>
+    <div class="inbox-save-type">Выбрано: ${selectedItems.length}</div>
+    <div class="inbox-folder-picker-list">
+      <button id="inboxFolderCreateBtn" class="inbox-folder-picker-btn primary" type="button"><span>+ Новая папка</span><span>создать</span></button>
+      <button id="inboxFolderNoFolderBtn" class="inbox-folder-picker-btn muted" type="button"><span>Без папки</span><span>наружу</span></button>
+      ${folderButtons}
+    </div>
+    <div class="inbox-save-actions"><button id="inboxFolderCancelBtn" type="button" class="inbox-save-cancel">Отмена</button><button id="inboxFolderCloseBtn" type="button" class="inbox-save-confirm">Готово</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close = () => closeInboxSaveModal();
+  on(overlay.querySelector("#inboxFolderCancelBtn"), "click", close);
+  on(overlay.querySelector("#inboxFolderCloseBtn"), "click", close);
+  on(overlay.querySelector("#inboxFolderCreateBtn"), "click", async () => {
+    const title = prompt("Название папки:", "Новая папка");
+    if (title === null) return;
+    close();
+    await createInboxFolderFromSelection(title.trim() || "Новая папка");
+  });
+  on(overlay.querySelector("#inboxFolderNoFolderBtn"), "click", async () => { close(); await moveSelectedInboxItemsToFolder(""); });
+  overlay.querySelectorAll("[data-folder-target]").forEach((btn) => {
+    btn.addEventListener("click", async () => { const folderId = btn.getAttribute("data-folder-target") || ""; close(); await moveSelectedInboxItemsToFolder(folderId); });
+  });
+  overlay.addEventListener("click", (event) => { if (event.target === overlay) close(); });
+}
+
+async function createInboxFolderFromSelection(title) {
+  if (inboxBusy) return;
+  const ids = getSelectedInboxItemsInListOrder().map((item) => item.id);
+  if (!ids.length) return;
+  inboxBusy = true; renderInboxPage(false);
+  try {
+    const data = await inboxApi("/api/inbox/folders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, ids }) });
+    const folder = normalizeInboxFolder(data.folder || data.inboxFolder || data.inbox_folder);
+    if (folder) {
+      inboxFolders = [folder, ...inboxFolders.filter((item) => item.id !== folder.id)];
+      inboxItems = inboxItems.map((item) => ids.includes(item.id) ? { ...item, folderId: folder.id, updatedAt: new Date().toISOString() } : item);
+      expandedInboxFolderIds.add(folder.id);
+    } else await loadInboxItemsFromCloud();
+    selectedInboxItemIds.clear(); renderInboxPage(false);
+  } catch (err) { alert("Не удалось создать папку:\n" + (err?.message || err)); }
+  finally { inboxBusy = false; renderInboxPage(false); }
+}
+
+async function moveSelectedInboxItemsToFolder(folderId) {
+  if (inboxBusy) return;
+  const ids = getSelectedInboxItemsInListOrder().map((item) => item.id);
+  if (!ids.length) return;
+  const cleanFolderId = String(folderId || "").trim();
+  inboxBusy = true; renderInboxPage(false);
+  try {
+    await inboxApi("/api/inbox/move", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids, folderId: cleanFolderId || null }) });
+    inboxItems = inboxItems.map((item) => ids.includes(item.id) ? { ...item, folderId: cleanFolderId, updatedAt: new Date().toISOString() } : item);
+    if (cleanFolderId) expandedInboxFolderIds.add(cleanFolderId);
+    selectedInboxItemIds.clear(); renderInboxPage(false);
+  } catch (err) { alert("Не удалось переместить записи:\n" + (err?.message || err)); }
+  finally { inboxBusy = false; renderInboxPage(false); }
+}
+
+async function promptRenameInboxFolder(folderId) {
+  const folder = inboxFolders.find((item) => item.id === folderId);
+  if (!folder) return;
+  const nextTitle = prompt("Новое название папки:", folder.title || "");
+  if (nextTitle === null) return;
+  try {
+    const data = await inboxApi(`/api/inbox/folders/${encodeURIComponent(folderId)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: nextTitle.trim() || folder.title || "Без названия" }) });
+    const updated = normalizeInboxFolder(data.folder || data.inboxFolder || data.inbox_folder);
+    if (updated) { inboxFolders = inboxFolders.map((item) => item.id === folderId ? updated : item); renderInboxPage(false); }
+  } catch (err) { alert("Не удалось переименовать папку:\n" + (err?.message || err)); }
+}
+
+async function confirmDeleteInboxFolder(folderId) {
+  const folder = inboxFolders.find((item) => item.id === folderId);
+  if (!folder) return;
+  const count = inboxItems.filter((item) => item.folderId === folderId).length;
+  if (!confirm(`Удалить папку «${folder.title || "Без названия"}»?\n\nЗаписи не удалятся, они выйдут в общий Inbox.\nВ папке: ${count}`)) return;
+  try {
+    await inboxApi(`/api/inbox/folders/${encodeURIComponent(folderId)}`, { method: "DELETE" });
+    inboxFolders = inboxFolders.filter((item) => item.id !== folderId);
+    inboxItems = inboxItems.map((item) => item.folderId === folderId ? { ...item, folderId: "" } : item);
+    expandedInboxFolderIds.delete(folderId); expandedInboxFolderFullIds.delete(folderId);
+    renderInboxPage(false);
+  } catch (err) { alert("Не удалось удалить папку:\n" + (err?.message || err)); }
+}
+
+handleMergeSelectedInboxItems = async function handleMergeSelectedInboxItemsV125() {
+  if (inboxBusy) return;
+  const selectedItems = getSelectedInboxItemsInListOrder();
+  const ids = selectedItems.map((item) => item.id);
+  if (ids.length < 2) { alert("Выбери минимум две записи для объединения."); return; }
+  const selectedFolderIds = Array.from(new Set(selectedItems.map((item) => item.folderId || "")));
+  const commonFolderId = selectedFolderIds.length === 1 ? selectedFolderIds[0] : "";
+  const title = await askInboxMergeTitle(formatInboxLocalDefaultTitle(new Date()), ids.length);
+  if (!title) return;
+  inboxBusy = true; renderInboxPage(false);
+  try {
+    const data = await inboxApi("/api/inbox/merge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids, title }) });
+    const merged = normalizeInboxItem(data.item || data.inboxItem || data.inbox_item);
+    const deletedIds = Array.isArray(data.deletedIds) ? data.deletedIds.map(String) : (Array.isArray(data.deleted_ids) ? data.deleted_ids.map(String) : ids);
+    const deletedSet = new Set(deletedIds);
+    inboxItems = inboxItems.filter((item) => !deletedSet.has(item.id));
+    if (merged) {
+      if (commonFolderId) {
+        try {
+          await inboxApi("/api/inbox/move", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: [merged.id], folderId: commonFolderId }) });
+          merged.folderId = commonFolderId;
+          expandedInboxFolderIds.add(commonFolderId);
+        } catch (moveErr) { console.warn("Moving merged inbox item to folder failed:", moveErr); }
+      }
+      inboxItems.unshift(merged);
+    }
+    selectedInboxItemIds.clear(); activeInboxItemId = ""; renderInboxPage(false);
+  } catch (err) { alert("Не удалось объединить записи:\n" + (err?.message || err)); renderInboxPage(false); }
+  finally { inboxBusy = false; renderInboxPage(false); }
+};
+
+function formatFolderItemCountRu(count) {
+  const n = Math.abs(Number(count) || 0);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} документ`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} документа`;
+  return `${n} документов`;
+}
+
+function iconFolderMoveMini() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h6l2 2h8v9.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.5Z"/><path d="M12 13h5"/><path d="m15 10 3 3-3 3"/></svg>`;
+}
+
+function iconFolderFilledMini() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 7.4c0-1 .8-1.8 1.8-1.8h5.1l2 2h5.7c1 0 1.8.8 1.8 1.8v8.1c0 1-.8 1.8-1.8 1.8H5.6c-1 0-1.8-.8-1.8-1.8V7.4Z"/></svg>`;
+}
+
+function iconChevronDownMini() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>`;
 }
