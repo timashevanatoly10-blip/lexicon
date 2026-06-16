@@ -12642,3 +12642,354 @@ function iconFolderFilledMini() {
 function iconChevronDownMini() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>`;
 }
+
+
+/* ===== Inbox folders preview polish v126 ===== */
+(function applyInboxFolderPreviewPolishV126() {
+  if (typeof document !== "undefined" && !document.getElementById("inboxFolderPreviewPolishV126")) {
+    const style = document.createElement("style");
+    style.id = "inboxFolderPreviewPolishV126";
+    style.textContent = `
+      /* v126: Inbox header alignment */
+      .inbox-shell.inbox-list-shell {
+        padding: 0 5px 12px !important;
+      }
+
+      .inbox-topline.inbox-list-topline {
+        display: grid !important;
+        grid-template-columns: 38px minmax(94px, 1fr) auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 52px !important;
+        padding: 1px 6px 12px !important;
+      }
+
+      .inbox-back-btn {
+        width: 36px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        font-size: 29px !important;
+        transform: translateY(0) !important;
+      }
+
+      .inbox-title-block {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 1px !important;
+        min-width: 0 !important;
+        transform: translateY(-1px) !important;
+      }
+
+      .inbox-title {
+        font-size: clamp(19px, 5.15vw, 29px) !important;
+        line-height: 0.98 !important;
+        letter-spacing: -0.045em !important;
+        white-space: nowrap !important;
+      }
+
+      .inbox-subtitle {
+        font-size: clamp(11px, 2.7vw, 14.5px) !important;
+        line-height: 1.08 !important;
+        font-weight: 650 !important;
+        color: rgba(31,33,31,0.50) !important;
+        white-space: nowrap !important;
+      }
+
+      .inbox-top-actions {
+        display: grid !important;
+        grid-template-columns: 34px 45px 51px 34px !important;
+        align-items: center !important;
+        justify-content: end !important;
+        gap: 5px !important;
+        transform: translateY(-1px) !important;
+      }
+
+      .inbox-action-btn {
+        height: 32px !important;
+        min-height: 32px !important;
+        border-radius: 999px !important;
+        font-size: clamp(10px, 2.45vw, 13px) !important;
+        opacity: 1 !important;
+      }
+
+      .inbox-sum-btn { width: 34px !important; font-size: 18px !important; }
+      .inbox-text-btn { width: 45px !important; }
+      .inbox-html-btn { width: 51px !important; }
+      .inbox-folder-btn { width: 34px !important; }
+
+      .inbox-action-btn.inactive {
+        opacity: 0.64 !important;
+        filter: saturate(0.72) brightness(1.08) !important;
+        pointer-events: none !important;
+        color: rgba(31,111,86,0.54) !important;
+        background:
+          radial-gradient(circle at 50% 52%, rgba(244,246,242,0.62) 0%, rgba(250,251,248,0.72) 58%, rgba(255,255,255,0.88) 100%) !important;
+      }
+
+      .inbox-action-btn.active {
+        opacity: 1 !important;
+      }
+
+      .inbox-folder-btn svg {
+        width: 16px !important;
+        height: 16px !important;
+      }
+
+      /* v126: Folder as a compact capsule + preview drawer */
+      .inbox-list-flat {
+        gap: 8px !important;
+        padding: 0 6px !important;
+      }
+
+      .inbox-folder-block {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 1px 0 4px !important;
+      }
+
+      .inbox-folder-row {
+        min-height: 46px !important;
+        grid-template-columns: 30px minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        padding: 6px 8px 6px 10px !important;
+        border-radius: 23px !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
+
+      .inbox-folder-block.open .inbox-folder-row {
+        margin-bottom: 0 !important;
+      }
+
+      .inbox-folder-icon {
+        width: 27px !important;
+        height: 27px !important;
+      }
+
+      .inbox-folder-icon svg {
+        width: 24px !important;
+        height: 24px !important;
+      }
+
+      .inbox-folder-main {
+        gap: 0 !important;
+        justify-content: center !important;
+      }
+
+      .inbox-folder-title {
+        font-size: clamp(14px, 3.35vw, 19px) !important;
+        font-weight: 740 !important;
+        line-height: 1.05 !important;
+      }
+
+      .inbox-folder-count {
+        display: none !important;
+      }
+
+      .inbox-folder-actions {
+        gap: 5px !important;
+      }
+
+      .inbox-folder-actions .edit,
+      .inbox-folder-actions .delete {
+        width: 25px !important;
+        height: 25px !important;
+      }
+
+      .inbox-folder-toggle {
+        width: 25px !important;
+        height: 25px !important;
+      }
+
+      .inbox-folder-toggle svg {
+        width: 14px !important;
+        height: 14px !important;
+      }
+
+      .inbox-folder-drawer {
+        margin: 4px 10px 9px 10px !important;
+        border-radius: 25px !important;
+        background: rgba(250,251,248,0.79) !important;
+        border: 2px solid rgba(255,255,255,0.72) !important;
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,0.42),
+          inset 2px 2px 5px rgba(255,255,255,0.54),
+          inset -2px -2px 6px rgba(197,207,196,0.10),
+          0 2px 8px rgba(180,186,176,0.06) !important;
+        overflow: hidden !important;
+        animation: inboxFolderDrawerV126 0.18s ease-out both;
+      }
+
+      @keyframes inboxFolderDrawerV126 {
+        from { opacity: 0; transform: translateY(-5px) scaleY(0.985); }
+        to { opacity: 1; transform: translateY(0) scaleY(1); }
+      }
+
+      .inbox-folder-scroll {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .inbox-folder-scroll.preview {
+        max-height: 168px !important;
+      }
+
+      .inbox-folder-scroll.full {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+
+      .inbox-folder-drawer .inbox-row {
+        min-height: 48px !important;
+        border-radius: 0 !important;
+        grid-template-columns: 27px minmax(0, 1fr) 58px !important;
+        padding: 7px 8px !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(224,228,222,0.54) !important;
+        background: rgba(255,255,255,0.48) !important;
+        box-shadow: none !important;
+      }
+
+      .inbox-folder-drawer .inbox-row:first-child {
+        border-radius: 22px 22px 0 0 !important;
+      }
+
+      .inbox-folder-drawer .inbox-row:last-child {
+        border-bottom: 0 !important;
+      }
+
+      .inbox-folder-drawer .inbox-row-title {
+        font-size: clamp(12.4px, 2.95vw, 16.5px) !important;
+        font-weight: 680 !important;
+      }
+
+      .inbox-folder-drawer .inbox-row-marker {
+        width: 18px !important;
+        height: 18px !important;
+      }
+
+      .inbox-folder-drawer .inbox-row-action-btn {
+        width: 24px !important;
+        height: 24px !important;
+      }
+
+      .inbox-folder-show-all {
+        width: 100% !important;
+        min-height: 40px !important;
+        border: 0 !important;
+        border-top: 1px solid rgba(224,228,222,0.48) !important;
+        background: rgba(250,251,248,0.62) !important;
+        color: #1f6f56 !important;
+        font-size: clamp(12px, 2.8vw, 15.5px) !important;
+        font-weight: 720 !important;
+        line-height: 1 !important;
+        padding: 0 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+      }
+
+      .inbox-folder-empty {
+        padding: 15px 10px !important;
+      }
+
+      @media (max-width: 390px) {
+        .inbox-topline.inbox-list-topline {
+          grid-template-columns: 36px minmax(84px, 1fr) auto !important;
+          gap: 7px !important;
+          padding-left: 4px !important;
+          padding-right: 4px !important;
+        }
+        .inbox-top-actions {
+          grid-template-columns: 31px 40px 46px 31px !important;
+          gap: 4px !important;
+        }
+        .inbox-action-btn { height: 30px !important; min-height: 30px !important; font-size: 10px !important; }
+        .inbox-sum-btn { width: 31px !important; font-size: 17px !important; }
+        .inbox-text-btn { width: 40px !important; }
+        .inbox-html-btn { width: 46px !important; }
+        .inbox-folder-btn { width: 31px !important; }
+        .inbox-folder-row { grid-template-columns: 29px minmax(0, 1fr) auto !important; }
+        .inbox-folder-drawer { margin-left: 8px !important; margin-right: 8px !important; }
+        .inbox-folder-scroll.preview { max-height: 162px !important; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  renderInboxPage = function renderInboxPageV126(isLoading = false) {
+    activeInboxItemId = "";
+    if (!inboxPage) return;
+
+    const count = inboxItems.length;
+    const selectedCount = selectedInboxItemIds.size;
+    const canMerge = selectedCount >= 2 && !inboxBusy;
+    const canExport = selectedCount >= 1 && !inboxBusy;
+    const canFolder = selectedCount >= 1 && !inboxBusy;
+    const subtitle = isLoading
+      ? "Загружаю..."
+      : (selectedCount ? `Выбрано: ${selectedCount}` : formatInboxCountRu(count));
+
+    inboxPage.innerHTML = `
+      <section class="inbox-shell inbox-list-shell">
+        <div class="inbox-topline inbox-list-topline">
+          <button id="backHomeFromInboxBtn" class="back-btn inbox-back-btn" type="button" title="Назад">←</button>
+          <div class="inbox-title-block">
+            <div class="inbox-title">Inbox</div>
+            <div class="inbox-subtitle">${escapeHTML(subtitle)}</div>
+          </div>
+          <div class="inbox-top-actions">
+            <button id="inboxCombineBtn" class="inbox-action-btn inbox-sum-btn ${canMerge ? "active" : "inactive"}" type="button" title="Объединить выбранные">Σ</button>
+            <button id="inboxTextExportBtn" class="inbox-action-btn inbox-text-btn ${canExport ? "active" : "inactive"}" type="button" title="Сохранить TXT">TXT</button>
+            <button id="inboxHtmlExportBtn" class="inbox-action-btn inbox-html-btn ${canExport ? "active" : "inactive"}" type="button" title="Сохранить HTML">HTML</button>
+            <button id="inboxFolderBtn" class="inbox-action-btn inbox-folder-btn ${canFolder ? "active" : "inactive"}" type="button" title="В папку">${iconFolderMoveMini()}</button>
+          </div>
+        </div>
+        <div id="inboxList" class="inbox-list inbox-list-flat">
+          ${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}
+        </div>
+      </section>`;
+
+    on(document.getElementById("backHomeFromInboxBtn"), "click", () => showPage("home"));
+    on(document.getElementById("inboxCombineBtn"), "click", handleMergeSelectedInboxItems);
+    on(document.getElementById("inboxTextExportBtn"), "click", () => handleExportSelectedInboxItems("txt"));
+    on(document.getElementById("inboxHtmlExportBtn"), "click", () => handleExportSelectedInboxItems("html"));
+    on(document.getElementById("inboxFolderBtn"), "click", showInboxFolderPickerModal);
+    bindInboxListEvents();
+  };
+
+  renderInboxFolderBlockHtml = function renderInboxFolderBlockHtmlV126(folder) {
+    const items = inboxItems.filter((item) => item.folderId === folder.id);
+    const isOpen = expandedInboxFolderIds.has(folder.id);
+    const isFull = expandedInboxFolderFullIds.has(folder.id);
+    const hasMoreThanPreview = items.length > 3;
+
+    return `<section class="inbox-folder-block ${isOpen ? "open" : ""}" data-inbox-folder-id="${escapeHTML(folder.id)}">
+      <div class="inbox-folder-row" role="button" tabindex="0" data-inbox-folder-toggle="${escapeHTML(folder.id)}">
+        <span class="inbox-folder-icon">${iconFolderFilledMini()}</span>
+        <span class="inbox-folder-main">
+          <span class="inbox-folder-title">${escapeHTML(folder.title || "Без названия")}</span>
+          <span class="inbox-folder-count">${escapeHTML(formatFolderItemCountRu(items.length))}</span>
+        </span>
+        <span class="inbox-folder-actions">
+          <button class="inbox-row-action-btn edit" type="button" data-inbox-folder-edit="${escapeHTML(folder.id)}" title="Переименовать папку">${iconEditMini()}</button>
+          <button class="inbox-row-action-btn delete" type="button" data-inbox-folder-delete="${escapeHTML(folder.id)}" title="Удалить папку">${iconTrashMini()}</button>
+          <button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="Раскрыть папку">${iconChevronDownMini()}</button>
+        </span>
+      </div>
+      ${isOpen ? `<div class="inbox-folder-drawer">
+        <div class="inbox-folder-scroll ${isFull ? "full" : "preview"}">
+          ${items.length ? items.map(renderInboxRowHtml).join("") : `<div class="inbox-folder-empty">Папка пустая</div>`}
+        </div>
+        ${hasMoreThanPreview && !isFull ? `<button class="inbox-folder-show-all" type="button" data-inbox-folder-show-all="${escapeHTML(folder.id)}">Показать все <span>›</span></button>` : ""}
+      </div>` : ""}
+    </section>`;
+  };
+})();
