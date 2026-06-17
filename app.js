@@ -13170,3 +13170,228 @@ function iconChevronDownMini() {
     });
   };
 })();
+
+
+/* ===== Inbox folder outline frame v128 ===== */
+(() => {
+  const styleId = "inboxFolderOutlineFrameV128Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* v128: папка всегда читается как отдельный контейнер */
+    .inbox-folder-block {
+      position: relative !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 0 !important;
+      margin: 2px 0 6px !important;
+      padding: 0 !important;
+      border-radius: 29px !important;
+      border: 1.6px solid rgba(31,111,86,0.46) !important;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,0.78) 0%, rgba(250,251,248,0.70) 58%, rgba(246,248,245,0.62) 100%) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.52),
+        inset 2px 2px 5px rgba(255,255,255,0.54),
+        inset -2px -2px 6px rgba(197,207,196,0.08),
+        0 1px 4px rgba(31,111,86,0.035) !important;
+      overflow: hidden !important;
+    }
+
+    .inbox-folder-block.open {
+      border-color: rgba(31,111,86,0.56) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.54),
+        inset 2px 2px 5px rgba(255,255,255,0.56),
+        inset -2px -2px 6px rgba(197,207,196,0.10),
+        0 2px 7px rgba(31,111,86,0.045) !important;
+    }
+
+    .inbox-folder-block.folder-selected {
+      border-color: rgba(31,111,86,0.72) !important;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(239,247,239,0.86) 0%, rgba(249,251,248,0.74) 58%, rgba(245,248,244,0.66) 100%) !important;
+    }
+
+    /* верх папки становится шапкой внутри рамки, а не отдельной капсулой */
+    .inbox-folder-row {
+      min-height: 48px !important;
+      margin: 0 !important;
+      padding: 7px 9px 7px 11px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      grid-template-columns: 31px minmax(0, 1fr) auto !important;
+    }
+
+    .inbox-folder-block.folder-selected .inbox-folder-row {
+      background: transparent !important;
+      border-color: transparent !important;
+    }
+
+    .inbox-folder-row:active {
+      background: rgba(95,153,98,0.035) !important;
+    }
+
+    .inbox-folder-main {
+      gap: 0 !important;
+      justify-content: center !important;
+    }
+
+    .inbox-folder-title {
+      font-size: clamp(14px, 3.35vw, 19px) !important;
+      font-weight: 760 !important;
+      line-height: 1.05 !important;
+      letter-spacing: -0.018em !important;
+    }
+
+    .inbox-folder-count {
+      display: none !important;
+    }
+
+    .inbox-folder-icon.selectable {
+      width: 27px !important;
+      height: 27px !important;
+      background: rgba(255,255,255,0.46) !important;
+      border: 1.6px solid rgba(31,111,86,0.24) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.50),
+        0 1px 3px rgba(180,188,178,0.045) !important;
+    }
+
+    .inbox-folder-icon.selectable svg {
+      width: 23px !important;
+      height: 23px !important;
+      fill: rgba(31,111,86,0.84) !important;
+      stroke: rgba(31,111,86,0.90) !important;
+      stroke-width: 2.0 !important;
+    }
+
+    .inbox-folder-icon.selectable.selected {
+      background: #1f6f56 !important;
+      border-color: rgba(31,111,86,0.90) !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.18),
+        0 2px 6px rgba(31,111,86,0.14) !important;
+    }
+
+    .inbox-folder-icon.selectable.selected svg {
+      fill: rgba(255,255,255,0.96) !important;
+      stroke: rgba(255,255,255,0.98) !important;
+    }
+
+    .inbox-folder-actions {
+      gap: 5px !important;
+    }
+
+    .inbox-folder-actions .inbox-row-action-btn {
+      width: 25px !important;
+      height: 25px !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(245,247,244,0.62) 0%, rgba(251,252,249,0.74) 58%, rgba(255,255,255,0.88) 100%) !important;
+      border-color: rgba(255,255,255,0.76) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.34),
+        0 1px 3px rgba(186,193,184,0.04) !important;
+    }
+
+    /* содержимое — внутри той же рамки папки */
+    .inbox-folder-drawer {
+      margin: 0 7px 8px !important;
+      border-radius: 22px !important;
+      background: rgba(255,255,255,0.38) !important;
+      border: 1px solid rgba(31,111,86,0.13) !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.38),
+        inset 1px 1px 3px rgba(255,255,255,0.42) !important;
+      overflow: hidden !important;
+    }
+
+    .inbox-folder-scroll.preview {
+      max-height: 160px !important;
+    }
+
+    .inbox-folder-scroll.full {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    .inbox-folder-drawer .inbox-row {
+      min-height: 47px !important;
+      border-radius: 0 !important;
+      grid-template-columns: 27px minmax(0, 1fr) 58px !important;
+      padding: 7px 8px !important;
+      background: rgba(255,255,255,0.36) !important;
+      border: 0 !important;
+      border-bottom: 1px solid rgba(224,228,222,0.50) !important;
+      box-shadow: none !important;
+    }
+
+    .inbox-folder-drawer .inbox-row.selected {
+      background: rgba(226,239,227,0.56) !important;
+    }
+
+    .inbox-folder-drawer .inbox-row:last-child {
+      border-bottom: 0 !important;
+    }
+
+    .inbox-folder-drawer .inbox-row:first-child,
+    .inbox-folder-drawer .inbox-row:last-child {
+      border-radius: 0 !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-title {
+      font-size: clamp(12.4px, 2.95vw, 16.5px) !important;
+      font-weight: 680 !important;
+    }
+
+    .inbox-folder-show-all {
+      width: 100% !important;
+      min-height: 39px !important;
+      border: 0 !important;
+      border-top: 1px solid rgba(224,228,222,0.48) !important;
+      background: rgba(250,251,248,0.45) !important;
+      color: #1f6f56 !important;
+      font-size: clamp(12px, 2.8vw, 15.5px) !important;
+      font-weight: 720 !important;
+      line-height: 1 !important;
+      padding: 0 14px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 7px !important;
+    }
+
+    .inbox-folder-empty {
+      padding: 15px 10px !important;
+      background: rgba(255,255,255,0.28) !important;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-folder-block {
+        border-radius: 27px !important;
+        margin-bottom: 5px !important;
+      }
+
+      .inbox-folder-row {
+        grid-template-columns: 29px minmax(0, 1fr) auto !important;
+        padding-left: 10px !important;
+        padding-right: 7px !important;
+      }
+
+      .inbox-folder-drawer {
+        margin-left: 6px !important;
+        margin-right: 6px !important;
+        margin-bottom: 7px !important;
+      }
+
+      .inbox-folder-scroll.preview {
+        max-height: 156px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
