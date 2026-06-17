@@ -74,6 +74,7 @@ let activeInboxItemId = "";
 const selectedInboxItemIds = new Set();
 const expandedInboxFolderIds = new Set();
 const expandedInboxFolderFullIds = new Set();
+const selectedInboxFolderIds = new Set();
 
 // ===== NAV =====
 const openFilesBtn = document.getElementById("openFilesBtn");
@@ -9349,6 +9350,7 @@ function resetAccountScopedState() {
   inboxBusy = false;
   activeInboxItemId = "";
   selectedInboxItemIds.clear();
+  selectedInboxFolderIds.clear();
   expandedInboxFolderIds.clear();
   expandedInboxFolderFullIds.clear();
 
@@ -12991,5 +12993,180 @@ function iconChevronDownMini() {
         ${hasMoreThanPreview && !isFull ? `<button class="inbox-folder-show-all" type="button" data-inbox-folder-show-all="${escapeHTML(folder.id)}">Показать все <span>›</span></button>` : ""}
       </div>` : ""}
     </section>`;
+  };
+})();
+
+
+/* ===== Inbox folder selection + preview reset v127 ===== */
+(() => {
+  const styleId = "inboxFolderSelectionV127Styles";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      .inbox-folder-icon {
+        border-radius: 999px !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+        transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, color 0.12s ease !important;
+      }
+
+      .inbox-folder-icon:active {
+        transform: scale(0.94) !important;
+      }
+
+      .inbox-folder-icon.selectable {
+        background: rgba(255,255,255,0.62) !important;
+        border: 2px solid rgba(31,111,86,0.22) !important;
+        box-shadow:
+          inset 0 0 0 2px rgba(255,255,255,0.48),
+          0 1px 4px rgba(180,188,178,0.06) !important;
+      }
+
+      .inbox-folder-icon.selectable svg {
+        fill: none !important;
+        stroke: rgba(31,111,86,0.92) !important;
+      }
+
+      .inbox-folder-icon.selectable.selected {
+        background: #1f6f56 !important;
+        border-color: rgba(31,111,86,0.92) !important;
+        color: #ffffff !important;
+        box-shadow:
+          inset 0 0 0 2px rgba(255,255,255,0.20),
+          0 2px 7px rgba(31,111,86,0.14) !important;
+      }
+
+      .inbox-folder-icon.selectable.selected svg {
+        fill: rgba(255,255,255,0.94) !important;
+        stroke: rgba(255,255,255,0.98) !important;
+      }
+
+      .inbox-folder-block.folder-selected .inbox-folder-row {
+        background:
+          radial-gradient(circle at 50% 52%, rgba(226,239,227,0.74) 0%, rgba(245,249,244,0.92) 58%, rgba(255,255,255,0.99) 100%) !important;
+        border-color: rgba(255,255,255,0.96) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  toggleInboxFolder = function toggleInboxFolderV127(folderId) {
+    if (!folderId) return;
+
+    if (expandedInboxFolderIds.has(folderId)) {
+      expandedInboxFolderIds.delete(folderId);
+      expandedInboxFolderFullIds.delete(folderId);
+    } else {
+      expandedInboxFolderIds.add(folderId);
+      expandedInboxFolderFullIds.delete(folderId);
+    }
+
+    renderInboxPage(false);
+  };
+
+  function toggleInboxFolderSelection(folderId) {
+    if (!folderId) return;
+
+    if (selectedInboxFolderIds.has(folderId)) {
+      selectedInboxFolderIds.delete(folderId);
+    } else {
+      selectedInboxFolderIds.add(folderId);
+    }
+
+    renderInboxPage(false);
+  }
+
+  renderInboxFolderBlockHtml = function renderInboxFolderBlockHtmlV127(folder) {
+    const items = inboxItems.filter((item) => item.folderId === folder.id);
+    const isOpen = expandedInboxFolderIds.has(folder.id);
+    const isFull = expandedInboxFolderFullIds.has(folder.id);
+    const isSelected = selectedInboxFolderIds.has(folder.id);
+    const hasMoreThanPreview = items.length > 3;
+
+    return `<section class="inbox-folder-block ${isOpen ? "open" : ""} ${isSelected ? "folder-selected" : ""}" data-inbox-folder-id="${escapeHTML(folder.id)}">
+      <div class="inbox-folder-row" role="button" tabindex="0" data-inbox-folder-toggle="${escapeHTML(folder.id)}">
+        <span class="inbox-folder-icon selectable ${isSelected ? "selected" : ""}" data-inbox-folder-select="${escapeHTML(folder.id)}" aria-label="Выбрать папку">${iconFolderFilledMini()}</span>
+        <span class="inbox-folder-main">
+          <span class="inbox-folder-title">${escapeHTML(folder.title || "Без названия")}</span>
+          <span class="inbox-folder-count">${escapeHTML(formatFolderItemCountRu(items.length))}</span>
+        </span>
+        <span class="inbox-folder-actions">
+          <button class="inbox-row-action-btn edit" type="button" data-inbox-folder-edit="${escapeHTML(folder.id)}" title="Переименовать папку">${iconEditMini()}</button>
+          <button class="inbox-row-action-btn delete" type="button" data-inbox-folder-delete="${escapeHTML(folder.id)}" title="Удалить папку">${iconTrashMini()}</button>
+          <button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="Раскрыть папку">${iconChevronDownMini()}</button>
+        </span>
+      </div>
+      ${isOpen ? `<div class="inbox-folder-drawer">
+        <div class="inbox-folder-scroll ${isFull ? "full" : "preview"}">
+          ${items.length ? items.map(renderInboxRowHtml).join("") : `<div class="inbox-folder-empty">Папка пустая</div>`}
+        </div>
+        ${hasMoreThanPreview && !isFull ? `<button class="inbox-folder-show-all" type="button" data-inbox-folder-show-all="${escapeHTML(folder.id)}">Показать все <span>›</span></button>` : ""}
+      </div>` : ""}
+    </section>`;
+  };
+
+  bindInboxListEvents = function bindInboxListEventsV127() {
+    document.querySelectorAll(".inbox-row").forEach((row) => {
+      row.onclick = (event) => {
+        const editTarget = event.target.closest("[data-inbox-edit]");
+        const deleteTarget = event.target.closest("[data-inbox-delete]");
+        const selectTarget = event.target.closest("[data-inbox-select]");
+        const id = row.dataset.inboxId || "";
+        if (selectTarget) { event.preventDefault(); event.stopPropagation(); toggleInboxItemSelection(id); return; }
+        if (editTarget) { event.preventDefault(); event.stopPropagation(); promptRenameInboxItem(id); return; }
+        if (deleteTarget) { event.preventDefault(); event.stopPropagation(); confirmDeleteInboxItem(id); return; }
+        showInboxItemPreview(id);
+      };
+      row.onkeydown = (event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showInboxItemPreview(row.dataset.inboxId || ""); }
+      };
+    });
+
+    document.querySelectorAll("[data-inbox-folder-select]").forEach((el) => {
+      el.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleInboxFolderSelection(el.getAttribute("data-inbox-folder-select") || "");
+      });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-toggle]").forEach((el) => {
+      el.addEventListener("click", (event) => {
+        if (event.target.closest("[data-inbox-folder-edit]") || event.target.closest("[data-inbox-folder-delete]") || event.target.closest("[data-inbox-folder-select]")) return;
+        event.preventDefault();
+        event.stopPropagation();
+        toggleInboxFolder(el.getAttribute("data-inbox-folder-toggle") || "");
+      });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-edit]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        promptRenameInboxFolder(btn.getAttribute("data-inbox-folder-edit") || "");
+      });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-delete]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        confirmDeleteInboxFolder(btn.getAttribute("data-inbox-folder-delete") || "");
+      });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-show-all]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const folderId = btn.getAttribute("data-inbox-folder-show-all") || "";
+        if (folderId) {
+          expandedInboxFolderFullIds.add(folderId);
+          expandedInboxFolderIds.add(folderId);
+          renderInboxPage(false);
+        }
+      });
+    });
   };
 })();
