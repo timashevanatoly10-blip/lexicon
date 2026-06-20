@@ -13395,3 +13395,107 @@ function iconChevronDownMini() {
   `;
   document.head.appendChild(style);
 })();
+
+/* ===== Inbox folder wide slim frame v129 ===== */
+(() => {
+  const styleId = "inboxFolderWideSlimV129Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* Папка шире обычных записей и заметно тоньше */
+    .inbox-folder-block {
+      width: calc(100% + 12px) !important;
+      margin: 2px -6px 7px !important;
+      border-radius: 23px !important;
+    }
+
+    .inbox-folder-row {
+      min-height: 39px !important;
+      height: 39px !important;
+      padding: 3px 7px 3px 10px !important;
+      grid-template-columns: 27px minmax(0, 1fr) auto !important;
+      gap: 7px !important;
+    }
+
+    .inbox-folder-title {
+      font-size: clamp(13px, 3.05vw, 17.5px) !important;
+      font-weight: 740 !important;
+      line-height: 1 !important;
+    }
+
+    .inbox-folder-icon.selectable {
+      width: 23px !important;
+      height: 23px !important;
+      border-width: 1.4px !important;
+    }
+
+    .inbox-folder-icon.selectable svg {
+      width: 19px !important;
+      height: 19px !important;
+      stroke-width: 1.9 !important;
+    }
+
+    .inbox-folder-actions {
+      gap: 3px !important;
+    }
+
+    .inbox-folder-actions .inbox-row-action-btn {
+      width: 22px !important;
+      height: 22px !important;
+      border-width: 1.25px !important;
+    }
+
+    .inbox-folder-actions .inbox-row-action-btn svg {
+      width: 12.5px !important;
+      height: 12.5px !important;
+      stroke-width: 2.05 !important;
+    }
+
+    /* При раскрытии внешняя рамка остаётся широкой, а записи внутри — уже */
+    .inbox-folder-drawer {
+      margin: 0 10px 9px !important;
+      border-radius: 20px !important;
+    }
+
+    .inbox-folder-drawer .inbox-row {
+      min-height: 46px !important;
+      grid-template-columns: 27px minmax(0, 1fr) 56px !important;
+      padding: 6px 8px !important;
+    }
+
+    .inbox-folder-scroll.preview {
+      max-height: 154px !important;
+    }
+
+    .inbox-folder-show-all {
+      min-height: 35px !important;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-folder-block {
+        width: calc(100% + 10px) !important;
+        margin-left: -5px !important;
+        margin-right: -5px !important;
+        border-radius: 22px !important;
+      }
+
+      .inbox-folder-row {
+        min-height: 38px !important;
+        height: 38px !important;
+        grid-template-columns: 26px minmax(0, 1fr) auto !important;
+        padding-left: 9px !important;
+        padding-right: 6px !important;
+      }
+
+      .inbox-folder-drawer {
+        margin-left: 9px !important;
+        margin-right: 9px !important;
+        margin-bottom: 8px !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
