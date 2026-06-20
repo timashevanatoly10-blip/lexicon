@@ -13843,9 +13843,33 @@ function iconChevronDownMini() {
 
       .inbox-head-btn svg { width: 15px !important; height: 15px !important; stroke: currentColor !important; stroke-width: 2.1 !important; fill: none !important; }
       .inbox-head-btn.sum { font-size: 18px !important; }
-      .inbox-head-btn.menu { font-size: 22px !important; padding-bottom: 4px !important; }
+      .inbox-head-btn.menu {
+        padding: 0 !important;
+        color: #1f6f56 !important;
+        background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.76) 0%, rgba(249,250,247,0.91) 56%, rgba(255,255,255,0.99) 100%) !important;
+        border-color: rgba(255,255,255,0.92) !important;
+      }
+      .inbox-more-dots {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        transform: translateY(0);
+      }
+      .inbox-more-dots i {
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: currentColor;
+        display: block;
+      }
       .inbox-head-btn.inactive { opacity: 0.28 !important; filter: saturate(0.65) !important; pointer-events: none !important; }
       .inbox-head-btn.active { color: #fff !important; background: #1f6f56 !important; border-color: rgba(255,255,255,0.82) !important; }
+      .inbox-head-btn.menu.active {
+        color: #1f6f56 !important;
+        background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.76) 0%, rgba(249,250,247,0.91) 56%, rgba(255,255,255,0.99) 100%) !important;
+        border-color: rgba(255,255,255,0.92) !important;
+      }
 
       .inbox-list-flat > .inbox-row,
       .inbox-folder-drawer .inbox-row {
@@ -13868,44 +13892,69 @@ function iconChevronDownMini() {
         position: fixed;
         inset: 0;
         z-index: 10008;
-        background: rgba(10,20,15,0.24);
+        background: rgba(10,20,15,0.10);
         display: flex;
         align-items: flex-start;
         justify-content: flex-end;
-        padding: max(78px, calc(env(safe-area-inset-top) + 68px)) 14px 14px;
+        padding: max(80px, calc(env(safe-area-inset-top) + 70px)) 14px 14px;
         box-sizing: border-box;
       }
 
       .inbox-context-menu {
-        width: min(245px, calc(100vw - 28px));
-        border-radius: 20px;
+        display: grid;
+        grid-template-columns: repeat(4, 38px);
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: auto;
+        min-width: 0;
+        border-radius: 999px;
         padding: 7px;
         background: rgba(255,255,252,0.985);
         border: 1px solid rgba(226,231,224,0.86);
-        box-shadow: 0 16px 38px rgba(20,40,30,0.18);
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,0.54),
+          0 10px 24px rgba(20,40,30,0.13);
       }
 
       .inbox-context-menu button {
-        width: 100%;
-        min-height: 39px;
-        border: 0;
-        border-radius: 14px;
-        background: transparent;
-        color: rgba(31,33,31,0.82);
-        padding: 0 12px;
-        display: flex;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
+        border: 1.5px solid rgba(255,255,255,0.90);
+        border-radius: 999px;
+        background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.76) 0%, rgba(249,250,247,0.91) 56%, rgba(255,255,255,0.99) 100%);
+        color: #1f6f56;
+        padding: 0;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        text-align: left;
-        font-size: 14px;
-        font-weight: 680;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,0.34),
+          0 1px 3px rgba(186,193,184,0.05);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
       }
 
-      .inbox-context-menu button:active { background: rgba(95,153,98,0.08); }
-      .inbox-context-menu button.danger { color: rgba(150,48,45,0.92); }
-      .inbox-context-menu button:disabled { opacity: 0.28; }
-      .inbox-context-separator { height: 1px; margin: 5px 6px; background: rgba(224,228,222,0.76); }
+      .inbox-context-menu button svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+        stroke-width: 2.15;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .inbox-context-menu button:active { transform: scale(0.94); }
+      .inbox-context-menu button.danger { color: rgba(150,48,45,0.88); }
+      .inbox-context-menu button:disabled { opacity: 0.24; pointer-events: none; }
+      .inbox-context-label { display: none; }
 
       @media (max-width: 390px) {
         .inbox-top-actions { grid-template-columns: repeat(5, 29px) !important; gap: 4px !important; }
@@ -14009,12 +14058,11 @@ function iconChevronDownMini() {
     const overlay = document.createElement("div");
     overlay.id = "inboxContextOverlay";
     overlay.className = "inbox-context-overlay";
-    overlay.innerHTML = `<div class="inbox-context-menu" role="menu">
-      <button id="inboxMenuRename" type="button" ${canRename ? "" : "disabled"}><span>Переименовать</span><span>✎</span></button>
-      <button id="inboxMenuDelete" class="danger" type="button" ${canDelete ? "" : "disabled"}><span>Удалить</span><span>⌫</span></button>
-      <div class="inbox-context-separator"></div>
-      <button id="inboxMenuTxt" type="button" ${canExport ? "" : "disabled"}><span>TXT</span><span>текст</span></button>
-      <button id="inboxMenuHtml" type="button" ${canExport ? "" : "disabled"}><span>HTML</span><span>страница</span></button>
+    overlay.innerHTML = `<div class="inbox-context-menu" role="menu" aria-label="Действия">
+      <button id="inboxMenuRename" type="button" title="Переименовать" aria-label="Переименовать" ${canRename ? "" : "disabled"}>${iconEditMini()}<span class="inbox-context-label">Переименовать</span></button>
+      <button id="inboxMenuDelete" class="danger" type="button" title="Удалить" aria-label="Удалить" ${canDelete ? "" : "disabled"}>${iconTrashMini()}<span class="inbox-context-label">Удалить</span></button>
+      <button id="inboxMenuTxt" type="button" title="TXT" aria-label="Экспорт TXT" ${canExport ? "" : "disabled"}>TXT</button>
+      <button id="inboxMenuHtml" type="button" title="HTML" aria-label="Экспорт HTML" ${canExport ? "" : "disabled"}>HTML</button>
     </div>`;
     overlay.addEventListener("click", (event) => { if (event.target === overlay) closeInboxContextMenu(); });
     document.body.appendChild(overlay);
@@ -14122,7 +14170,7 @@ function iconChevronDownMini() {
           <button id="inboxFolderBtn" class="inbox-head-btn ${canFolder ? "active" : "inactive"}" type="button" title="В папку">${iconFolderMoveMini()}</button>
           <button id="inboxMoveDownBtn" class="inbox-head-btn ${canMove ? "active" : "inactive"}" type="button" title="Ниже">↓</button>
           <button id="inboxCombineBtn" class="inbox-head-btn sum ${canMerge ? "active" : "inactive"}" type="button" title="Объединить">Σ</button>
-          <button id="inboxMoreBtn" class="inbox-head-btn menu active" type="button" title="Ещё">…</button>
+          <button id="inboxMoreBtn" class="inbox-head-btn menu active" type="button" title="Ещё" aria-label="Ещё"><span class="inbox-more-dots"><i></i><i></i><i></i></span></button>
         </div>
       </div>
       <div id="inboxList" class="inbox-list inbox-list-flat">${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}</div>
