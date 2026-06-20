@@ -13608,3 +13608,142 @@ function iconChevronDownMini() {
 
   document.head.appendChild(style);
 })();
+
+/* ===== Inbox unified ultra-wide slim rows v131 ===== */
+(() => {
+  const styleId = "inboxUnifiedSlimRowsV131Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* Общий ритм списка: тонкие современные строки */
+    .inbox-list-flat {
+      gap: 6px !important;
+    }
+
+    /* Обычные записи вне папок: та же длина и почти та же высота, что у папки */
+    .inbox-list-flat > .inbox-row {
+      width: calc(100% + 24px) !important;
+      min-height: 32px !important;
+      height: 32px !important;
+      margin: 1px -12px 0 !important;
+      padding: 2px 5px 2px 8px !important;
+      grid-template-columns: 22px minmax(0, 1fr) 42px !important;
+      gap: 5px !important;
+      border-radius: 18px !important;
+      box-sizing: border-box !important;
+    }
+
+    .inbox-list-flat > .inbox-row .inbox-row-title {
+      font-size: clamp(12.5px, 2.95vw, 16.8px) !important;
+      font-weight: 710 !important;
+      line-height: 1 !important;
+      letter-spacing: -0.018em !important;
+    }
+
+    .inbox-list-flat > .inbox-row .inbox-row-marker {
+      width: 16px !important;
+      height: 16px !important;
+      border-width: 1.6px !important;
+    }
+
+    .inbox-list-flat > .inbox-row .inbox-row-side-actions {
+      gap: 2px !important;
+    }
+
+    .inbox-list-flat > .inbox-row .inbox-row-action-btn {
+      width: 19px !important;
+      height: 19px !important;
+      border-width: 1.1px !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.26),
+        0 1px 2px rgba(186,193,184,0.035) !important;
+    }
+
+    .inbox-list-flat > .inbox-row .inbox-row-action-btn svg {
+      width: 10.5px !important;
+      height: 10.5px !important;
+      stroke-width: 2 !important;
+    }
+
+    /* Записи внутри папки: тоже тонкие, но чуть короче внешней рамки */
+    .inbox-folder-drawer {
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+    }
+
+    .inbox-folder-drawer .inbox-row {
+      width: calc(100% - 6px) !important;
+      min-height: 31px !important;
+      height: 31px !important;
+      margin-left: 3px !important;
+      margin-right: 3px !important;
+      padding: 2px 5px 2px 7px !important;
+      grid-template-columns: 21px minmax(0, 1fr) 40px !important;
+      gap: 5px !important;
+      border-radius: 15px !important;
+      box-sizing: border-box !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-title {
+      font-size: clamp(12px, 2.82vw, 16.2px) !important;
+      font-weight: 690 !important;
+      line-height: 1 !important;
+      letter-spacing: -0.016em !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-marker {
+      width: 15px !important;
+      height: 15px !important;
+      border-width: 1.5px !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-side-actions {
+      gap: 2px !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-action-btn {
+      width: 18px !important;
+      height: 18px !important;
+      border-width: 1px !important;
+    }
+
+    .inbox-folder-drawer .inbox-row-action-btn svg {
+      width: 10px !important;
+      height: 10px !important;
+      stroke-width: 2 !important;
+    }
+
+    .inbox-folder-scroll.preview {
+      max-height: 105px !important;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-list-flat > .inbox-row {
+        width: calc(100% + 20px) !important;
+        min-height: 31px !important;
+        height: 31px !important;
+        margin-left: -10px !important;
+        margin-right: -10px !important;
+        grid-template-columns: 21px minmax(0, 1fr) 40px !important;
+        padding-left: 7px !important;
+        padding-right: 4px !important;
+      }
+
+      .inbox-folder-drawer .inbox-row {
+        min-height: 30px !important;
+        height: 30px !important;
+        grid-template-columns: 20px minmax(0, 1fr) 38px !important;
+        padding-left: 6px !important;
+        padding-right: 4px !important;
+      }
+
+      .inbox-folder-scroll.preview {
+        max-height: 102px !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
