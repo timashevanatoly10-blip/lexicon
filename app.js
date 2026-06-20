@@ -13747,3 +13747,393 @@ function iconChevronDownMini() {
 
   document.head.appendChild(style);
 })();
+
+/* ===== Inbox compact header + contextual actions v132 ===== */
+(() => {
+  const styleId = "inboxContextHeaderV132Styles";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      body.inbox-page-open #brandBtn { position: relative !important; }
+
+      .inbox-global-back {
+        position: fixed !important;
+        top: max(10px, env(safe-area-inset-top)) !important;
+        left: max(10px, env(safe-area-inset-left)) !important;
+        z-index: 9994 !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        border: 1.5px solid rgba(255,255,255,0.90) !important;
+        background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.74) 0%, rgba(249,250,247,0.90) 56%, rgba(255,255,255,0.98) 100%) !important;
+        color: #1f6f56 !important;
+        font-size: 20px !important;
+        font-weight: 560 !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.36), 0 1px 4px rgba(186,193,184,0.08) !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+
+      .inbox-global-back:active { transform: scale(0.94) !important; }
+
+      .inbox-list-topline {
+        display: grid !important;
+        grid-template-columns: minmax(86px, auto) minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 42px !important;
+        padding: 1px 0 7px !important;
+      }
+
+      .inbox-title-block {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        min-width: 0 !important;
+        padding-left: 2px !important;
+      }
+
+      .inbox-title {
+        font-size: clamp(17px, 4vw, 23px) !important;
+        line-height: 1 !important;
+      }
+
+      .inbox-subtitle {
+        font-size: clamp(10.5px, 2.45vw, 13.5px) !important;
+        line-height: 1.05 !important;
+        margin-top: 2px !important;
+        white-space: nowrap !important;
+      }
+
+      .inbox-top-actions {
+        display: grid !important;
+        grid-template-columns: repeat(5, 32px) !important;
+        justify-content: end !important;
+        align-items: center !important;
+        gap: 5px !important;
+      }
+
+      .inbox-head-btn {
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        border: 1.5px solid rgba(255,255,255,0.90) !important;
+        background: radial-gradient(circle at 50% 52%, rgba(240,243,239,0.76) 0%, rgba(249,250,247,0.91) 56%, rgba(255,255,255,0.99) 100%) !important;
+        color: #1f6f56 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.34), 0 1px 3px rgba(186,193,184,0.05) !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+
+      .inbox-head-btn svg { width: 15px !important; height: 15px !important; stroke: currentColor !important; stroke-width: 2.1 !important; fill: none !important; }
+      .inbox-head-btn.sum { font-size: 18px !important; }
+      .inbox-head-btn.menu { font-size: 22px !important; padding-bottom: 4px !important; }
+      .inbox-head-btn.inactive { opacity: 0.28 !important; filter: saturate(0.65) !important; pointer-events: none !important; }
+      .inbox-head-btn.active { color: #fff !important; background: #1f6f56 !important; border-color: rgba(255,255,255,0.82) !important; }
+
+      .inbox-list-flat > .inbox-row,
+      .inbox-folder-drawer .inbox-row {
+        grid-template-columns: 22px minmax(0, 1fr) !important;
+      }
+
+      .inbox-row-side-actions { display: none !important; }
+
+      .inbox-folder-row {
+        grid-template-columns: 22px minmax(0, 1fr) 22px !important;
+      }
+
+      .inbox-folder-actions .edit,
+      .inbox-folder-actions .delete { display: none !important; }
+
+      .inbox-folder-actions { gap: 0 !important; }
+      .inbox-folder-actions .inbox-folder-toggle { width: 19px !important; height: 19px !important; }
+
+      .inbox-context-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10008;
+        background: rgba(10,20,15,0.24);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        padding: max(78px, calc(env(safe-area-inset-top) + 68px)) 14px 14px;
+        box-sizing: border-box;
+      }
+
+      .inbox-context-menu {
+        width: min(245px, calc(100vw - 28px));
+        border-radius: 20px;
+        padding: 7px;
+        background: rgba(255,255,252,0.985);
+        border: 1px solid rgba(226,231,224,0.86);
+        box-shadow: 0 16px 38px rgba(20,40,30,0.18);
+      }
+
+      .inbox-context-menu button {
+        width: 100%;
+        min-height: 39px;
+        border: 0;
+        border-radius: 14px;
+        background: transparent;
+        color: rgba(31,33,31,0.82);
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 680;
+      }
+
+      .inbox-context-menu button:active { background: rgba(95,153,98,0.08); }
+      .inbox-context-menu button.danger { color: rgba(150,48,45,0.92); }
+      .inbox-context-menu button:disabled { opacity: 0.28; }
+      .inbox-context-separator { height: 1px; margin: 5px 6px; background: rgba(224,228,222,0.76); }
+
+      @media (max-width: 390px) {
+        .inbox-top-actions { grid-template-columns: repeat(5, 29px) !important; gap: 4px !important; }
+        .inbox-head-btn { width: 29px !important; min-width: 29px !important; height: 29px !important; font-size: 15px !important; }
+        .inbox-head-btn.menu { font-size: 20px !important; }
+        .inbox-list-topline { grid-template-columns: minmax(76px, auto) minmax(0, 1fr) !important; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function inboxSelectionMode() {
+    if (selectedInboxFolderIds.size) return "folders";
+    if (selectedInboxItemIds.size) return "items";
+    return "none";
+  }
+
+  function clearInboxSelections() {
+    selectedInboxItemIds.clear();
+    selectedInboxFolderIds.clear();
+  }
+
+  toggleInboxItemSelection = function toggleInboxItemSelectionV132(id) {
+    if (!id) return;
+    selectedInboxFolderIds.clear();
+    if (selectedInboxItemIds.has(id)) selectedInboxItemIds.delete(id);
+    else selectedInboxItemIds.add(id);
+    renderInboxPage(false);
+  };
+
+  function toggleFolderSelectionV132(folderId) {
+    if (!folderId) return;
+    selectedInboxItemIds.clear();
+    if (selectedInboxFolderIds.has(folderId)) selectedInboxFolderIds.delete(folderId);
+    else selectedInboxFolderIds.add(folderId);
+    renderInboxPage(false);
+  }
+
+  function selectedInboxObjectCount() {
+    return selectedInboxItemIds.size || selectedInboxFolderIds.size;
+  }
+
+  function selectedSingleItem() {
+    if (selectedInboxItemIds.size !== 1) return null;
+    return inboxItems.find((item) => selectedInboxItemIds.has(item.id)) || null;
+  }
+
+  function selectedSingleFolder() {
+    if (selectedInboxFolderIds.size !== 1) return null;
+    return inboxFolders.find((folder) => selectedInboxFolderIds.has(folder.id)) || null;
+  }
+
+  async function deleteCurrentInboxSelection() {
+    const mode = inboxSelectionMode();
+    if (mode === "items") {
+      const ids = Array.from(selectedInboxItemIds);
+      if (!ids.length) return;
+      if (!confirm(`Удалить выбранные записи: ${ids.length}?`)) return;
+      for (const id of ids) {
+        await inboxApi(`/api/inbox/${encodeURIComponent(id)}`, { method: "DELETE" });
+        inboxItems = inboxItems.filter((item) => item.id !== id);
+      }
+      selectedInboxItemIds.clear();
+      renderInboxPage(false);
+      return;
+    }
+
+    if (mode === "folders") {
+      const ids = Array.from(selectedInboxFolderIds);
+      if (!ids.length) return;
+      if (!confirm(`Удалить выбранные папки: ${ids.length}? Записи останутся в Inbox.`)) return;
+      for (const id of ids) {
+        await inboxApi(`/api/inbox/folders/${encodeURIComponent(id)}`, { method: "DELETE" });
+        inboxFolders = inboxFolders.filter((folder) => folder.id !== id);
+        inboxItems = inboxItems.map((item) => item.folderId === id ? { ...item, folderId: "", folder_id: "" } : item);
+      }
+      selectedInboxFolderIds.clear();
+      renderInboxPage(false);
+    }
+  }
+
+  async function renameCurrentInboxSelection() {
+    const item = selectedSingleItem();
+    if (item) { await promptRenameInboxItem(item.id); return; }
+    const folder = selectedSingleFolder();
+    if (folder) { await promptRenameInboxFolder(folder.id); }
+  }
+
+  function closeInboxContextMenu() {
+    document.getElementById("inboxContextOverlay")?.remove();
+  }
+
+  function showInboxContextMenu() {
+    closeInboxContextMenu();
+    const mode = inboxSelectionMode();
+    const count = selectedInboxObjectCount();
+    const canRename = count === 1;
+    const canDelete = count >= 1;
+    const canExport = mode === "items" && selectedInboxItemIds.size >= 1;
+
+    const overlay = document.createElement("div");
+    overlay.id = "inboxContextOverlay";
+    overlay.className = "inbox-context-overlay";
+    overlay.innerHTML = `<div class="inbox-context-menu" role="menu">
+      <button id="inboxMenuRename" type="button" ${canRename ? "" : "disabled"}><span>Переименовать</span><span>✎</span></button>
+      <button id="inboxMenuDelete" class="danger" type="button" ${canDelete ? "" : "disabled"}><span>Удалить</span><span>⌫</span></button>
+      <div class="inbox-context-separator"></div>
+      <button id="inboxMenuTxt" type="button" ${canExport ? "" : "disabled"}><span>TXT</span><span>текст</span></button>
+      <button id="inboxMenuHtml" type="button" ${canExport ? "" : "disabled"}><span>HTML</span><span>страница</span></button>
+    </div>`;
+    overlay.addEventListener("click", (event) => { if (event.target === overlay) closeInboxContextMenu(); });
+    document.body.appendChild(overlay);
+
+    on(document.getElementById("inboxMenuRename"), "click", async () => { closeInboxContextMenu(); await renameCurrentInboxSelection(); });
+    on(document.getElementById("inboxMenuDelete"), "click", async () => { closeInboxContextMenu(); await deleteCurrentInboxSelection(); });
+    on(document.getElementById("inboxMenuTxt"), "click", () => { closeInboxContextMenu(); handleExportSelectedInboxItems("txt"); });
+    on(document.getElementById("inboxMenuHtml"), "click", () => { closeInboxContextMenu(); handleExportSelectedInboxItems("html"); });
+  }
+
+  function handleInboxMovePlaceholder(direction) {
+    const count = selectedInboxObjectCount();
+    if (count !== 1) return;
+    alert(direction === "up" ? "Перемещение вверх подключим на следующем этапе." : "Перемещение вниз подключим на следующем этапе.");
+  }
+
+  function handleInboxFolderActionV132() {
+    const mode = inboxSelectionMode();
+    if (mode === "items") { showInboxFolderPickerModal(); return; }
+    if (mode === "folders") alert("Папку в папку подключим на следующем этапе.");
+  }
+
+  renderInboxRowHtml = function renderInboxRowHtmlV132(item) {
+    const dateLabel = formatInboxDate(item.updatedAt || item.createdAt);
+    const title = String(item.title || "").trim() || dateLabel || "Без названия";
+    const selected = selectedInboxItemIds.has(item.id);
+    return `<div class="inbox-row ${selected ? "selected" : ""}" role="button" tabindex="0" data-inbox-id="${escapeHTML(item.id)}">
+      <span class="inbox-row-marker ${selected ? "selected" : ""}" data-inbox-select="${escapeHTML(item.id)}" aria-label="Выбрать запись"></span>
+      <span class="inbox-row-main"><span class="inbox-row-title">${escapeHTML(title)}</span></span>
+    </div>`;
+  };
+
+  renderInboxFolderBlockHtml = function renderInboxFolderBlockHtmlV132(folder) {
+    const items = inboxItems.filter((item) => item.folderId === folder.id);
+    const isOpen = expandedInboxFolderIds.has(folder.id);
+    const isFull = expandedInboxFolderFullIds.has(folder.id);
+    const isSelected = selectedInboxFolderIds.has(folder.id);
+    const hasMoreThanPreview = items.length > 3;
+
+    return `<section class="inbox-folder-block ${isOpen ? "open" : ""} ${isSelected ? "folder-selected" : ""}" data-inbox-folder-id="${escapeHTML(folder.id)}">
+      <div class="inbox-folder-row" role="button" tabindex="0" data-inbox-folder-toggle="${escapeHTML(folder.id)}">
+        <span class="inbox-folder-icon selectable ${isSelected ? "selected" : ""}" data-inbox-folder-select="${escapeHTML(folder.id)}" aria-label="Выбрать папку">${iconFolderFilledMini()}</span>
+        <span class="inbox-folder-main"><span class="inbox-folder-title">${escapeHTML(folder.title || "Без названия")}</span></span>
+        <span class="inbox-folder-actions"><button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="Раскрыть папку">${iconChevronDownMini()}</button></span>
+      </div>
+      ${isOpen ? `<div class="inbox-folder-drawer">
+        <div class="inbox-folder-scroll ${isFull ? "full" : "preview"}">${items.length ? items.map(renderInboxRowHtml).join("") : `<div class="inbox-folder-empty">Папка пустая</div>`}</div>
+        ${hasMoreThanPreview && !isFull ? `<button class="inbox-folder-show-all" type="button" data-inbox-folder-show-all="${escapeHTML(folder.id)}">Показать все <span>›</span></button>` : ""}
+      </div>` : ""}
+    </section>`;
+  };
+
+  bindInboxListEvents = function bindInboxListEventsV132() {
+    document.querySelectorAll(".inbox-row").forEach((row) => {
+      row.onclick = (event) => {
+        const id = row.dataset.inboxId || "";
+        if (event.target.closest("[data-inbox-select]")) { event.preventDefault(); event.stopPropagation(); toggleInboxItemSelection(id); return; }
+        showInboxItemPreview(id);
+      };
+      row.onkeydown = (event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showInboxItemPreview(row.dataset.inboxId || ""); }
+      };
+    });
+
+    document.querySelectorAll("[data-inbox-folder-select]").forEach((el) => {
+      el.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleFolderSelectionV132(el.getAttribute("data-inbox-folder-select") || ""); });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-toggle]").forEach((el) => {
+      el.addEventListener("click", (event) => {
+        if (event.target.closest("[data-inbox-folder-select]")) return;
+        event.preventDefault(); event.stopPropagation(); toggleInboxFolder(el.getAttribute("data-inbox-folder-toggle") || "");
+      });
+    });
+
+    document.querySelectorAll("[data-inbox-folder-show-all]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.preventDefault(); event.stopPropagation();
+        const folderId = btn.getAttribute("data-inbox-folder-show-all") || "";
+        if (folderId) { expandedInboxFolderFullIds.add(folderId); expandedInboxFolderIds.add(folderId); renderInboxPage(false); }
+      });
+    });
+  };
+
+  renderInboxPage = function renderInboxPageV132(isLoading = false) {
+    activeInboxItemId = "";
+    if (!inboxPage) return;
+    document.body.classList.add("inbox-page-open");
+
+    const mode = inboxSelectionMode();
+    const itemCount = selectedInboxItemIds.size;
+    const folderCount = selectedInboxFolderIds.size;
+    const totalSelected = itemCount || folderCount;
+    const canMove = totalSelected === 1 && !inboxBusy;
+    const canFolder = totalSelected >= 1 && !inboxBusy;
+    const canMerge = mode === "items" && itemCount >= 2 && !inboxBusy;
+    const subtitle = isLoading ? "Загружаю..." : (totalSelected ? `Выбрано: ${totalSelected}` : formatInboxCountRu(inboxItems.length));
+
+    inboxPage.innerHTML = `<section class="inbox-shell inbox-list-shell">
+      <button id="backHomeFromInboxBtn" class="inbox-global-back" type="button" title="Назад">←</button>
+      <div class="inbox-topline inbox-list-topline">
+        <div class="inbox-title-block"><div class="inbox-title">Inbox</div><div class="inbox-subtitle">${escapeHTML(subtitle)}</div></div>
+        <div class="inbox-top-actions">
+          <button id="inboxMoveUpBtn" class="inbox-head-btn ${canMove ? "active" : "inactive"}" type="button" title="Выше">↑</button>
+          <button id="inboxFolderBtn" class="inbox-head-btn ${canFolder ? "active" : "inactive"}" type="button" title="В папку">${iconFolderMoveMini()}</button>
+          <button id="inboxMoveDownBtn" class="inbox-head-btn ${canMove ? "active" : "inactive"}" type="button" title="Ниже">↓</button>
+          <button id="inboxCombineBtn" class="inbox-head-btn sum ${canMerge ? "active" : "inactive"}" type="button" title="Объединить">Σ</button>
+          <button id="inboxMoreBtn" class="inbox-head-btn menu active" type="button" title="Ещё">…</button>
+        </div>
+      </div>
+      <div id="inboxList" class="inbox-list inbox-list-flat">${isLoading ? buildInboxLoadingHtml() : buildInboxListHtml()}</div>
+    </section>`;
+
+    on(document.getElementById("backHomeFromInboxBtn"), "click", () => { clearInboxSelections(); document.body.classList.remove("inbox-page-open"); showPage("home"); });
+    on(document.getElementById("inboxMoveUpBtn"), "click", () => handleInboxMovePlaceholder("up"));
+    on(document.getElementById("inboxMoveDownBtn"), "click", () => handleInboxMovePlaceholder("down"));
+    on(document.getElementById("inboxFolderBtn"), "click", handleInboxFolderActionV132);
+    on(document.getElementById("inboxCombineBtn"), "click", handleMergeSelectedInboxItems);
+    on(document.getElementById("inboxMoreBtn"), "click", showInboxContextMenu);
+    bindInboxListEvents();
+  };
+})();
