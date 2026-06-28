@@ -14454,8 +14454,8 @@ function iconChevronDownMini() {
     const isFull = expandedInboxFolderFullIds.has(folder.id);
     const isSelected = selectedInboxFolderIds.has(folder.id);
     const childEntries = getInboxEntriesForParentV133(folder.id);
-    const visibleEntries = isFull ? childEntries : childEntries.slice(0, 3);
-    const hasMoreThanPreview = childEntries.length > visibleEntries.length;
+    const visibleEntries = childEntries;
+    const hasMoreThanPreview = !isFull && childEntries.length > 3;
     const nextAncestors = new Set(ancestors);
     nextAncestors.add(folder.id);
     const stats = getFolderSubtreeStatsV133(folder.id);
@@ -14473,7 +14473,7 @@ function iconChevronDownMini() {
         <span class="inbox-folder-actions"><button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="${isOpen ? "Свернуть папку" : "Раскрыть папку"}">${iconChevronDownMini()}</button></span>
       </div>
       ${isOpen ? `<div class="inbox-folder-drawer">
-        <div class="inbox-folder-scroll ${isFull ? "full" : "preview"}">
+        <div class="inbox-folder-scroll ${isFull ? "full" : "preview"} ${hasMoreThanPreview ? "scrollable-preview" : ""}">
           ${visibleEntries.length
             ? visibleEntries.map((entry) => renderInboxEntryV133(entry, depth + 1, nextAncestors)).join("")
             : `<div class="inbox-folder-empty">Папка пустая</div>`}
@@ -15423,6 +15423,127 @@ function iconChevronDownMini() {
         max-width: calc(100% - 10px) !important;
         margin-left: 5px !important;
         margin-right: 5px !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
+
+/* ===== Inbox nested hierarchy + preview scroll v135 ===== */
+(() => {
+  const styleId = "inboxNestedHierarchyScrollV135Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* Короткий режим снова прокручивается внутри папки. */
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll.preview.scrollable-preview {
+      position: relative !important;
+      max-height: 154px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior: contain !important;
+      touch-action: pan-y !important;
+      scrollbar-width: none !important;
+    }
+
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll.preview.scrollable-preview::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll.full {
+      max-height: none !important;
+      overflow: visible !important;
+      touch-action: auto !important;
+    }
+
+    /* Родительская папка — отдельная более насыщенная шапка контейнера. */
+    .inbox-tree-list > .inbox-tree-folder.open > .inbox-folder-row {
+      background:
+        radial-gradient(circle at 48% 42%, rgba(222,237,224,0.94) 0%, rgba(237,245,237,0.95) 60%, rgba(249,252,248,0.98) 100%) !important;
+      border-bottom: 1px solid rgba(31,111,86,0.20) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.72),
+        inset 0 -1px 0 rgba(31,111,86,0.055) !important;
+    }
+
+    .inbox-tree-list > .inbox-tree-folder.open > .inbox-folder-row .inbox-folder-title {
+      color: #175f4b !important;
+      font-weight: 790 !important;
+    }
+
+    .inbox-tree-list > .inbox-tree-folder.open > .inbox-folder-row .inbox-folder-icon.selectable {
+      background: rgba(225,239,226,0.92) !important;
+      border-color: rgba(31,111,86,0.34) !important;
+    }
+
+    /* Вложенная папка — светлая вкладка с линией связи от родителя. */
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+      position: relative !important;
+      padding-left: 12px !important;
+      background:
+        linear-gradient(90deg, rgba(232,242,233,0.72) 0%, rgba(247,250,246,0.90) 18%, rgba(255,255,255,0.96) 100%) !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      width: 7px;
+      border-top: 1.5px solid rgba(31,111,86,0.38);
+      transform: translateY(-0.5px);
+      pointer-events: none;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-title {
+      color: rgba(31,33,31,0.90) !important;
+      font-weight: 735 !important;
+    }
+
+    /* Тонкая вертикальная ветка показывает, что всё ниже принадлежит родителю. */
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll {
+      position: relative !important;
+    }
+
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      left: 4px;
+      top: 0;
+      bottom: 7px;
+      width: 1.5px;
+      border-radius: 999px;
+      background: rgba(31,111,86,0.22);
+      pointer-events: none;
+    }
+
+    /* У записей линия не мешает маркеру и остаётся только как фон иерархии. */
+    .inbox-folder-scroll > .inbox-tree-item,
+    .inbox-folder-scroll > .inbox-tree-folder {
+      position: relative !important;
+      z-index: 4 !important;
+    }
+
+    /* На следующей глубине оттенок ещё легче, ширина при этом не меняется. */
+    .inbox-folder-drawer .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+      background:
+        linear-gradient(90deg, rgba(239,246,239,0.74) 0%, rgba(250,252,249,0.92) 18%, rgba(255,255,255,0.97) 100%) !important;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll.preview.scrollable-preview {
+        max-height: 148px !important;
+      }
+
+      .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+        padding-left: 11px !important;
       }
     }
   `;
