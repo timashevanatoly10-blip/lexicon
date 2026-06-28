@@ -15052,7 +15052,7 @@ function iconChevronDownMini() {
     const canMerge = mode === "items" && itemCount >= 2 && !inboxBusy;
     const subtitle = isLoading
       ? "Загружаю..."
-      : (totalSelected ? `Выбрано: ${totalSelected}` : `${formatInboxCountRu(inboxItems.length)} · папок: ${inboxFolders.length}`);
+      : (totalSelected ? `Выбрано: ${totalSelected}` : "");
 
     inboxPage.innerHTML = `<section class="inbox-shell inbox-list-shell inbox-tree-shell">
       <button id="backHomeFromInboxBtn" class="inbox-global-back" type="button" title="Назад">←</button>
@@ -15250,4 +15250,182 @@ function iconChevronDownMini() {
     `;
     document.head.appendChild(style);
   }
+})();
+
+
+/* ===== Inbox clean idle header + flat nested folder tabs v134 ===== */
+(() => {
+  const styleId = "inboxFlatNestedFolderTabsV134Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* В обычном режиме под Inbox ничего не показываем. */
+    .inbox-subtitle:empty {
+      display: none !important;
+    }
+
+    .inbox-title-block:has(.inbox-subtitle:empty) {
+      justify-content: center !important;
+      transform: translateY(0) !important;
+    }
+
+    /* Раскрытая папка остаётся одним ровным контейнером на всю ширину. */
+    .inbox-tree-folder.open > .inbox-folder-drawer {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 0 7px !important;
+      border-left: 0 !important;
+      border-right: 0 !important;
+      border-bottom: 0 !important;
+      border-radius: 0 0 18px 18px !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+
+    .inbox-tree-folder.open > .inbox-folder-drawer > .inbox-folder-scroll {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+
+    /* Вложенная папка не сужается и не уезжает вправо. */
+    .inbox-folder-drawer .inbox-tree-folder {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-left: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+
+    /* Каждая вложенная папка выглядит как следующая шапка-вкладка. */
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+      width: 100% !important;
+      min-height: 40px !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 5px 8px !important;
+      grid-template-columns: 23px minmax(0, 1fr) 22px !important;
+      gap: 7px !important;
+      border: 0 !important;
+      border-top: 1px solid rgba(31,111,86,0.16) !important;
+      border-bottom: 1px solid rgba(224,228,222,0.48) !important;
+      border-radius: 0 !important;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(244,248,243,0.86) 0%, rgba(251,252,249,0.90) 62%, rgba(255,255,255,0.96) 100%) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.66),
+        inset 0 -1px 0 rgba(31,111,86,0.035) !important;
+      box-sizing: border-box !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder.folder-selected > .inbox-folder-row {
+      background:
+        radial-gradient(circle at 50% 45%, rgba(226,239,227,0.84) 0%, rgba(245,249,244,0.94) 62%, rgba(255,255,255,0.98) 100%) !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-main {
+      min-width: 0 !important;
+      gap: 2px !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-title {
+      font-size: clamp(12.8px, 3vw, 16.8px) !important;
+      line-height: 1.02 !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-count {
+      font-size: clamp(8.8px, 2vw, 11px) !important;
+      line-height: 1.02 !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-icon.selectable {
+      width: 20px !important;
+      height: 20px !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row .inbox-folder-icon.selectable svg {
+      width: 17px !important;
+      height: 17px !important;
+    }
+
+    /* У следующего уровня снова та же ширина — без ступенек и рамок внутри рамок. */
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-drawer {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-drawer > .inbox-folder-scroll {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+
+    /* Записи внутри любой папки выравниваются одинаково и не съезжают с глубиной. */
+    .inbox-folder-scroll > .inbox-tree-item {
+      width: calc(100% - 12px) !important;
+      min-width: 0 !important;
+      max-width: calc(100% - 12px) !important;
+      margin: 5px 6px 0 !important;
+      padding-left: 7px !important;
+      padding-right: 7px !important;
+      border-radius: 15px !important;
+      box-sizing: border-box !important;
+    }
+
+    .inbox-folder-scroll > .inbox-tree-item + .inbox-tree-item {
+      margin-top: 4px !important;
+    }
+
+    .inbox-folder-scroll > .inbox-tree-folder + .inbox-tree-item,
+    .inbox-folder-scroll > .inbox-tree-item + .inbox-tree-folder {
+      margin-top: 5px !important;
+    }
+
+    .inbox-tree-folder > .inbox-folder-drawer > .inbox-folder-show-all {
+      margin-top: 4px !important;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+        min-height: 39px !important;
+        padding-left: 7px !important;
+        padding-right: 7px !important;
+        grid-template-columns: 22px minmax(0, 1fr) 21px !important;
+        gap: 6px !important;
+      }
+
+      .inbox-folder-scroll > .inbox-tree-item {
+        width: calc(100% - 10px) !important;
+        max-width: calc(100% - 10px) !important;
+        margin-left: 5px !important;
+        margin-right: 5px !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 })();
