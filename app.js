@@ -14213,6 +14213,7 @@ function iconChevronDownMini() {
     return {
       id: String(folder.id || uid("inbox_folder")),
       title: String(folder.title || folder.name || "Без названия"),
+      description: String(folder.description ?? ""),
       parentFolderId: cleanInboxFolderIdV133(folder.parentFolderId ?? folder.parent_folder_id ?? ""),
       parent_folder_id: cleanInboxFolderIdV133(folder.parentFolderId ?? folder.parent_folder_id ?? ""),
       position: cleanInboxPositionV133(folder.position),
@@ -14432,6 +14433,185 @@ function iconChevronDownMini() {
     };
   }
 
+  let activeInboxFolderDescriptionIdV136 = "";
+  let inboxFolderDescriptionExpandedV136 = false;
+  let inboxFolderDescriptionEditingV136 = false;
+  let inboxFolderDescriptionSavingV136 = false;
+  let inboxFolderDescriptionDraftV136 = "";
+
+  function iconFolderDescriptionMiniV136(hasDescription = false) {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6.5 3.8h8.1l3 3v13.4H6.5z"></path>
+      <path d="M14.6 3.8v3.3h3"></path>
+      <path d="M9.2 10.2h5.8M9.2 13.4h5.8M9.2 16.6h4.2"></path>
+      ${hasDescription ? `<circle class="inbox-folder-description-dot" cx="18.2" cy="18.1" r="2.15"></circle>` : ""}
+    </svg>`;
+  }
+
+  function iconFolderDescriptionExpandV136(isExpanded = false) {
+    return isExpanded
+      ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"></path></svg>`
+      : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6M15 3h6v6M9 21H3v-6M15 21h6v-6"></path></svg>`;
+  }
+
+  function inboxFolderDescriptionWordV136(number, forms) {
+    const value = Math.abs(Number(number) || 0);
+    const mod100 = value % 100;
+    const mod10 = value % 10;
+    if (mod100 >= 11 && mod100 <= 14) return forms[2];
+    if (mod10 === 1) return forms[0];
+    if (mod10 >= 2 && mod10 <= 4) return forms[1];
+    return forms[2];
+  }
+
+  function formatInboxFolderDescriptionStatsV136(folderId) {
+    const stats = getFolderSubtreeStatsV133(folderId);
+    const filesWord = inboxFolderDescriptionWordV136(stats.itemCount, ["файл", "файла", "файлов"]);
+    const foldersWord = inboxFolderDescriptionWordV136(stats.nestedFolderCount, ["папка", "папки", "папок"]);
+    return `${stats.itemCount} ${filesWord} · ${stats.nestedFolderCount} ${foldersWord}`;
+  }
+
+  function closeInboxFolderDescriptionV136() {
+    document.getElementById("inboxFolderDescriptionOverlayV136")?.remove();
+    activeInboxFolderDescriptionIdV136 = "";
+    inboxFolderDescriptionExpandedV136 = false;
+    inboxFolderDescriptionEditingV136 = false;
+    inboxFolderDescriptionSavingV136 = false;
+    inboxFolderDescriptionDraftV136 = "";
+  }
+
+  function readInboxFolderDescriptionDraftV136() {
+    const textarea = document.getElementById("inboxFolderDescriptionInputV136");
+    if (textarea) inboxFolderDescriptionDraftV136 = textarea.value;
+    return inboxFolderDescriptionDraftV136;
+  }
+
+  function renderInboxFolderDescriptionModalV136() {
+    const folder = inboxFolders.find((item) => item.id === activeInboxFolderDescriptionIdV136);
+    if (!folder) {
+      closeInboxFolderDescriptionV136();
+      return;
+    }
+
+    const previousOverlay = document.getElementById("inboxFolderDescriptionOverlayV136");
+    if (previousOverlay && inboxFolderDescriptionEditingV136) readInboxFolderDescriptionDraftV136();
+    previousOverlay?.remove();
+
+    const description = String(folder.description ?? "");
+    const shownText = inboxFolderDescriptionEditingV136 ? inboxFolderDescriptionDraftV136 : description;
+    const statistics = formatInboxFolderDescriptionStatsV136(folder.id);
+    const overlay = document.createElement("div");
+    overlay.id = "inboxFolderDescriptionOverlayV136";
+    overlay.className = "inbox-folder-description-overlay";
+    overlay.innerHTML = `<section class="inbox-folder-description-card ${inboxFolderDescriptionExpandedV136 ? "expanded" : ""}" role="dialog" aria-modal="true" aria-label="Описание к папке">
+      <header class="inbox-folder-description-head">
+        <div class="inbox-folder-description-title-wrap">
+          <div class="inbox-folder-description-title">Описание к папке</div>
+          <div class="inbox-folder-description-folder-name">${escapeHTML(folder.title || "Без названия")}</div>
+        </div>
+        <div class="inbox-folder-description-head-actions">
+          <button id="inboxFolderDescriptionEditV136" class="inbox-folder-description-head-btn ${inboxFolderDescriptionEditingV136 ? "saving-mode" : ""}" type="button" title="${inboxFolderDescriptionEditingV136 ? "Сохранить" : "Изменить"}" aria-label="${inboxFolderDescriptionEditingV136 ? "Сохранить" : "Изменить"}" ${inboxFolderDescriptionSavingV136 ? "disabled" : ""}>
+            ${inboxFolderDescriptionEditingV136 ? "✓" : iconEditMini()}
+          </button>
+          <button id="inboxFolderDescriptionExpandV136" class="inbox-folder-description-head-btn" type="button" title="${inboxFolderDescriptionExpandedV136 ? "Свернуть окно" : "Развернуть окно"}" aria-label="${inboxFolderDescriptionExpandedV136 ? "Свернуть окно" : "Развернуть окно"}">
+            ${iconFolderDescriptionExpandV136(inboxFolderDescriptionExpandedV136)}
+          </button>
+          <button id="inboxFolderDescriptionCloseV136" class="inbox-folder-description-head-btn close" type="button" title="Закрыть" aria-label="Закрыть">×</button>
+        </div>
+      </header>
+      <div class="inbox-folder-description-stat">${escapeHTML(statistics)}</div>
+      <div class="inbox-folder-description-divider"></div>
+      ${inboxFolderDescriptionEditingV136
+        ? `<textarea id="inboxFolderDescriptionInputV136" class="inbox-folder-description-input" placeholder="Напиши любое описание к этой папке..." spellcheck="true"></textarea>`
+        : `<div class="inbox-folder-description-text ${description.trim() ? "" : "empty"}">${description.trim() ? escapeHTML(description) : "Описание пока не добавлено."}</div>`}
+      ${inboxFolderDescriptionSavingV136 ? `<div class="inbox-folder-description-saving">Сохраняю...</div>` : ""}
+    </section>`;
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay && !inboxFolderDescriptionEditingV136 && !inboxFolderDescriptionSavingV136) {
+        closeInboxFolderDescriptionV136();
+      }
+    });
+
+    document.body.appendChild(overlay);
+
+    if (inboxFolderDescriptionEditingV136) {
+      const textarea = document.getElementById("inboxFolderDescriptionInputV136");
+      if (textarea) {
+        textarea.value = shownText;
+        textarea.addEventListener("input", () => {
+          inboxFolderDescriptionDraftV136 = textarea.value;
+        });
+        requestAnimationFrame(() => {
+          textarea.focus();
+          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        });
+      }
+    }
+
+    on(document.getElementById("inboxFolderDescriptionCloseV136"), "click", closeInboxFolderDescriptionV136);
+
+    on(document.getElementById("inboxFolderDescriptionExpandV136"), "click", () => {
+      readInboxFolderDescriptionDraftV136();
+      inboxFolderDescriptionExpandedV136 = !inboxFolderDescriptionExpandedV136;
+      renderInboxFolderDescriptionModalV136();
+    });
+
+    on(document.getElementById("inboxFolderDescriptionEditV136"), "click", async () => {
+      if (inboxFolderDescriptionSavingV136) return;
+
+      if (!inboxFolderDescriptionEditingV136) {
+        inboxFolderDescriptionDraftV136 = String(folder.description ?? "");
+        inboxFolderDescriptionEditingV136 = true;
+        renderInboxFolderDescriptionModalV136();
+        return;
+      }
+
+      readInboxFolderDescriptionDraftV136();
+      inboxFolderDescriptionSavingV136 = true;
+      renderInboxFolderDescriptionModalV136();
+
+      try {
+        const data = await inboxApi(`/api/inbox/folders/${encodeURIComponent(folder.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: inboxFolderDescriptionDraftV136 })
+        });
+
+        const savedFolder = normalizeInboxFolder(data.folder || data.inboxFolder || {
+          ...folder,
+          description: inboxFolderDescriptionDraftV136
+        });
+
+        inboxFolders = inboxFolders.map((item) => item.id === folder.id
+          ? { ...item, ...savedFolder, description: String(savedFolder?.description ?? inboxFolderDescriptionDraftV136) }
+          : item
+        );
+
+        inboxFolderDescriptionEditingV136 = false;
+        inboxFolderDescriptionSavingV136 = false;
+        renderInboxPage(false);
+        renderInboxFolderDescriptionModalV136();
+      } catch (err) {
+        inboxFolderDescriptionSavingV136 = false;
+        alert("Не удалось сохранить описание:\n" + (err?.message || err));
+        renderInboxFolderDescriptionModalV136();
+      }
+    });
+  }
+
+  function openInboxFolderDescriptionV136(folderId) {
+    const folder = inboxFolders.find((item) => item.id === folderId);
+    if (!folder) return;
+
+    activeInboxFolderDescriptionIdV136 = folder.id;
+    inboxFolderDescriptionExpandedV136 = false;
+    inboxFolderDescriptionEditingV136 = false;
+    inboxFolderDescriptionSavingV136 = false;
+    inboxFolderDescriptionDraftV136 = String(folder.description ?? "");
+    renderInboxFolderDescriptionModalV136();
+  }
+
   function renderInboxEntryV133(entry, depth = 0, ancestors = new Set()) {
     if (entry.type === "item") return renderInboxRowHtml(entry.item, depth);
     return renderInboxFolderBlockHtml(entry.folder, depth, ancestors);
@@ -14453,24 +14633,23 @@ function iconChevronDownMini() {
     const isOpen = expandedInboxFolderIds.has(folder.id);
     const isFull = expandedInboxFolderFullIds.has(folder.id);
     const isSelected = selectedInboxFolderIds.has(folder.id);
+    const hasDescription = Boolean(String(folder.description ?? "").trim());
     const childEntries = getInboxEntriesForParentV133(folder.id);
     const visibleEntries = childEntries;
     const hasMoreThanPreview = !isFull && childEntries.length > 3;
     const nextAncestors = new Set(ancestors);
     nextAncestors.add(folder.id);
-    const stats = getFolderSubtreeStatsV133(folder.id);
-    const countLabel = stats.nestedFolderCount
-      ? `${stats.itemCount} док. · ${stats.nestedFolderCount} пап.`
-      : formatFolderItemCountRu(stats.itemCount);
 
     return `<section class="inbox-folder-block inbox-tree-folder ${isOpen ? "open" : ""} ${isSelected ? "folder-selected" : ""}" style="--inbox-tree-depth:${Math.max(0, Number(depth) || 0)}" data-inbox-folder-id="${escapeHTML(folder.id)}">
       <div class="inbox-folder-row" role="button" tabindex="0" data-inbox-folder-toggle="${escapeHTML(folder.id)}">
         <span class="inbox-folder-icon selectable ${isSelected ? "selected" : ""}" data-inbox-folder-select="${escapeHTML(folder.id)}" aria-label="Выбрать папку">${iconFolderFilledMini()}</span>
         <span class="inbox-folder-main">
           <span class="inbox-folder-title">${escapeHTML(folder.title || "Без названия")}</span>
-          <span class="inbox-folder-count">${escapeHTML(countLabel)}</span>
         </span>
-        <span class="inbox-folder-actions"><button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="${isOpen ? "Свернуть папку" : "Раскрыть папку"}">${iconChevronDownMini()}</button></span>
+        <span class="inbox-folder-actions">
+          <button class="inbox-row-action-btn inbox-folder-description-btn ${hasDescription ? "has-description" : ""}" type="button" data-inbox-folder-description="${escapeHTML(folder.id)}" title="Описание к папке" aria-label="Описание к папке">${iconFolderDescriptionMiniV136(hasDescription)}</button>
+          <button class="inbox-row-action-btn inbox-folder-toggle" type="button" data-inbox-folder-toggle="${escapeHTML(folder.id)}" title="${isOpen ? "Свернуть папку" : "Раскрыть папку"}">${iconChevronDownMini()}</button>
+        </span>
       </div>
       ${isOpen ? `<div class="inbox-folder-drawer">
         <div class="inbox-folder-scroll ${isFull ? "full" : "preview"} ${hasMoreThanPreview ? "scrollable-preview" : ""}">
@@ -14531,9 +14710,20 @@ function iconChevronDownMini() {
       });
     });
 
+    document.querySelectorAll("[data-inbox-folder-description]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openInboxFolderDescriptionV136(button.getAttribute("data-inbox-folder-description") || "");
+      });
+    });
+
     document.querySelectorAll("[data-inbox-folder-toggle]").forEach((element) => {
       element.addEventListener("click", (event) => {
-        if (event.target.closest("[data-inbox-folder-select]")) return;
+        if (
+          event.target.closest("[data-inbox-folder-select]") ||
+          event.target.closest("[data-inbox-folder-description]")
+        ) return;
         event.preventDefault();
         event.stopPropagation();
         toggleInboxFolder(element.getAttribute("data-inbox-folder-toggle") || "");
@@ -15550,3 +15740,340 @@ function iconChevronDownMini() {
 
   document.head.appendChild(style);
 })();
+
+/* ===== Inbox folder descriptions v136 ===== */
+(() => {
+  const styleId = "inboxFolderDescriptionsV136Styles";
+  if (typeof document === "undefined" || document.getElementById(styleId)) return;
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    /* В шапке папки остаются только значок, название, описание и стрелка. */
+    .inbox-folder-count {
+      display: none !important;
+    }
+
+    .inbox-folder-main {
+      justify-content: center !important;
+      gap: 0 !important;
+    }
+
+    .inbox-folder-row {
+      grid-template-columns: 22px minmax(0, 1fr) 51px !important;
+    }
+
+    .inbox-folder-actions {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 4px !important;
+      min-width: 49px !important;
+    }
+
+    .inbox-folder-actions .inbox-folder-description-btn,
+    .inbox-folder-actions .inbox-folder-toggle {
+      display: inline-flex !important;
+      width: 22px !important;
+      min-width: 22px !important;
+      height: 22px !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+    }
+
+    .inbox-folder-description-btn {
+      position: relative !important;
+      color: rgba(31,111,86,0.32) !important;
+      background: rgba(255,255,255,0.28) !important;
+      border-color: rgba(255,255,255,0.66) !important;
+      opacity: 0.88 !important;
+    }
+
+    .inbox-folder-description-btn.has-description {
+      color: #1f6f56 !important;
+      background:
+        radial-gradient(circle at 50% 52%, rgba(223,237,225,0.92) 0%, rgba(244,249,243,0.96) 58%, rgba(255,255,255,0.99) 100%) !important;
+      border-color: rgba(255,255,255,0.92) !important;
+      opacity: 1 !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.42),
+        0 1px 4px rgba(31,111,86,0.08) !important;
+    }
+
+    .inbox-folder-description-btn svg {
+      width: 14px !important;
+      height: 14px !important;
+      stroke: currentColor !important;
+      stroke-width: 1.9 !important;
+      fill: none !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+    }
+
+    .inbox-folder-description-btn .inbox-folder-description-dot {
+      fill: currentColor !important;
+      stroke: #ffffff !important;
+      stroke-width: 0.9 !important;
+    }
+
+    .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+      grid-template-columns: 23px minmax(0, 1fr) 51px !important;
+    }
+
+    .inbox-folder-description-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+      box-sizing: border-box;
+      background: rgba(10,20,15,0.24);
+      animation: textAttachBackdropIn 0.12s ease-out;
+    }
+
+    .inbox-folder-description-card {
+      position: relative;
+      width: min(440px, 100%);
+      max-height: min(58dvh, 470px);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
+      border-radius: 27px;
+      padding: 15px 15px 14px;
+      background: rgba(255,255,252,0.985);
+      border: 1px solid rgba(226,231,224,0.88);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.54),
+        0 18px 46px rgba(20,40,30,0.20);
+      animation: dictionaryPickerRise 0.16s ease-out;
+    }
+
+    .inbox-folder-description-card.expanded {
+      width: min(640px, 100%);
+      height: calc(100dvh - 28px);
+      max-height: calc(100dvh - 28px);
+    }
+
+    .inbox-folder-description-head {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .inbox-folder-description-title-wrap {
+      min-width: 0;
+    }
+
+    .inbox-folder-description-title {
+      color: #1f6f56;
+      font-size: clamp(17px, 4vw, 22px);
+      font-weight: 790;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+    }
+
+    .inbox-folder-description-folder-name {
+      margin-top: 4px;
+      color: rgba(31,33,31,0.54);
+      font-size: clamp(11px, 2.5vw, 13.5px);
+      font-weight: 610;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .inbox-folder-description-head-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .inbox-folder-description-head-btn {
+      width: 31px;
+      min-width: 31px;
+      height: 31px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255,255,255,0.90);
+      background:
+        radial-gradient(circle at 50% 52%, rgba(240,243,239,0.78) 0%, rgba(249,250,247,0.93) 58%, rgba(255,255,255,0.99) 100%);
+      color: #1f6f56;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 20px;
+      font-weight: 650;
+      line-height: 1;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.36),
+        0 1px 4px rgba(186,193,184,0.06);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inbox-folder-description-head-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .inbox-folder-description-head-btn.saving-mode {
+      color: #ffffff;
+      background: #1f6f56;
+      border-color: rgba(255,255,255,0.84);
+      font-size: 18px;
+    }
+
+    .inbox-folder-description-head-btn.close {
+      color: rgba(31,33,31,0.55);
+      font-size: 22px;
+      font-weight: 430;
+      padding-bottom: 2px;
+    }
+
+    .inbox-folder-description-head-btn:disabled {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
+    .inbox-folder-description-stat {
+      flex: 0 0 auto;
+      margin-top: 11px;
+      color: rgba(31,33,31,0.52);
+      font-size: clamp(11.5px, 2.65vw, 14px);
+      font-weight: 620;
+      line-height: 1.15;
+    }
+
+    .inbox-folder-description-divider {
+      flex: 0 0 auto;
+      height: 1px;
+      margin: 10px 0 11px;
+      background: rgba(224,228,222,0.76);
+    }
+
+    .inbox-folder-description-text {
+      flex: 1 1 auto;
+      min-height: 112px;
+      max-height: min(32dvh, 260px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 2px 3px 8px;
+      color: rgba(31,33,31,0.86);
+      font-size: clamp(14px, 3.3vw, 18px);
+      font-weight: 450;
+      line-height: 1.42;
+      letter-spacing: -0.01em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      scrollbar-width: thin;
+    }
+
+    .inbox-folder-description-text.empty {
+      color: rgba(31,33,31,0.38);
+      font-style: italic;
+    }
+
+    .inbox-folder-description-card.expanded .inbox-folder-description-text {
+      max-height: none;
+      min-height: 0;
+    }
+
+    .inbox-folder-description-input {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 140px;
+      max-height: min(34dvh, 290px);
+      resize: none;
+      box-sizing: border-box;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 19px;
+      border: 2px solid rgba(255,255,255,0.90);
+      background: rgba(248,250,247,0.86);
+      color: #1f211f;
+      font-size: clamp(14px, 3.3vw, 18px);
+      font-weight: 450;
+      line-height: 1.42;
+      padding: 12px 13px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.40),
+        inset 2px 2px 5px rgba(255,255,255,0.60),
+        inset -2px -2px 6px rgba(197,207,196,0.10);
+    }
+
+    .inbox-folder-description-card.expanded .inbox-folder-description-input {
+      min-height: 0;
+      max-height: none;
+    }
+
+    .inbox-folder-description-input::placeholder {
+      color: rgba(119,122,119,0.42);
+    }
+
+    .inbox-folder-description-saving {
+      flex: 0 0 auto;
+      margin-top: 8px;
+      color: #1f6f56;
+      font-size: 12px;
+      font-weight: 720;
+      text-align: center;
+    }
+
+    @media (max-width: 390px) {
+      .inbox-folder-row {
+        grid-template-columns: 21px minmax(0, 1fr) 48px !important;
+      }
+
+      .inbox-folder-drawer .inbox-tree-folder > .inbox-folder-row {
+        grid-template-columns: 22px minmax(0, 1fr) 48px !important;
+      }
+
+      .inbox-folder-actions {
+        min-width: 46px !important;
+        gap: 3px !important;
+      }
+
+      .inbox-folder-description-overlay {
+        padding: 10px;
+      }
+
+      .inbox-folder-description-card {
+        max-height: min(62dvh, 500px);
+        padding: 14px 13px 13px;
+      }
+
+      .inbox-folder-description-card.expanded {
+        height: calc(100dvh - 20px);
+        max-height: calc(100dvh - 20px);
+      }
+
+      .inbox-folder-description-head-actions {
+        gap: 4px;
+      }
+
+      .inbox-folder-description-head-btn {
+        width: 29px;
+        min-width: 29px;
+        height: 29px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
+
