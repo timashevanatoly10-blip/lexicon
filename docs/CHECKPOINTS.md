@@ -251,3 +251,34 @@ Deploy guard принимает только предыдущий подтвер
 Исправление сохраняется отдельным commit того же CP-002, без CP-003 и без
 перемещения cp-002 (`ffce58bc0d33f53d8442f00570eeda36150071d0`).
 Фактический deployment и live smoke записываются после публикации.
+
+#### Результат исправления — 2026-10-30 00:12 МСК
+
+Исправление commit `d89fcf2c6c066cde2c77db24f00f1ffb70b3cf80` отправлено в main
+`timashevanatoly10-blip/lexicon`. Тег cp-002 остаётся на
+`ffce58bc0d33f53d8442f00570eeda36150071d0`; CP-003 не создавался.
+Чистый commit повторно собран, SHA-256 artifact совпал с предпубликационным.
+Deploy только существующего lexicon-worker выполнен; опубликованный модуль
+скачан через Cloudflare API и совпал с artifact по SHA-256:
+`a987f137bfc58209d640784f94413c5438f683553bcb3827c4660e7cb18ac999`.
+
+- Deployment: `4bb5c9dc-d775-4fc1-9bd8-b878d44e69aa`.
+- Version: `c44288f6-3673-4e75-8f9d-c4383f78bd08`, 100% трафика.
+- До/после deploy проверены имена/типы всех прежних bindings, точный DB ID,
+  сохранность значений plain_text vars. Secret_text bindings сохранены без
+  чтения/изменения значений. Wrangler config и D1 schema не менялись; миграций,
+  записи пользовательских словарей/слов и публикаций frontend не было.
+- **Live Chrome form PASS:** настоящая production-страница, browser POST
+  application/x-www-form-urlencoded с собственным Origin/Referer и secure CSRF
+  cookie, HTTP 303, переход на разрешённый callback, state/issuer, PKCE exchange.
+  Callback перехвачен CDP до обращения к ChatGPT; Referer на чужой домен не ушёл.
+  Это проверка браузерного OAuth, а не автоматизация UI аккаунта ChatGPT.
+- **Live MCP/legacy smoke PASS:** пять tools, SDK initialize/list/call,
+  существующие словари/карточки/поиск и прежний API, запрет без авторизации и
+  запрет записи с read-only scope. Оба временных smoke grants отозваны.
+  Ноль тестовых словарей/слов. Opera отдельно не запускалась.
+
+Нужно начать подключение в ChatGPT заново, чтобы загрузить новую HTML-форму с
+исправленными заголовками; уже открытая старая форма сохраняет старую policy.
+Результат фиксируется документационным commit того же CP-002 без нового deploy
+и без перемещения checkpoint-тега.

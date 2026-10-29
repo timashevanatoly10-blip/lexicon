@@ -132,6 +132,16 @@ SDK и старый API прошли read-only smoke; binding names/types, DB и
 сохранены. Значения secret_text не извлекались и не менялись. Тестовых словарей
 или слов в production не создавалось. Подключение UI ChatGPT — отдельный шаг.
 
+Обновление CP-002 от 2026-10-30 00:12 МСК: исправлен browser OAuth
+`invalid_origin` (no-referrer → Origin null) и CSP redirect. Commit
+`d89fcf2c6c066cde2c77db24f00f1ffb70b3cf80`, deployment
+`4bb5c9dc-d775-4fc1-9bd8-b878d44e69aa`, version
+`c44288f6-3673-4e75-8f9d-c4383f78bd08` (100%). Актуальный bundled SHA-256:
+`a987f137bfc58209d640784f94413c5438f683553bcb3827c4660e7cb18ac999`.
+Фактическая production-форма в Chrome прошла POST/303/callback/PKCE; live MCP и
+старый API также прошли smoke. Строгие Origin/CSRF проверки сохранены, D1/секреты
+не менялись, cp-002 не передвигался. Подробности и границы — в журнале.
+
 ## Ведение изменений (правила)
 
 Постоянные правила — [AGENTS.md](../AGENTS.md).

@@ -103,6 +103,8 @@ Origin null не допускается; Referer не заменяет пров�
 `node scripts/oauth-browser-smoke.cjs` повторяет реальную форму на production,
 перехватывая callback до внешнего сетевого запроса. Ключи держит только в памяти,
 выданный read-only grant отзывает; словари не изменяет.
+После исправления browser OAuth от 2026-10-30 начните подключение в ChatGPT
+заново: открытая ранее форма сохраняет старый Referrer-Policy до перезагрузки.
 
 `scripts/mcp-ops.cjs` выполняет только фиксированные операции LEXICON:
 backup → verify-backup → migrate → artifact → deploy, с проверкой точной цели,
