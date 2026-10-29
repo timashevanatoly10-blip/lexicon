@@ -53,8 +53,22 @@ Backend deploy, D1, изменение облачных bindings, vars и secret
 
 URL: `https://timashevanatoly10-blip.github.io/lexicon/`.
 Pages публикует `main` из `/`, workflow `pages-build-deployment`.
-Commit/push/tag и фактический результат будут записаны после выполнения.
-Точный checkpoint-коммит определяется тегом cp-001; тег не передвигается.
+Checkpoint-коммит создан локально:
+`c68ce818fdd555f0caa87656c77e8094238e1a1f`.
+Локальный тег `cp-001` указывает на тот же коммит и не передвигается.
+Frontend release ID: `2e3b88c7b8e30620eb4c`.
+Перед commit проверены 29 отслеживаемых файлов: сигнатуры секретов не найдены,
+SHA-256 всех 12 публичных assets совпали с Git index, backend-хеш совпал с импортом.
+
+Первый push отклонён HTTP 403: Git Credential Manager использовал `mymatevessel`.
+Повторный push с явно выбранным `timashevanatoly10-blip` ожидал авторизации
+и остановлен до её завершения; фонового push не оставлено. GCM github list
+показал только аккаунт `mymatevessel`. Необходимо завершить вход Git Credential
+Manager под `timashevanatoly10-blip` с правом записи в этот репозиторий, затем
+повторить разрешённый push main и cp-001 и проверить результат Pages.
+Публикация CP-001 в GitHub/Pages не выполнена; существующий сайт не заявляется
+обновлённым. Эта запись сохраняется отдельным документационным коммитом того же
+этапа, без перемещения cp-001 и без начала CP-002.
 
 ### Ограничение первого выпуска
 
