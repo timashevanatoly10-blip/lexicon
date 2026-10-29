@@ -282,3 +282,62 @@ Deploy только существующего lexicon-worker выполнен; 
 исправленными заголовками; уже открытая старая форма сохраняет старую policy.
 Результат фиксируется документационным commit того же CP-002 без нового deploy
 и без перемещения checkpoint-тега.
+
+## CP-003 — Full LEXICON dictionary management (2026-10-30)
+
+Пользователь разрешил реализацию, tests/commit/tag/push, backup/additive migration
+и deploy существующего lexicon-worker, без тестовых удалений production-данных.
+Номер cp-003 свободен локально и в origin; CP-001/cp-001 и CP-002/cp-002 неизменны.
+GitHub account `timashevanatoly10-blip`, exact origin и push permission проверены.
+
+Состав checkpoint: общий AI module (извлечён исходный REST pipeline), durable
+word-tasks и fullCard validator, shared legacy/MCP deletions, девять MCP tools,
+новые delete scopes/consent, `0002_full_cards.sql`, tests/full-cards, расширенные
+MCP regression fixtures, live generator check, safeguards/production smoke и
+документация [CP003_MCP.md](CP003_MCP.md). Frontend assets/config неизменны.
+Исходники и документация до checkpoint ещё не считаются отправленными в GitHub.
+
+Проверки до публикации:
+
+- `npm run test:full-cards`: PASS, реальные локальные workerd/D1, семь независимых
+  owners, все три панели, atomic commit, нормализованные дубли, concurrent submit,
+  idempotency, status без расходов, HTTP error/partial/uncertain, bounded explicit
+  retry, daily budget и crash recovery; exact-ID подтверждаемое удаление,
+  changed-target/replay/cross-owner denial, shared legacy REST deletion и AI.
+- Настоящие frontend normalizers и HTML renderers извлечены из app.js для tests;
+  полные сохранённые center/left/right показывают значения/примеры, мнемонику,
+  ассоциации и грамматику. Frontend не изменялся, не создавалась другая карточка.
+- `npm run test:mcp`, `npm run test:oauth-browser`: PASS, SDK/OAuth/PKCE/CSRF/
+  scopes/изолированные owners/прежняя atomic запись и REST, настоящая Chrome form.
+  Старый быстрый atomic writer тестируется через INTERNAL fixture-only route;
+  публичный MCP принимает только words strings и больше не предлагает quick mode.
+- `scripts/full-card-live.cjs`: три реальные генерации текущим LEXICON pipeline
+  контрольного слова contactor, все панели и parts согласованы; ноль D1-словарей
+  или слов создано. Данные private cache не входят в Git. Повтор теста
+  `LEXICON_USE_LIVE_CARD=1 npm run test:full-cards` провёл реальные ответы через
+  новые задачи, D1 save и frontend renderers без новых платных API calls.
+- JS syntax и diff checks, frontend build/check PASS, release прежний
+  `2e3b88c7b8e30620eb4c`.
+- Перед migration выполнен SQL export существующей DB в игнорируемую
+  `.wrangler/cp003/private/`. Restore + exact migration проверены в SQLite;
+  хеши исходных полей dictionaries/dictionary_words/public_dictionary_links
+  совпали до/после. Секреты и backup не входят в Git.
+
+Entry `backend/worker.js` SHA-256:
+`fe9871cbe25ec1d6782d6de1f9aa37e77fb57fa4992a3f73c2c6c51364ecfa4d`.
+Bundled runtime artifact SHA-256:
+`a2bf736b246abd316f00b2deaff3ed5d884c4c75477ed5e7713dcecafb20ee6e`.
+Migration SHA-256:
+`20251d746e38b90784bd3062ceada0d30688f88269545c908447b13de6ab40c1`.
+Deploy guard требует предыдущий production artifact
+`a987f137bfc58209d640784f94413c5438f683553bcb3827c4660e7cb18ac999`,
+совпадение settings/vars/DB и сохранение всех bindings/secrets. После deploy
+будут проверены опубликованный hash и текущий deployment/version, а также
+read-only production MCP/REST и Chrome OAuth smoke.
+
+На момент этой подготовительной записи production migration/deploy CP-003 ещё
+не выполнялись. Пользовательский словарь «кодекс» и другие записи не удалялись.
+Live запись/удаление в пользовательских словарях в smoke не предусмотрены.
+Новое поколение требует продолжения через continue_word_task, а удаление —
+повторного OAuth с delete scopes и явного подтверждения. Общая стоимость API
+не фиксируется в долларах; лимиты и неопределённые сбои подробно описаны в инструкции.

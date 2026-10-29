@@ -7,7 +7,8 @@
     "check:frontend": "node scripts/build-frontend.cjs --check",
     "test:pwa": "node tests/pwa-update.cjs",
     "test:mcp": "node tests/mcp.cjs",
-    "test:oauth-browser": "node tests/oauth-browser.cjs"
+    "test:oauth-browser": "node tests/oauth-browser.cjs",
+    "test:full-cards": "node tests/full-cards.cjs"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

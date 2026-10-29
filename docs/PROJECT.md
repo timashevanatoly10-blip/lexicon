@@ -94,7 +94,21 @@ Cloudflare после даты проверки. Deployment/version ID не за
 - D1: никаких SQL-запросов, экспорта, миграций или подключения к remote D1 без
   отдельного явного разрешения. Локальная D1 не является копией production.
 
-## MCP LEXICON — CP-002
+## MCP LEXICON — CP-003
+
+CP-003 расширяет тот же Worker девятью tools: полные карточки через существующие
+три режима AI, durable задачи и подтверждаемое удаление. Контракты/расходы/
+ограничения — [CP003_MCP.md](CP003_MCP.md); фактический статус публикации ниже
+в журнале CHECKPOINTS. Исходные dictionaries/dictionary_words и owner hashes
+используются без замены. Число owners не ограничено двумя.
+Общий AI-модуль `backend/services/ai.js` используется прежним `/api/ai` и MCP;
+общие deletion operations — прежним REST и подтверждаемыми MCP tools.
+`0002_full_cards.sql` добавляет только mcp_word_tasks, mcp_word_panels,
+mcp_generation_budget, mcp_delete_confirmations и concurrency index.
+Frontend-файлы обоих сайтов прежние. Production-версия CP-003 фиксируется
+после deploy, до этого сведения CP-002 ниже являются предыдущим состоянием.
+
+### Предыдущая версия CP-002
 
 Реализован `/mcp` в том же lexicon-worker: stateless Streamable HTTP JSON,
 list_dictionaries, get_dictionary, create_dictionary, add_words, search_words.

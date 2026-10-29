@@ -8,7 +8,7 @@ let mf,db,server;let id=0;
 async function req(path,options={}) {return mf.dispatchFetch(ORIGIN+path,{...options,redirect:'manual'});}
 async function post(path,payload,options={}) {return req(path,{method:'POST',headers:{'Content-Type':'application/json',...options.headers},body:JSON.stringify(payload)});}
 async function rpc(token,method,params={}){return post('/mcp',{jsonrpc:'2.0',id:++id,method,params},{headers:{Accept:'application/json, text/event-stream',Authorization:'Bearer '+token}});}
-async function tool(token,name,args){const r=await rpc(token,'tools/call',{name,arguments:args});if(r.status!==200)return {http:r.status};const j=await r.json();return j.result;}
+async function tool(token,name,args){const r=name==='add_words'?await post('/_fixture/legacy-atomic-add',args,{headers:{Authorization:'Bearer '+token}}):await rpc(token,'tools/call',{name,arguments:args});if(r.status!==200)return {http:r.status};const j=await r.json();return j.result;}
 async function oauth(legacy=fixtureToken,scope='lexicon.dictionaries.read lexicon.dictionaries.create lexicon.words.write offline_access'){
   const registration=await post('/oauth/register',{redirect_uris:['https://chatgpt.com/connector_platform_oauth_redirect'],token_endpoint_auth_method:'none'});assert.equal(registration.status,201);const client=await registration.json();
   const verifier=crypto.randomBytes(32).toString('base64url');const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
@@ -25,7 +25,8 @@ async function oauth(legacy=fixtureToken,scope='lexicon.dictionaries.read lexico
   return {...tokens,client_id:client.client_id};
 }
 async function main(){
-  const bundled=await build({entryPoints:['backend/worker.js'],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'});
+  // CP-002 atomic writer remains INTERNAL; no fast-card tool is exposed in production.
+  const bundled=await build({stdin:{resolveDir:process.cwd(),contents:`import worker from './backend/worker.js';import {addWords} from './backend/services/dictionaries.js';import {authenticate} from './backend/mcp/oauth.js';export default {async fetch(r,e){if(new URL(r.url).pathname!=='/_fixture/legacy-atomic-add')return worker.fetch(r,e);try{const p=await authenticate(r,e);const data=await addWords(e.DB,p.owner,await r.json());return Response.json({result:{structuredContent:data}});}catch(x){return Response.json({result:{isError:true,structuredContent:{error:{code:x.code||'OPERATION_FAILED'}}}});}}};`},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'});
   mf=new Miniflare(convertV4MiniflareOptions({modules:true,script:bundled.outputFiles[0].text,compatibilityDate:'2026-05-01',bindings:{ACCESS_TOKENS:fixtureToken+','+otherToken},d1Databases:{DB:'cp002-local-fixture'},cf:false,logRequests:false}));
   db=await mf.getD1Database('DB');await db.exec(fs.readFileSync('tests/fixtures/lexicon-schema.sql','utf8'));await db.batch(fs.readFileSync('backend/migrations/0001_mcp.sql','utf8').replace(/^--.*$/gm,'').split(';').map(s=>s.trim()).filter(Boolean).map(s=>db.prepare(s)));
   const date='2026-01-01T00:00:00.000Z',owner=hash(fixtureToken),other=hash(otherToken);
@@ -38,7 +39,7 @@ async function main(){
   const rejected=await post('/oauth/register',{redirect_uris:['https://attacker.invalid/callback']});assert.equal(rejected.status,400);
   const grant=await oauth();const readonly=await oauth(fixtureToken,'lexicon.dictionaries.read');const foreign=await oauth(otherToken);
   const initialized=await(await rpc(grant.access_token,'initialize',{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'fixture',version:'1'}})).json();assert.equal(initialized.result.serverInfo.name,'LEXICON');
-  const advertised=await(await rpc(grant.access_token,'tools/list')).json();assert.equal(advertised.result.tools.length,5);
+  const advertised=await(await rpc(grant.access_token,'tools/list')).json();assert.equal(advertised.result.tools.length,9);
   assert.equal((await tool(readonly.access_token,'create_dictionary',{title:'No permission',request_id:'readonly-fixture'})).http,403);
   assert.equal((await tool(foreign.access_token,'get_dictionary',{dictionary_id:'existing-dictionary'})).structuredContent.error.code,'NOT_FOUND');
   assert.equal((await tool(foreign.access_token,'add_words',{dictionary_id:'existing-dictionary',request_id:'foreign-write-denied',words:[{word:'injected',translation:'blocked'}]})).structuredContent.error.code,'NOT_FOUND');
@@ -88,7 +89,7 @@ async function main(){
   server=http.createServer(async(q,s)=>{try{const parts=[];for await(const p of q)parts.push(p);const r=await req(q.url,{method:q.method,headers:q.headers,...(q.method==='GET'?{}:{body:Buffer.concat(parts)})});s.writeHead(r.status,Object.fromEntries(r.headers));s.end(Buffer.from(await r.arrayBuffer()));}catch{s.writeHead(500);s.end();}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const {Client}=await import('@modelcontextprotocol/sdk/client/index.js');const {StreamableHTTPClientTransport}=await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
-  const client=new Client({name:'LEXICON-standard-client-test',version:'1'});await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${server.address().port}/mcp`),{requestInit:{headers:{Authorization:'Bearer '+grant.access_token}}}));assert.equal((await client.listTools()).tools.length,5);const sdkRead=await client.callTool({name:'list_dictionaries',arguments:{limit:1}});assert(!sdkRead.isError);await client.close();
+  const client=new Client({name:'LEXICON-standard-client-test',version:'1'});await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${server.address().port}/mcp`),{requestInit:{headers:{Authorization:'Bearer '+grant.access_token}}}));assert.equal((await client.listTools()).tools.length,9);const sdkRead=await client.callTool({name:'list_dictionaries',arguments:{limit:1}});assert(!sdkRead.isError);await client.close();
   console.log('PASS official MCP SDK: initialize, notification, tools/list, tools/call, Streamable HTTP JSON response');
   const refresh=await post('/oauth/token',{grant_type:'refresh_token',client_id:grant.client_id,refresh_token:grant.refresh_token,resource:RESOURCE});assert.equal(refresh.status,200);const rotated=await refresh.json();assert.equal((await rpc(grant.access_token,'ping')).status,401);
   const reuse=await post('/oauth/token',{grant_type:'refresh_token',client_id:grant.client_id,refresh_token:grant.refresh_token,resource:RESOURCE});assert.equal(reuse.status,400);assert.equal((await rpc(rotated.access_token,'ping')).status,401);

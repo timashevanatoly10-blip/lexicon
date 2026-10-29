@@ -4,6 +4,10 @@
 CP-002 adds OAuth-protected `/mcp` and shared dictionary operations. See
 [MCP connection and operations](../docs/MCP_CONNECT.md) and the verified
 [deployment journal](../docs/CHECKPOINTS.md); do not infer production state from Git.
+
+CP-003 shares the original AI pipeline between REST and durable full-card MCP
+tasks, adds confirmation-protected deletion and an additive control-table
+migration. See [CP-003 contracts, costs and limitations](../docs/CP003_MCP.md).
 Account: `e7dd176c5580b561da2048b23ed5f6c0`. Worker: `lexicon-worker`.
 
 `wrangler.jsonc` describes the existing Worker and D1 database. It contains only

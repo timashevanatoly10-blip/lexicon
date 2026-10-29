@@ -7,7 +7,9 @@
 - Конфигурация: `backend/wrangler.jsonc`, существующая D1-база `lexicon-db` через binding `DB`.
 - Инструменты: Wrangler и Playwright в devDependencies; зависимости фиксируются `package-lock.json`.
 - PWA: обновление кнопкой **Update**; [описание и проверка на iPhone](docs/PWA_UPDATES.md).
-- ChatGPT MCP: пять инструментов словарей в существующем Worker; [подключение OAuth](docs/MCP_CONNECT.md).
+- ChatGPT MCP: девять инструментов в существующем Worker; [подключение OAuth](docs/MCP_CONNECT.md).
+- CP-003 MCP: полные карточки, задачи генерации и подтверждаемое удаление;
+  [контракты, ограничения и стоимость](docs/CP003_MCP.md). Статус публикации — в журнале.
 
 Frontend: [GitHub Pages](https://timashevanatoly10-blip.github.io/lexicon/), публикация из корня `main`.
 Перед публикацией: `npm run build:frontend`, `npm run check:frontend`, `npm run test:pwa`.

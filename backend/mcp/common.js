@@ -1,6 +1,6 @@
 export const ORIGIN = 'https://lexicon-worker.timashevanatoly10.workers.dev';
 export const RESOURCE = ORIGIN + '/mcp';
-export const SCOPES = ['lexicon.dictionaries.read', 'lexicon.dictionaries.create', 'lexicon.words.write'];
+export const SCOPES = ['lexicon.dictionaries.read', 'lexicon.dictionaries.create', 'lexicon.words.write', 'lexicon.dictionaries.delete', 'lexicon.words.delete'];
 export const now = () => Math.floor(Date.now() / 1000);
 export const random = () => b64(crypto.getRandomValues(new Uint8Array(32)));
 export function b64(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }

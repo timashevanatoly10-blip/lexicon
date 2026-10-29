@@ -77,11 +77,11 @@ export async function createDictionary(db,owner,args) {
   ]);
   return readOperation(db,owner,op.requestId,'create_dictionary',op.digest);
 }
-export async function addWords(db,owner,args) {
+export async function addWords(db,owner,args,generatedItems) {
   if(!Array.isArray(args.words)||args.words.length<1||args.words.length>50)throw error('INVALID_INPUT','Provide 1..50 words');
   // Hash the stable user input, not generated IDs or timestamps.
   const op=await operation(db,owner,args.request_id,'add_words',{dictionary_id:args.dictionary_id,words:args.words});if(op.result)return op.result;
-  const id=string(args.dictionary_id,'dictionary_id');await dictionary(db,owner,id);const items=args.words.map(card);const sync=await synchronizeKeys(db,owner,id);
+  const id=string(args.dictionary_id,'dictionary_id');await dictionary(db,owner,id);const items=generatedItems||args.words.map(card);const sync=await synchronizeKeys(db,owner,id);
   const seen=new Map();for(const item of items){if(seen.has(item.key)){item.id=seen.get(item.key);item.in_batch=true;}else seen.set(item.key,item.id);}
   const date=new Date().toISOString(),statements=[...sync.statements];
   for(const item of items.filter(x=>!x.in_batch))statements.push(db.prepare(`INSERT INTO dictionary_words(id,dictionary_id,owner_token_hash,word,transcription,translation,part_of_speech,meta,created_at,updated_at,normalized_word,search_text)

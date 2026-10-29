@@ -20,7 +20,7 @@ async function main(){
   const {Client}=await import('@modelcontextprotocol/sdk/client/index.js'),{StreamableHTTPClientTransport}=await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
   const sdk=new Client({name:'LEXICON-production-read-smoke',version:'2'});try{
     await sdk.connect(new StreamableHTTPClientTransport(new URL(RESOURCE),{requestInit:{headers:{Authorization:'Bearer '+grant.access_token}}}));
-    const names=(await sdk.listTools()).tools.map(t=>t.name);assert.deepEqual(names,['list_dictionaries','get_dictionary','create_dictionary','add_words','search_words']);
+    const names=(await sdk.listTools()).tools.map(t=>t.name);assert.deepEqual(names,['list_dictionaries','get_dictionary','create_dictionary','add_words','search_words','get_word_task','continue_word_task','delete_dictionary','delete_word']);
     const list=await sdk.callTool({name:'list_dictionaries',arguments:{limit:100}});assert(!list.isError);
     const restResponse=await request('/api/dictionaries',{headers:{Authorization:'Bearer '+legacy}});assert.equal(restResponse.status,200);const rest=await restResponse.json();assert(rest.ok);
     const authoritative=new Set(rest.dictionaries.map(d=>d.id));assert(list.structuredContent.dictionaries.every(d=>authoritative.has(d.id)));
