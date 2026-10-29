@@ -121,6 +121,17 @@ mcp_oauth_clients/codes/grants, mcp_used_refresh, mcp_rate_limits. Новых Wo
 Точная версия, хеш backend/deploy artifact и подтверждённое состояние production
 фиксируются в [CHECKPOINTS.md](CHECKPOINTS.md). GitHub не доказывает состояние Worker.
 
+Проверено 2026-10-29 19:58 МСК: CP-002
+`ffce58bc0d33f53d8442f00570eeda36150071d0`, неизменяемый `cp-002`;
+публиковался чистый manifest commit `76e52e0bd1f7ee37c888196ca9843081b8a789ee`
+с тем же runtime. Deployment `c2e16325-ebe1-4304-8953-5d427c89792d`, version
+`7930c8e7-be50-43ec-adb0-3d06829a1ce0` (100%). Bundled backend SHA-256:
+`05de91f352f29ee72592fbddf1225296f4bdce76aa0676b48b4292175b7ed6a6`.
+Production migration/backfill завершены после backup. OAuth + стандартный MCP
+SDK и старый API прошли read-only smoke; binding names/types, DB и plain vars
+сохранены. Значения secret_text не извлекались и не менялись. Тестовых словарей
+или слов в production не создавалось. Подключение UI ChatGPT — отдельный шаг.
+
 ## Ведение изменений (правила)
 
 Постоянные правила — [AGENTS.md](../AGENTS.md).

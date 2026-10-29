@@ -173,3 +173,49 @@ Rollback — согласованный revert/deploy кода, без DROP но
 используются skip-CI маркеры, чтобы не запрашивать публикацию frontend зеркал;
 их настройки и файлы не меняются. Backend deploy выполняется отдельно Wrangler.
 На момент этой записи production migration/deploy ещё не выполнялись.
+
+### CP-002 — подтверждённая production-публикация, 2026-10-29 19:58 МСК
+
+- Функциональный checkpoint `ffce58bc0d33f53d8442f00570eeda36150071d0`, тег
+  `cp-002` отправлены в разрешённый origin. Тег указывает на этот commit и
+  не передвигался. CP-001 неизменён. Commit manifest перед deploy:
+  `76e52e0bd1f7ee37c888196ca9843081b8a789ee`; он также отправлен в main.
+- Перед deploy рабочее дерево чистое; повторный dry-run дал тот же SHA-256
+  artifact `05de91f352f29ee72592fbddf1225296f4bdce76aa0676b48b4292175b7ed6a6`.
+  Весь опубликованный модуль, включая imports, скачан через Cloudflare API
+  после deploy и совпал с этим artifact по SHA-256.
+- Проверенный SQL backup и восстановление выполнены до production migration.
+  `0001_mcp.sql` применена Wrangler migrations runner в существующую lexicon-db;
+  backfill менял только новые normalized_word/search_text с условием совпадения
+  прежних полей. NULL ключей после backfill нет. Исходные словари/карточки/links
+  не удалялись и не перезаписывались; новой D1/Worker не создавалось.
+- Deploy выполнен локальным Wrangler с `backend/wrangler.jsonc`, только
+  существующий `lexicon-worker`, account `e7dd176c5580b561da2048b23ed5f6c0`.
+  Активный deployment: `c2e16325-ebe1-4304-8953-5d427c89792d`.
+  Worker version: `7930c8e7-be50-43ec-adb0-3d06829a1ce0`, доля **100%**.
+- Перед deploy сверены account/name, существующие settings/vars и единственная
+  DB `6e63edd9-166b-400a-a644-caf474dc0ce6`. После deploy все прежние binding
+  names/types и DB ID сохранены, значения plain_text vars совпали, включая
+  ACCESS_TOKENS. DEEPL_API_KEY/OPENAI_API_KEY сохранены как secret_text;
+  их значения не читались, не изменялись и не публиковались. Секреты не задавались
+  заново через Wrangler. Новых OAuth client secrets или API keys не создавалось.
+- Опубликован `https://lexicon-worker.timashevanatoly10.workers.dev/mcp`.
+  Production smoke официальным MCP SDK: initialize, tools/list (пять tools),
+  tools/call list/get/search — PASS. Проверены существующий owner mapping и
+  совпадение ID с прежним `/api/dictionaries`, чтение сохранённой карточки, поиск.
+  Без OAuth /mcp и прежний API дают 401, запись с read-only grant запрещена.
+  Прежний авторизованный API вернул 200 и корректный ответ.
+- Smoke создавал только временные служебные OAuth client/code/grant записи;
+  grant успешно отозван. **Ноль** тестовых словарей/слов и пользовательских
+  изменений. Production create/add намеренно не выполнялись: их транзакции,
+  idempotency и regression проверены локально на синтетической D1.
+- Frontend-файлы и fingerprint прежние; ручных публикаций и изменений настроек
+  GitHub Pages / Cloudflare Pages нет. Их автоматический статус этим этапом
+  не проверялся. Skip-CI маркеры не являются доказательством состояния зеркал.
+
+Эта запись сохраняется последующим документационным коммитом того же CP-002
+и push main без нового deploy и без перемещения cp-002. Подключение приложения
+в интерфейсе ChatGPT остаётся отдельным пользовательским шагом: developer mode,
+custom MCP URL, OAuth, браузерное согласие с существующим LEXICON-ключом.
+UI ChatGPT не автоматизировался, фактическая совместимость интерфейса/политик
+конкретного тарифа пока не подтверждена. Сервер и стандартный SDK проверены live.
