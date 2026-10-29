@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Preserve the imported production module byte for byte, including line endings.
+backend/worker.js -text
+*.png binary

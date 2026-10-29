@@ -1,0 +1,14 @@
+{
+  "name": "lexicon",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:frontend": "node scripts/build-frontend.cjs",
+    "check:frontend": "node scripts/build-frontend.cjs --check",
+    "test:pwa": "node tests/pwa-update.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "wrangler": "^4.155.0"
+  }
+}

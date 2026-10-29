@@ -1,0 +1,12 @@
+# Existing GitHub Pages publication: main branch, repository root.
+# Publish only the frontend; these repository files are not website assets.
+exclude:
+  - backend
+  - docs
+  - scripts
+  - tests
+  - node_modules
+  - AGENTS.md
+  - README.md
+  - package.json
+  - package-lock.json

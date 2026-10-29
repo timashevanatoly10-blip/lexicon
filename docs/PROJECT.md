@@ -1,0 +1,102 @@
+# Карта проекта LEXICON
+
+Составлено 2026-10-29. Локальные файлы и Git проверены при подготовке CP-001.
+Облачные сведения ниже получены через Wrangler whoami и GET Cloudflare API
+при проверке и импорте 2026-10-29; это снимок, а не гарантия текущего production.
+При подготовке этой документации повторных запросов к Cloudflare не выполнялось.
+GitHub Pages проверен отдельно 2026-10-29 через аутентифицированный GitHub REST API.
+
+## Архитектура
+
+| Компонент | Файлы / ресурс | Назначение и статус |
+|---|---|---|
+| Frontend | `index.html`, `app.js`, `style.css` | Статическое браузерное приложение; перевод, словари, обработка документов и ИИ-интерфейсы |
+| PWA | `manifest.webmanifest`, `icons/`, `sw.js`, `pwa-updates.js`, `pwa-state.js`, `pwa-updates.css`, `frontend-release.js` | Регистрация в pwa-updates.js; prompt lifecycle по MyMate, сохранение черновиков, активация по кнопке |
+| Backend | `backend/worker.js` | Развёрнутый JS-модуль, импортирован через API без изменения байтов; исходная TS-структура и сборочный проект не восстановлены |
+| Cloudflare Worker | `lexicon-worker` | Облачный backend, окружение `production` |
+| D1 | `lexicon-db`, binding `DB` | Существующая база; данные, схема и миграции не импортированы и не проверены |
+| Wrangler | `backend/wrangler.jsonc` | Имя Worker, аккаунт, compatibility date, D1 и несекретные vars |
+| Инструменты | `package.json`, `package-lock.json`, `scripts/`, `tests/` | Wrangler 4.155.0 и Playwright как devDependencies; детерминированная frontend-сборка и A → B тесты; lock фиксирует дерево |
+| GitHub | `origin` | Хранение исходников, конфигурации без секретов и истории изменений |
+
+Frontend обращается к `https://lexicon-worker.timashevanatoly10.workers.dev`.
+В `app.js` также задан `VETAI_API_BASE`:
+`https://gpt24-test.timashevanatoly10.workers.dev`. Это внешняя зависимость вне
+текущего разрешённого объёма работ; здесь не исследуется и не изменяется.
+
+## Точные идентификаторы
+
+| Параметр | Значение |
+|---|---|
+| Cloudflare Account ID | `e7dd176c5580b561da2048b23ed5f6c0` |
+| Учётная запись при проверке | `timashevanatoly10@gmail.com` |
+| Worker | `lexicon-worker` |
+| Окружение | `production` |
+| workers.dev | `https://lexicon-worker.timashevanatoly10.workers.dev` |
+| compatibility_date | `2026-05-01` |
+| compatibility_flags | Пустой список при импорте |
+| D1 database_name | `lexicon-db` |
+| D1 binding | `DB` |
+| D1 database_id | `6e63edd9-166b-400a-a644-caf474dc0ce6` |
+| GitHub origin (fetch/push) | `https://github.com/timashevanatoly10-blip/lexicon.git` |
+| Ветка при подготовке | `main` |
+| HEAD до CP-001 | `40f8c9f` — `Enhance folder object with description and modal` |
+
+При облачной проверке: workers.dev включён, preview URLs выключены, cron пуст,
+привязок R2/KV нет. Список Custom Domains и список зон аккаунта пусты; маршруты
+зон не обнаружены. Логи включены, traces выключены. Импорт не менял эти настройки.
+
+SHA-256 импортированного `backend/worker.js`:
+`4875fa0e2d8d3fcb2abb20d84767c5bce5a25ec18b26028fe44d814ddbd4397a`.
+Это идентификатор импортированного файла, не подтверждение активной версии
+Cloudflare после даты проверки. Deployment/version ID не зафиксирован — непроверено.
+
+## Переменные и секреты
+
+В конфигурацию перенесены несекретные vars:
+`OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL`, `PROMPT_IMAGE_TEXT_EXTRACT`,
+`PROMPT_TEXT_LEFT`, `PROMPT_TEXT_TRANSLATE`, `PROMPT_WORD_CARD_SHORT`,
+`PROMPT_WORD_LEFT`, `PROMPT_WORD_QUICK_TRANSLATE`, `PROMPT_WORD_RIGHT`,
+`PROMPT_WORD_TRANSLATE`.
+
+Чувствительные bindings отсутствуют в Git-конфигурации: `ACCESS_TOKENS`,
+`DEEPL_API_KEY`, `OPENAI_API_KEY`. Их значения не документируются.
+При облачной проверке ACCESS_TOKENS имел тип plain_text, ключи API — secret_text.
+Изменение типа, ротация или перенос этих значений требуют отдельного разрешения.
+
+`keep_vars: true` установлен для сохранения remote vars, отсутствующих локально.
+Это не гарантия сохранения всех bindings и секретов: перед каждым deploy нужна
+отдельная сверка актуальных настроек с подготовленной конфигурацией.
+`.gitignore` исключает node_modules, .wrangler, локальные env/dev.vars и ключи;
+разрешённые example-файлы должны содержать только заглушки.
+
+## Публикация и источники истины
+
+- GitHub: после разрешения сохранять исходники Worker, несекретную конфигурацию,
+  lock-файл и описание каждого изменения. Для CP-001 пользователь разрешил commit,
+  tag, push и frontend-публикацию. Фактический статус — в CHECKPOINTS.md.
+  Push сам по себе не означает публикацию в Cloudflare.
+- Backend: дальнейшая публикация через локальный Wrangler с явным указанием
+  `backend/wrangler.jsonc`, только после отдельного разрешения на production deploy.
+  Подготовка должна фиксировать точный commit/tag, файлы и хеши; после публикации
+  фиксировать проверенную активную версию и результат smoke test в журнале.
+- Frontend: `https://timashevanatoly10-blip.github.io/lexicon/`, GitHub Pages.
+  Проверен build_type `legacy`, source `main`, path `/`, HTTPS включён, custom
+  domain нет. Workflow `pages-build-deployment`, ID `269609938`; push в main
+  запускает публикацию. `_config.yml` исключает backend и служебные файлы из сайта.
+  Другие внешние интеграции репозитория не проверены. Backend deploy в CP-001 нет.
+- Сборка: `npm run build:frontend` обновляет `sw.js` и `frontend-release.js`
+  по содержимому публичных assets и шаблона. Backend/docs не меняют frontend ID.
+  Файлы подготавливаются до commit, серверного Vite/React build нет.
+  `npm run check:frontend` проверяет актуальность. Подробнее — [PWA_UPDATES.md](PWA_UPDATES.md).
+- Dashboard/API показывают облачное состояние; локальные файлы и GitHub показывают
+  сохранённые версии. Сверка необходима перед каждым production deploy.
+- D1: никаких SQL-запросов, экспорта, миграций или подключения к remote D1 без
+  отдельного явного разрешения. Локальная D1 не является копией production.
+
+## Ведение изменений
+
+Постоянные правила — [AGENTS.md](../AGENTS.md).
+Порядок checkpoint и журнал — [CHECKPOINTS.md](CHECKPOINTS.md).
+Rollback через согласованный revert; отдельный production rollback/deploy требует
+своего разрешения и не происходит автоматически при откате Git.
