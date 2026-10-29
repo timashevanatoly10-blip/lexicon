@@ -1,3 +1,5 @@
+import { handleMcpRoutes } from './mcp/transport.js';
+import * as dictionaryServices from './services/dictionaries.js';
 const ALLOWED_ORIGINS = [
   "https://timashevanatoly10-blip.github.io",
   "https://mylexicon.pages.dev",
@@ -10,6 +12,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin") || "";
+    const mcpResponse = await handleMcpRoutes(request, env);
+    if (mcpResponse) return mcpResponse;
 
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -336,117 +340,14 @@ function requireDb(env, origin) {
 }
 
 async function handleGetDictionaries(env, origin, ownerTokenHash) {
-  const dbError = requireDb(env, origin);
-  if (dbError) return dbError;
-
-  const dictionariesResult = await env.DB.prepare(`
-    SELECT
-      id,
-      title,
-      note,
-      created_at,
-      updated_at
-    FROM dictionaries
-    WHERE owner_token_hash = ?
-    ORDER BY updated_at DESC, created_at DESC
-  `).bind(ownerTokenHash).all();
-
-  const wordsResult = await env.DB.prepare(`
-    SELECT
-      id,
-      dictionary_id,
-      word,
-      transcription,
-      translation,
-      part_of_speech,
-      meta,
-      created_at,
-      updated_at
-    FROM dictionary_words
-    WHERE owner_token_hash = ?
-    ORDER BY created_at DESC
-  `).bind(ownerTokenHash).all();
-
-  const dictionaries = (dictionariesResult.results || []).map(row => ({
-    id: row.id,
-    title: row.title,
-    note: row.note || "",
-    words: [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  }));
-
-  const byId = new Map(dictionaries.map(dict => [dict.id, dict]));
-
-  for (const row of wordsResult.results || []) {
-    const dict = byId.get(row.dictionary_id);
-    if (!dict) continue;
-
-    dict.words.push(rowToWord(row));
-  }
-
-  return jsonResponse({
-    ok: true,
-    dictionaries
-  }, origin);
+  const dbError = requireDb(env, origin); if (dbError) return dbError;
+  return jsonResponse({ ok: true, dictionaries: await dictionaryServices.listAll(env.DB, ownerTokenHash) }, origin);
 }
 
 async function handleCreateDictionary(request, env, origin, ownerTokenHash) {
-  const dbError = requireDb(env, origin);
-  if (dbError) return dbError;
-
-  const body = await readJsonBody(request);
-  const title = String(body.title || "").trim() || "Новый словарь";
-  const note = String(body.note || "").trim() || "личный словарь";
-  const now = new Date().toISOString();
-  const id = String(body.id || "").trim() || uid("dict");
-
-  await env.DB.prepare(`
-    INSERT INTO dictionaries (
-      id,
-      owner_token_hash,
-      title,
-      note,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      title = excluded.title,
-      note = excluded.note,
-      updated_at = excluded.updated_at
-    WHERE owner_token_hash = excluded.owner_token_hash
-  `).bind(id, ownerTokenHash, title, note, now, now).run();
-
-  const saved = await env.DB.prepare(`
-    SELECT
-      id,
-      title,
-      note,
-      created_at,
-      updated_at
-    FROM dictionaries
-    WHERE id = ? AND owner_token_hash = ?
-  `).bind(id, ownerTokenHash).first();
-
-  if (!saved) {
-    return jsonResponse({
-      ok: false,
-      error: "Dictionary id already belongs to another account"
-    }, origin, 409);
-  }
-
-  return jsonResponse({
-    ok: true,
-    dictionary: {
-      id: saved.id,
-      title: saved.title,
-      note: saved.note || "",
-      words: [],
-      createdAt: saved.created_at,
-      updatedAt: saved.updated_at
-    }
-  }, origin);
+  const dbError = requireDb(env, origin); if (dbError) return dbError;
+  try { return jsonResponse({ ok: true, dictionary: await dictionaryServices.legacyCreate(env.DB, ownerTokenHash, await readJsonBody(request)) }, origin); }
+  catch (err) { return jsonResponse({ ok: false, error: err.code ? err.message : "Dictionary operation failed" }, origin, err.status || 500); }
 }
 
 async function handleUpdateDictionary(request, env, origin, ownerTokenHash, dictionaryId) {
@@ -527,118 +428,10 @@ async function handleDeleteDictionary(env, origin, ownerTokenHash, dictionaryId)
 }
 
 async function handleCreateDictionaryWord(request, env, origin, ownerTokenHash, dictionaryId) {
-  const dbError = requireDb(env, origin);
-  if (dbError) return dbError;
-
-  if (!dictionaryId) {
-    return jsonResponse({ ok: false, error: "Dictionary id is required" }, origin, 400);
-  }
-
-  const dict = await env.DB.prepare(`
-    SELECT id
-    FROM dictionaries
-    WHERE id = ? AND owner_token_hash = ?
-  `).bind(dictionaryId, ownerTokenHash).first();
-
-  if (!dict) {
-    return jsonResponse({ ok: false, error: "Dictionary not found" }, origin, 404);
-  }
-
-  const body = await readJsonBody(request);
-  const word = String(body.word || "").trim();
-
-  if (!word) {
-    return jsonResponse({ ok: false, error: "Word is required" }, origin, 400);
-  }
-
-  const existing = await env.DB.prepare(`
-    SELECT
-      id,
-      dictionary_id,
-      word,
-      transcription,
-      translation,
-      part_of_speech,
-      meta,
-      created_at,
-      updated_at
-    FROM dictionary_words
-    WHERE dictionary_id = ?
-      AND owner_token_hash = ?
-      AND lower(word) = lower(?)
-    LIMIT 1
-  `).bind(dictionaryId, ownerTokenHash, word).first();
-
-  if (existing) {
-    return jsonResponse({
-      ok: true,
-      duplicate: true,
-      word: rowToWord(existing)
-    }, origin);
-  }
-
-  const now = new Date().toISOString();
-  const id = String(body.id || "").trim() || uid("word");
-  const transcription = String(body.transcription || "—").trim() || "—";
-  const translation = String(body.translation || "перевод позже").trim() || "перевод позже";
-  const partOfSpeech = String(body.partOfSpeech || body.part_of_speech || "").trim();
-  const meta = normalizeMetaForStorage(body.meta);
-
-  await env.DB.prepare(`
-    INSERT INTO dictionary_words (
-      id,
-      dictionary_id,
-      owner_token_hash,
-      word,
-      transcription,
-      translation,
-      part_of_speech,
-      meta,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      word = excluded.word,
-      transcription = excluded.transcription,
-      translation = excluded.translation,
-      part_of_speech = excluded.part_of_speech,
-      meta = excluded.meta,
-      updated_at = excluded.updated_at
-    WHERE owner_token_hash = excluded.owner_token_hash
-      AND dictionary_id = excluded.dictionary_id
-  `).bind(
-    id,
-    dictionaryId,
-    ownerTokenHash,
-    word,
-    transcription,
-    translation,
-    partOfSpeech,
-    meta,
-    now,
-    now
-  ).run();
-
-  await env.DB.prepare(`
-    UPDATE dictionaries
-    SET updated_at = ?
-    WHERE id = ? AND owner_token_hash = ?
-  `).bind(now, dictionaryId, ownerTokenHash).run();
-
-  return jsonResponse({
-    ok: true,
-    word: {
-      id,
-      word,
-      transcription,
-      translation,
-      partOfSpeech,
-      meta: parseStoredMeta(meta),
-      createdAt: now,
-      updatedAt: now
-    }
-  }, origin);
+  const dbError = requireDb(env, origin); if (dbError) return dbError;
+  if (!dictionaryId) return jsonResponse({ ok: false, error: "Dictionary id is required" }, origin, 400);
+  try { return jsonResponse({ ok: true, ...await dictionaryServices.legacyAdd(env.DB, ownerTokenHash, dictionaryId, await readJsonBody(request)) }, origin); }
+  catch (err) { return jsonResponse({ ok: false, error: err.code ? err.message : "Word operation failed" }, origin, err.status || 500); }
 }
 
 async function handleUpdateDictionaryWordMeta(request, env, origin, ownerTokenHash, dictionaryId, wordId) {

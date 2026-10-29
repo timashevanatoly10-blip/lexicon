@@ -106,3 +106,60 @@ SHA-256 каждого совпал с подготовленной версие
 LEXICON заново. Следующие frontend-релизы обнаруживаются и применяются по кнопке.
 Production A → B с уже внедрённым механизмом в этом первом выпуске не заявляется;
 реальный цикл проверен локальным HTTP-сервером.
+
+## CP-002 — LEXICON ChatGPT MCP (2026-10-29)
+
+Разрешены пользователем: полный цикл реализации, локальные тесты, backup,
+совместимая additive D1 migration, commit/tag/push main и deploy существующего
+lexicon-worker. Новые ресурсы, frontend/Pages изменения и CP-003 не входят в этап.
+CP-001 и его тег остаются неизменными. CP-002 до этого свободен локально и в origin;
+аккаунт GCM `timashevanatoly10-blip`, push permission и точный origin проверены.
+
+Функциональный commit: `CP-002: LEXICON ChatGPT MCP`, неизменяемый тег `cp-002`.
+SHA коммита и фактическая публикация записываются последующим документационным
+коммитом этого же этапа; данная подготовительная запись не утверждает deploy.
+
+Состав: `backend/mcp/{common,oauth,transport}.js`, общие операции
+`backend/services/dictionaries.js`, подключение в `backend/worker.js`, migration
+`backend/migrations/0001_mcp.sql` и migrations_dir в существующем Wrangler config;
+`tests/mcp.cjs`, синтетическая схема, dev MCP SDK/lockfile;
+`scripts/mcp-ops.cjs`, `scripts/mcp-smoke.cjs`, `scripts/verify-github.cjs`;
+правила AGENTS, карта, документация backend и инструкции MCP.
+Реализованы пять tools, OAuth PKCE/DCR, server-side mapping прежнего owner,
+scope/resource checks, refresh rotation/revocation, owner isolation,
+атомарное добавление до 50 карточек, idempotency и нормализованные дубли.
+Существующие переводы/meta не заменяются, MCP не вызывает AI API.
+
+Проверки до публикации:
+
+- `npm run test:mcp`: PASS — реальный локальный workerd/D1, официальный MCP SDK,
+  initialize/list/call, PKCE/CSRF/code replay, refresh reuse/expiry, scopes,
+  resource и чужой owner, create/read/search, одинаковые названия, pagination,
+  Unicode/case/whitespace duplicates, batch 50/51, concurrent request_id/insert,
+  validation и rollback транзакции при искусственной ошибке второго INSERT,
+  регрессия прежнего REST list/create/add и формат fullCard.
+- `node --check` Worker и служебных скриптов; `git diff --check`: PASS.
+- frontend build/check: прежний fingerprint `2e3b88c7b8e30620eb4c`, публичные
+  файлы не изменены. Ручной deploy/настройки Pages не выполняются.
+- Production source до изменения совпал с CP-001/import; bindings и правильная
+  D1 подтверждены через Cloudflare API без вывода значений vars/secrets.
+- SQL backup сохранён вне Git в `.wrangler/cp002/private/`, SHA проверен;
+  восстановление в SQLite, применение точной migration и backfill локально
+  сохраняют хеши всех исходных полей трёх таблиц. Нормализационных конфликтов,
+  пустых ключей и неверного ownership до миграции нет.
+
+SHA-256 `backend/worker.js`:
+`9bc87a9462c3a4f536eaa2f4a3c7ba3f06aa5c24a8307da7cfc38daf3e070111`.
+Это entry module, полный runtime включает перечисленные imports.
+SHA-256 готового bundled deploy artifact `worker.js`:
+`05de91f352f29ee72592fbddf1225296f4bdce76aa0676b48b4292175b7ed6a6`.
+SHA-256 migration: `f90520368303e22fdcb0cb6779a23803054657f9f48fe490533c5c78dd7ab480`.
+Перед deploy артефакт повторно собирается из чистого commit и проверяется
+по хешу; после deploy сравниваются опубликованный модуль и прежние bindings.
+
+Подключение/примеры: [MCP_CONNECT.md](MCP_CONNECT.md). Реальное подключение через
+UI ChatGPT выполняется пользователем отдельно; SDK-тест не выдаётся за UI-тест.
+Production smoke предусмотрен только на чтение словарей с отдельным временным
+OAuth grant и его отзывом; никакого тестового мусора в словарях.
+Rollback — согласованный revert/deploy кода, без DROP новых колонок/таблиц,
+без перемещения cp-002 и без удаления пользовательских записей.

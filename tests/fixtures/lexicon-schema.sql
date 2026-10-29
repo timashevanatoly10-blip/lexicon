@@ -1,0 +1,4 @@
+CREATE TABLE dictionaries(id TEXT PRIMARY KEY,owner_token_hash TEXT NOT NULL,title TEXT NOT NULL,note TEXT DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE dictionary_words(id TEXT PRIMARY KEY,dictionary_id TEXT NOT NULL,owner_token_hash TEXT NOT NULL,word TEXT NOT NULL,transcription TEXT DEFAULT '',translation TEXT DEFAULT '',part_of_speech TEXT DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL,meta TEXT DEFAULT '{}',FOREIGN KEY(dictionary_id) REFERENCES dictionaries(id) ON DELETE CASCADE);
+CREATE UNIQUE INDEX idx_dictionary_words_unique ON dictionary_words(dictionary_id,word);
+CREATE TABLE public_dictionary_links(id TEXT PRIMARY KEY,owner_token_hash TEXT NOT NULL,dictionary_id TEXT NOT NULL,share_id TEXT NOT NULL UNIQUE,is_active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);

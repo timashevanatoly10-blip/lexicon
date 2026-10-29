@@ -13,6 +13,7 @@
     {
       "binding": "DB",
       "database_name": "lexicon-db",
+      "migrations_dir": "migrations",
       "database_id": "6e63edd9-166b-400a-a644-caf474dc0ce6"
     }
   ],

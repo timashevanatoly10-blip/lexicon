@@ -94,7 +94,34 @@ Cloudflare после даты проверки. Deployment/version ID не за
 - D1: никаких SQL-запросов, экспорта, миграций или подключения к remote D1 без
   отдельного явного разрешения. Локальная D1 не является копией production.
 
-## Ведение изменений
+## MCP LEXICON — CP-002
+
+Реализован `/mcp` в том же lexicon-worker: stateless Streamable HTTP JSON,
+list_dictionaries, get_dictionary, create_dictionary, add_words, search_words.
+Словари и карточки остаются в существующих таблицах. `backend/services/dictionaries.js`
+переиспользуется MCP и прежними REST list/create/add; остальные API сохранены.
+OAuth в `backend/mcp/oauth.js`: DCR для ChatGPT, code + PKCE S256, opaque tokens
+с хешами в D1, scopes/resource, refresh rotation/revocation. Browser consent
+подтверждает существующий ACCESS token и связывает grant с прежним owner hash.
+OpenAI/DeepL не вызываются MCP, существующие ключи не служат OAuth credentials.
+
+- [Подключение, ограничения, API tools и безопасные операции](MCP_CONNECT.md).
+- [Исторический технический план](MCP_INTEGRATION_PLAN.md).
+- [Подтверждённый снимок структуры D1](MCP_SCHEMA_SNAPSHOT.md) — прочитаны только
+  sqlite_schema/метаданные разрешённой базы 2026-10-29; данные пользователей не читались.
+- [Исходный план тестов и команды ChatGPT](MCP_TEST_PLAN.md).
+
+Runtime не имеет внешних SDK-зависимостей; официальный MCP SDK — devDependency
+для локального и production smoke. Migration `backend/migrations/0001_mcp.sql`
+добавляет normalized_word/search_text и служебные таблицы mcp_operations,
+mcp_oauth_clients/codes/grants, mcp_used_refresh, mcp_rate_limits. Новых Workers,
+баз и хостинга нет. Схема исходных таблиц/карточек остаётся совместимой.
+Резервный SQL хранится только в игнорируемой `.wrangler/cp002/private/`;
+восстановление и сохранность исходных полей проверены до production migration.
+Точная версия, хеш backend/deploy artifact и подтверждённое состояние production
+фиксируются в [CHECKPOINTS.md](CHECKPOINTS.md). GitHub не доказывает состояние Worker.
+
+## Ведение изменений (правила)
 
 Постоянные правила — [AGENTS.md](../AGENTS.md).
 Порядок checkpoint и журнал — [CHECKPOINTS.md](CHECKPOINTS.md).
