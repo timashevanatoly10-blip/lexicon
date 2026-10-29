@@ -65,7 +65,8 @@ async function main(){
     for(const key of ['placement','limits','tail_consumers','tags'])if(ctx.settings[key]&&canonical(ctx.settings[key])!=='[]'&&canonical(ctx.settings[key])!=='{}'&&canonical(ctx.settings[key])!==canonical(ctx.config[key]||{}))throw Error('Unconfigured production setting '+key+'; STOP');
     for(const b of ctx.settings.bindings.filter(b=>b.type==='plain_text'&&b.name!=='ACCESS_TOKENS'))if(ctx.config.vars[b.name]!==b.text)throw Error('Production variable drift; STOP');
     const current=await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/workers/scripts/${WORKER}`,{headers:ctx.headers});if(!current.ok)throw Error('Source verification unavailable; STOP');const form=await current.formData(),part=form.get('worker.js');const bytes=typeof part==='string'?Buffer.from(part):Buffer.from(await part.arrayBuffer());
-    if(sha(bytes)!=='4875fa0e2d8d3fcb2abb20d84767c5bce5a25ec18b26028fe44d814ddbd4397a')throw Error('Production code drift; STOP');
+    // CP-002 OAuth correction: replace only the previously verified CP-002 artifact.
+    if(sha(bytes)!=='05de91f352f29ee72592fbddf1225296f4bdce76aa0676b48b4292175b7ed6a6')throw Error('Production code drift; STOP');
     const log=cli(['deploy','--config','backend/wrangler.jsonc']);
     const after=await ctx.cf('/workers/scripts/'+WORKER+'/settings');
     for(const b of ctx.settings.bindings){const a=after.bindings.find(x=>x.name===b.name&&x.type===b.type);if(!a||(b.type==='plain_text'&&a.text!==b.text)||(b.type==='d1'&&a.id!==b.id))throw Error('Production binding preservation verification failed; STOP');}

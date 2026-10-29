@@ -91,6 +91,19 @@ workspace. Включайте app только в нужных чатах; сл�
 grant с последующим отзывом; никаких тестовых словарей/слов. Не запускать без
 разрешения на production-проверку.
 
+`npm run test:oauth-browser` — настоящая HTML form navigation в установленном
+Chrome с локальным Worker/D1. CDP перехватывает все запросы, включая callback;
+сетевых обращений к ChatGPT нет. Тест воспроизводит старые no-referrer →
+Origin null → 403 и CSP-блокировку callback; проверяет исправленный POST/303,
+cookie/CSRF, state/issuer/PKCE и отказы при отсутствии/подмене Origin, cookie,
+CSRF и redirect_uri. Consent/disconnect используют Referrer-Policy same-origin,
+чтобы browser POST сохранял Origin, не передавая Referer на чужой домен.
+CSP формы согласия разрешает self и только проверенный callback этого клиента.
+Origin null не допускается; Referer не заменяет проверку Origin и CSRF.
+`node scripts/oauth-browser-smoke.cjs` повторяет реальную форму на production,
+перехватывая callback до внешнего сетевого запроса. Ключи держит только в памяти,
+выданный read-only grant отзывает; словари не изменяет.
+
 `scripts/mcp-ops.cjs` выполняет только фиксированные операции LEXICON:
 backup → verify-backup → migrate → artifact → deploy, с проверкой точной цели,
 backup hash, migration hash, чистоты Git, соответствия deploy artifact и сохранения

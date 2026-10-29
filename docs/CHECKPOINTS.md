@@ -219,3 +219,35 @@ Rollback — согласованный revert/deploy кода, без DROP но
 custom MCP URL, OAuth, браузерное согласие с существующим LEXICON-ключом.
 UI ChatGPT не автоматизировался, фактическая совместимость интерфейса/политик
 конкретного тарифа пока не подтверждена. Сервер и стандартный SDK проверены live.
+
+### CP-002 — исправление browser OAuth consent
+
+Пользователь сообщил реальный HTTP 403 invalid_origin после отправки формы.
+В установленном Chrome на локальном Worker воспроизведено: response header
+`Referrer-Policy: no-referrer` приводит к browser form POST с `Origin: null`,
+без Referer, при корректных cookie/CSRF. Transport правильно отвергает такой
+Origin. Прежние HTTP/SDK-тесты вручную задавали Origin и не выявляли эту ошибку.
+Отдельно воспроизведено: CSP form-action self блокирует cross-origin callback
+после успешного POST/303.
+
+Исправление: same-origin referrer policy для consent, disconnect и redirect;
+CSP consent разрешает self и единственный точный callback проверенного клиента
+(нормализованный URL). Чужие/null Origin не разрешены; отсутствие Origin на POST
+формы, несовпадение CSRF/cookie, неподтверждённый redirect по-прежнему отвергаются.
+PKCE, scopes, owner mapping, D1/schema и legacy API не меняются.
+
+Добавлены `tests/oauth-browser.cjs`, npm test:oauth-browser и безопасный live
+`scripts/oauth-browser-smoke.cjs`. Браузерные тесты перехватывают callback через
+CDP до обращения к ChatGPT. Проверены негативные сценарии missing/null/foreign
+Origin, wrong CSRF, no cookie, foreign redirect и полный положительный поток.
+Повторно пройдены MCP/OAuth, транзакции и прежние REST-тесты, syntax/diff checks.
+Frontend fingerprint прежний. Секретов в исходниках не обнаружено.
+
+Предпубликационный bundled SHA-256:
+`a987f137bfc58209d640784f94413c5438f683553bcb3827c4660e7cb18ac999`.
+Deploy guard принимает только предыдущий подтверждённый CP-002 artifact
+`05de91f352f29ee72592fbddf1225296f4bdce76aa0676b48b4292175b7ed6a6`;
+другая production-версия останавливает публикацию. Миграции не выполняются.
+Исправление сохраняется отдельным commit того же CP-002, без CP-003 и без
+перемещения cp-002 (`ffce58bc0d33f53d8442f00570eeda36150071d0`).
+Фактический deployment и live smoke записываются после публикации.
