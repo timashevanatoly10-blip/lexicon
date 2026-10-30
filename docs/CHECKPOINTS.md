@@ -351,3 +351,46 @@ runtime не меняется. После push и перед deploy артефа
 из чистого HEAD, затем проверяются baseline Worker и все прежние bindings.
 Skip-CI маркеры запрашивают пропуск frontend-публикаций; frontend не изменён.
 Эта запись не утверждает завершение migration/deploy.
+
+### CP-003 — production подтверждён 2026-10-30 01:33 МСК
+
+- Функциональный commit `34becb2331f95818546a76a9445d3d85ba2ebb8f` и тег cp-003
+  отправлены в разрешённый GitHub. Тег неизменяем; предыдущие checkpoint-теги
+  сохранились. Manifest commit `e56edcdbc6cce1ff91bb5afd87f0978b71546b93`
+  также отправлен; это чистая версия, из которой выполнен deploy, runtime тот же.
+- Резервная копия проверена восстановлением и exact migration hash. Wrangler
+  применил `0002_full_cards.sql` к существующей lexicon-db; четыре новые control
+  tables подтверждены. Migration не содержит изменения/удаления прежних записей.
+  Новых Workers, D1, bindings или secret values не создавалось.
+- Повторный dry-run дал тот же bundled SHA-256:
+  `a2bf736b246abd316f00b2deaff3ed5d884c4c75477ed5e7713dcecafb20ee6e`.
+  Перед deploy production соответствовал предыдущему CP-002 artifact;
+  settings и plain vars совпали с reviewed config, DB ID точный.
+- Deployment существующего lexicon-worker:
+  `277f03e5-3404-4223-9490-34466c694dc8`.
+  Version `61231223-3a34-4154-938b-95eaa8d235bd`, **100%** трафика.
+  Опубликованный модуль скачан через Cloudflare API и совпал с dry-run по SHA-256.
+  Все прежние binding names/types и DB ID сохранены; plain vars сравнивались
+  по значениям, включая ACCESS_TOKENS. Secret_text OPENAI_API_KEY/DEEPL_API_KEY
+  сохранены без извлечения значений и без повторного задания/ротации.
+- Live standard MCP SDK initialize/list/call: PASS. Опубликованы девять tools;
+  существующие словари/карточки/поиск и прежний REST API работают. Без OAuth —
+  отказ, write через read-only grant запрещён. Удаление/запись словарей в smoke
+  не выполнялись. Результаты реальной генерации и локального end-to-end с этими
+  ответами описаны выше; live generation-task с пользовательской записью не запускался.
+- Live Chrome OAuth POST/303/callback/PKCE: PASS. Callback перехвачен до внешней
+  сети; UI аккаунта ChatGPT не автоматизировался. Оба временных smoke grants
+  успешно отозваны. Пользовательский словарь «кодекс» не трогали.
+- Frontend assets и release прежние; сайтов/настроек Pages не меняли и не
+  публиковали вручную. Их автоматический статус этим этапом не проверялся.
+
+Для проверки из ChatGPT нужно обновить tools и заново авторизоваться для новых
+delete scopes; старые grants не расширялись. Все destructive проверки выполнены
+на synthetic fixtures, а не на существующих пользовательских данных. Полная
+генерация требует последовательного continue_word_task; остановленный чат можно
+продолжить по task_id. Failed/uncertain не выдаются за полный успех. Стоимость
+зависит от tokens/model; обычно три старта на новое слово, explicit retry
+ограничен и может оплачиваться дополнительно. Подробности — CP003_MCP.md.
+
+Эта запись результата отправляется отдельным документационным коммитом CP-003
+без нового deploy, без перемещения cp-003 и без начала CP-004.

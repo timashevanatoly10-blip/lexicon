@@ -108,6 +108,19 @@ mcp_generation_budget, mcp_delete_confirmations и concurrency index.
 Frontend-файлы обоих сайтов прежние. Production-версия CP-003 фиксируется
 после deploy, до этого сведения CP-002 ниже являются предыдущим состоянием.
 
+Проверено 2026-10-30 01:33 МСК: CP-003
+`34becb2331f95818546a76a9445d3d85ba2ebb8f`, cp-003; deploy из manifest
+`e56edcdbc6cce1ff91bb5afd87f0978b71546b93` с тем же runtime.
+Deployment `277f03e5-3404-4223-9490-34466c694dc8`, version
+`61231223-3a34-4154-938b-95eaa8d235bd` (100%). Bundled SHA-256:
+`a2bf736b246abd316f00b2deaff3ed5d884c4c75477ed5e7713dcecafb20ee6e`.
+Additive migration выполнена после backup/restore verification. Live MCP SDK,
+прежний REST и browser OAuth прошли read-only smoke. Пользовательские словари,
+owners и секреты не менялись; «кодекс» не удаляли. Реальная AI-генерация трёх
+панелей проверена без записи в словарь, затем эти ответы прошли локальный task
+pipeline и frontend renderers. Live запись/удаление пользовательских карточек
+не выполнялись. Новые delete scopes требуют повторного OAuth.
+
 ### Предыдущая версия CP-002
 
 Реализован `/mcp` в том же lexicon-worker: stateless Streamable HTTP JSON,
