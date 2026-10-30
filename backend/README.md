@@ -36,3 +36,10 @@ not authorize later deployments or secret changes.
 
 This downloaded module is the deployed JavaScript, not a recovered original
 TypeScript project, build pipeline, or Git history.
+
+CP-004 adds `/api/dictionary-tree` in `services/dictionary-tree.js` and additive
+`0003_dictionary_folders.sql`. Placement is separate from existing dictionary
+records; absent placement means root. Folder deletion preserves dictionaries
+and all cards. [Contracts and tests](../docs/CP004_FOLDERS.md).
+The CP-004 request explicitly authorizes its backup, additive migration,
+commit/tag/push and existing Worker/frontend publication; no secret changes.

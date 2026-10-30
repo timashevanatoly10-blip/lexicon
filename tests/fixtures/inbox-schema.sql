@@ -1,0 +1,3 @@
+CREATE TABLE inbox_folders (   id TEXT PRIMARY KEY,   owner_token_hash TEXT NOT NULL,   title TEXT NOT NULL,   created_at TEXT NOT NULL,   updated_at TEXT NOT NULL , parent_folder_id TEXT, description TEXT);
+CREATE TABLE inbox_items (   id TEXT PRIMARY KEY,   owner_token_hash TEXT NOT NULL,   title TEXT NOT NULL,   content_type TEXT NOT NULL,   source_text TEXT,   translated_text TEXT,   saved_text TEXT NOT NULL,   created_at TEXT NOT NULL,   updated_at TEXT NOT NULL , folder_id TEXT);
+CREATE TABLE inbox_tree_order (   id TEXT PRIMARY KEY,   owner_token_hash TEXT NOT NULL,   parent_folder_id TEXT,   entity_type TEXT NOT NULL,   entity_id TEXT NOT NULL,   position REAL NOT NULL );

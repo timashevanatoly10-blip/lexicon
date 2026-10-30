@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const files = ['index.html', 'app.js', 'style.css', 'pwa-updates.js', 'pwa-state.js', 'pwa-updates.css',
+  'dictionary-tree-model.js', 'dictionary-tree.js', 'dictionary-tree.css',
   'manifest.webmanifest', 'icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const sha = data => crypto.createHash('sha256').update(data).digest('hex');
 const template = fs.readFileSync(path.join(__dirname, 'sw-template.js'), 'utf8');

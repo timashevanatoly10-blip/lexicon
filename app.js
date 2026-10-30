@@ -146,7 +146,7 @@ function bindEvents() {
 
   on(backHomeFromFilesBtn, "click", () => showPage("home"));
   on(backHomeFromAiBtn, "click", () => showPage("home"));
-  on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+  on(backHomeFromLexiconBtn, "click", () => { if (window.LexiconDictionaryTree?.back()) return; showPage("home"); });
 
   on(wordModeBtn, "click", () => setMode("word"));
   on(textModeBtn, "click", () => setMode("text"));
@@ -5082,59 +5082,18 @@ function isWordFullCardLoading(wordItem) {
 }
 
 async function bootstrapDictionaries() {
-  if (publicDictionaryMode) return;
-  if (!getAccessToken()) return;
-
-  const localDictionaries = loadDictionaries();
-
+  if (publicDictionaryMode || !getAccessToken()) return;
+  const accountToken = getAccessToken(), localDictionaries = loadDictionaries();
   try {
-    const data = await dictionaryApi("/api/dictionaries", {
-      method: "GET"
-    });
-
-    if (publicDictionaryMode) return;
-
-    const cloudDictionaries = Array.isArray(data.dictionaries)
-      ? data.dictionaries.map(normalizeDictionaryFromApi)
-      : [];
-
-    if (!cloudDictionaries.length && localDictionaries.length) {
-      dictionaries = localDictionaries;
-      saveDictionaries();
-
-      await migrateLocalDictionariesToCloud(localDictionaries);
-
-      const afterMigration = await dictionaryApi("/api/dictionaries", {
-        method: "GET"
-      });
-
-      if (publicDictionaryMode) return;
-
-      dictionaries = Array.isArray(afterMigration.dictionaries)
-        ? afterMigration.dictionaries.map(normalizeDictionaryFromApi)
-        : localDictionaries;
-    } else {
-      dictionaries = cloudDictionaries;
-    }
-
+    const data = await dictionaryApi('/api/dictionaries', {method:'GET',headers:{Authorization:'Bearer '+accountToken}});
+    if (publicDictionaryMode || getAccessToken() !== accountToken) return;
+    dictionaries = Array.isArray(data.dictionaries) ? data.dictionaries.map(normalizeDictionaryFromApi) : [];
     saveDictionaries();
-
-    if (lexiconPage && lexiconPage.classList.contains("active")) {
-      renderLexiconPage();
-    }
+    if (lexiconPage && lexiconPage.classList.contains('active')) renderLexiconPage();
   } catch (err) {
-    if (publicDictionaryMode) return;
-    console.warn("Cloud dictionaries are unavailable, using local cache:", err);
+    if (publicDictionaryMode || getAccessToken() !== accountToken) return;
     dictionaries = localDictionaries;
-    saveDictionaries();
-
-    if (lexiconPage && lexiconPage.classList.contains("active")) {
-      renderLexiconPage();
-      const list = document.getElementById("dictionaryList");
-      if (list && !dictionaries.length) {
-        list.innerHTML = `<div class="lexicon-empty">Облако D1 недоступно: ${escapeHTML(err.message)}</div>`;
-      }
-    }
+    if (lexiconPage && lexiconPage.classList.contains('active')) renderLexiconPage();
   }
 }
 
@@ -9330,6 +9289,7 @@ async function switchAccessToken(nextToken) {
 }
 
 function resetAccountScopedState() {
+  window.LexiconDictionaryTree?.reset();
   dictionaries = [];
   expandedDictionaryId = null;
   dictionaryEditModeId = null;
@@ -10939,12 +10899,11 @@ function getLexiconStorageKey() {
     const encoded = btoa(unescape(encodeURIComponent(token)))
       .replaceAll("=", "")
       .replaceAll("+", "-")
-      .replaceAll("/", "_")
-      .slice(0, 42);
+      .replaceAll("/", "_");
 
-    return `${LEXICON_STORAGE_KEY}_${encoded}`;
+    return `${LEXICON_STORAGE_KEY}_v2_${encoded}`;
   } catch {
-    return `${LEXICON_STORAGE_KEY}_${encodeURIComponent(token).slice(0, 42)}`;
+    return `${LEXICON_STORAGE_KEY}_v2_${encodeURIComponent(token)}`;
   }
 }
 
@@ -11018,12 +10977,12 @@ function renderLexiconPage() {
   `;
 
   backHomeFromLexiconBtn = document.getElementById("backHomeFromLexiconBtn");
-  on(backHomeFromLexiconBtn, "click", () => showPage("home"));
+  on(backHomeFromLexiconBtn, "click", () => { if (window.LexiconDictionaryTree?.back()) return; showPage("home"); });
 
   const addDictionaryBtn = document.getElementById("addDictionaryBtn");
   const lexiconMenuBtn = document.getElementById("lexiconMenuBtn");
   const publicLexiconInstallBtn = document.getElementById("publicLexiconInstallBtn");
-  on(addDictionaryBtn, "click", addDictionary);
+  on(addDictionaryBtn, "click", () => { if (window.LexiconDictionaryTree && !publicDictionaryMode) window.LexiconDictionaryTree.addDictionary(); else addDictionary(); });
   on(lexiconMenuBtn, "click", () => alert("Меню пока заглушка. Потом здесь будут импорт, экспорт, настройки и режимы."));
   on(publicLexiconInstallBtn, "click", showPublicLexiconInstallNotice);
 
@@ -11044,13 +11003,17 @@ function showPublicLexiconInstallNotice() {
   alert("Для добавления словаря необходимо установить приложение Lexicon.");
 }
 
-function renderDictionaryList(filterText = "") {
-  const list = document.getElementById("dictionaryList");
+function renderDictionaryList(filterText = "", options = {}) {
+  const list = options.container || document.getElementById("dictionaryList");
+  if (!options.flat && !publicDictionaryMode && window.LexiconDictionaryTree) {
+    window.LexiconDictionaryTree.render(list, window.LexiconDictionaryTreeBridge);
+    return;
+  }
   if (!list) return;
 
   const query = (filterText || "").toString().trim().toLowerCase();
 
-  const filtered = dictionaries.filter((dict) => {
+  const filtered = (options.dictionaries || dictionaries).filter((dict) => {
     if (!query) return true;
     const titleMatch = (dict.title || "").toLowerCase().includes(query);
     const noteMatch = (dict.note || "").toLowerCase().includes(query);
@@ -16071,3 +16034,13 @@ function iconChevronDownMini() {
   document.head.appendChild(style);
 })();
 
+
+// Narrow bridge: organization owns navigation only; existing dictionary/card operations stay here.
+window.LexiconDictionaryTreeBridge = {
+  getToken:getAccessToken, getDictionaries:()=>dictionaries, isPublic:()=>publicDictionaryMode,
+  api:dictionaryApi, reload:bootstrapDictionaries,
+  renderFlat:(container,items)=>renderDictionaryList('',{flat:true,container,dictionaries:items}),
+  deleteDictionary,
+  show:()=>{ [homePage,filesPage,inboxPage,aiPage].forEach(hidePage); showExistingPage(lexiconPage); },
+  open:()=>showPage('lexicon')
+};

@@ -1,0 +1,52 @@
+/* Isolated dictionary organization. No Inbox selectors. */
+#lexiconPage .dt-view{display:block;min-width:0}
+#lexiconPage .dt-heading{display:flex;align-items:center;gap:10px;margin:2px 0 10px;min-width:0}
+#lexiconPage .dt-heading h2{font-size:20px;font-weight:580;margin:0;overflow-wrap:anywhere;line-height:1.25}
+#lexiconPage .dt-description{font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-height:4.5em;overflow:auto}
+#lexiconPage :is(.dt-heading,.dt-create,.dt-stack,.dt-toolbar) button,#lexiconPage .dt-folder-open,#lexiconPage .dt-preview-toggle,.dt-dialog button{min-height:44px;cursor:pointer;color:var(--accent-dark);background:var(--card);border:1px solid #d8e2d5;border-radius:12px;padding:9px 12px;font:inherit}
+#lexiconPage .dt-view button:disabled,.dt-dialog button:disabled{opacity:.45;cursor:default}
+#lexiconPage .dt-create{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 12px}
+#lexiconPage .dt-stack{font-size:13px;max-width:100%;background:#e8eee4;border-radius:10px;padding:8px 12px;color:#46644a}
+#lexiconPage .dt-stack summary{min-height:30px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:30px}
+#lexiconPage .dt-stack nav,.dt-destination-path{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+#lexiconPage .dt-stack nav button{font-size:13px;max-width:100%;overflow-wrap:anywhere;text-align:left}
+#lexiconPage .dt-toolbar{position:sticky;top:6px;z-index:15;display:flex;flex-wrap:wrap;gap:5px;padding:8px;margin:0 0 10px;background:rgba(232,239,228,.98);border:1px solid #bed0b9;border-radius:13px;box-shadow:0 3px 12px #203b2410}
+#lexiconPage .dt-toolbar[hidden]{display:none}
+#lexiconPage .dt-selection-count{width:100%;font-size:12px;color:var(--muted)}
+#lexiconPage .dt-toolbar button{font-size:12px;flex:1 0 auto;padding:8px;min-height:44px;min-width:44px}
+#lexiconPage .dt-folder{min-width:0;margin-bottom:8px;border:1px solid #cbdac3;border-radius:12px;background:#e6efdf;overflow:clip}
+#lexiconPage .dt-folder-row{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;min-height:58px}
+#lexiconPage .dt-folder-open{display:flex;align-items:center;gap:8px;min-width:0;width:100%;text-align:left;border:0!important;background:transparent!important;border-radius:0!important;padding:10px 6px!important;color:#355f3a!important}
+#lexiconPage .dt-folder-title{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;font-weight:580;font-size:14px}
+#lexiconPage .dt-folder-icon{display:inline-block;flex:0 0 22px;width:22px;height:15px;background:#96b784;border:1px solid #789d66;border-radius:2px;position:relative;margin-top:4px}
+#lexiconPage .dt-folder-icon::before{content:'';position:absolute;top:-5px;left:1px;width:10px;height:5px;border-radius:2px 2px 0 0;background:#96b784;border:1px solid #789d66;border-bottom:0}
+#lexiconPage .dt-count{font-size:10px;white-space:nowrap;color:#698063}
+#lexiconPage .dt-preview-toggle{border:0!important;background:transparent!important;border-radius:0!important;padding:0!important;font-size:20px!important}
+#lexiconPage .dt-select{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;cursor:pointer}
+#lexiconPage .dt-select input{width:20px;height:20px;margin:0;accent-color:#56834b}
+#lexiconPage .dt-folder:has(>.dt-folder-row>.dt-select input:checked){border-color:#5c8e50;box-shadow:inset 0 0 0 1px #5c8e50}
+#lexiconPage .dt-dictionary-row{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;margin-bottom:8px;min-width:0}
+#lexiconPage .dt-dictionary-row>.dt-select{margin-top:4px}
+#lexiconPage .dt-dictionary-content{min-width:0;width:100%}
+#lexiconPage .dt-dictionary-content .dictionary-line{min-height:48px}
+#lexiconPage .dt-dictionary-content .dictionary-name{overflow-wrap:anywhere}
+#lexiconPage .dt-preview{max-height:340px;overflow:auto;overscroll-behavior:contain;padding:8px 8px 2px 12px;border-top:1px solid #d5e0cd;background:#f5f8f0;scrollbar-gutter:stable}
+#lexiconPage .dt-preview[hidden]{display:none}
+#lexiconPage .dt-preview .dt-dictionary-row{grid-template-columns:minmax(0,1fr)}
+#lexiconPage .dt-preview-folder-row{grid-template-columns:minmax(0,1fr)}
+#lexiconPage .dt-preview .dt-folder-open{padding:10px!important;min-height:48px}
+#lexiconPage .dt-empty{font-size:13px;color:var(--muted);padding:12px 6px;line-height:1.5}
+#lexiconPage .dt-error,.dt-dialog .dt-error{font-size:13px;line-height:1.5;color:#9a3f32;overflow-wrap:anywhere}
+.dt-dialog{width:min(440px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #cbd6c5;border-radius:20px;background:var(--card);color:var(--text);padding:20px;box-shadow:0 16px 70px #183a2533}
+.dt-dialog::backdrop{background:#24332a66}
+.dt-dialog h2{font-size:19px;margin:0 0 14px;font-weight:580}
+.dt-dialog label{display:block;font-size:13px;color:var(--muted);margin-bottom:12px}
+.dt-dialog input,.dt-dialog textarea{display:block;margin-top:6px;width:100%;padding:10px;min-height:44px;border:1px solid #d3dece;background:white;border-radius:10px;font:inherit;font-size:16px;color:var(--text)}
+.dt-dialog-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.dt-dialog .dt-primary{background:#476f43;color:white;border-color:#476f43}
+.dt-dialog .dt-danger{background:#8c4438;color:white;border-color:#8c4438}
+.dt-dialog .dt-destinations{display:flex;flex-direction:column;gap:6px;max-height:45dvh;overflow:auto;margin-top:12px}
+.dt-dialog .dt-destination{text-align:left;overflow-wrap:anywhere}
+.dt-destination-path button{max-width:100%;font-size:12px;overflow-wrap:anywhere}
+@media (max-height:450px){.dt-dialog{padding:12px;max-height:calc(100dvh - 12px)}.dt-dialog .dt-destinations{max-height:30dvh}#lexiconPage .dt-toolbar{position:static}}
+@media (prefers-reduced-motion:reduce){#lexiconPage .dt-preview{scroll-behavior:auto}}

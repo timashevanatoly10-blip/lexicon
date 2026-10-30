@@ -8,7 +8,9 @@
     "test:pwa": "node tests/pwa-update.cjs",
     "test:mcp": "node tests/mcp.cjs",
     "test:oauth-browser": "node tests/oauth-browser.cjs",
-    "test:full-cards": "node tests/full-cards.cjs"
+    "test:full-cards": "node tests/full-cards.cjs",
+    "test:dictionary-folders": "node tests/dictionary-folders.cjs",
+    "test:dictionary-folders-ui": "node tests/dictionary-folders-ui.cjs"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

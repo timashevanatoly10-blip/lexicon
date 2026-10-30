@@ -1,5 +1,15 @@
 # Карта проекта LEXICON
 
+Актуальное расширение CP-004: [папки словарей](CP004_FOLDERS.md).
+Структура хранится отдельно от dictionaries/карточек, новые REST операции
+в `backend/services/dictionary-tree.js`, UI — три файла dictionary-tree*.
+Миграция 0003 additive, существующие словари имеют неявный корень.
+Оба существующих сайта: https://timashevanatoly10-blip.github.io/lexicon/
+и https://mylexicon.pages.dev/ (Cloudflare Pages project mylexicon, Git main).
+Их принадлежность LEXICON проверена через API 2026-10-30. Точный статус
+публикации CP-004 и версии записываются в CHECKPOINTS.md после проверки.
+Ниже сохранён исторический снимок CP-001 и последующие записи этапов.
+
 Составлено 2026-10-29. Локальные файлы и Git проверены при подготовке CP-001.
 Облачные сведения ниже получены через Wrangler whoami и GET Cloudflare API
 при проверке и импорте 2026-10-29; это снимок, а не гарантия текущего production.

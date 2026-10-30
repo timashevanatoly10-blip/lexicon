@@ -394,3 +394,54 @@ delete scopes; старые grants не расширялись. Все destructi
 
 Эта запись результата отправляется отдельным документационным коммитом CP-003
 без нового deploy, без перемещения cp-003 и без начала CP-004.
+
+## CP-004 — Dictionary folders for LEXICON
+
+Подготовка 2026-10-30. Предыдущий HEAD `37ba9d5e25f97b28173fa1d5b0419f912761b92f`,
+cp-003 `34becb2331f95818546a76a9445d3d85ba2ebb8f`; прежние теги сохраняются.
+Этот этап явно разрешает GitHub push, миграцию существующей lexicon-db и deploy
+существующего Worker и обоих существующих frontend-сайтов; новых ресурсов нет.
+
+Состав: отдельная модель/навигация/UI/CSS папок, узкий adapter app.js,
+GET/POST dictionary-tree, additive migration 0003, synthetic backend/browser
+tests, frontend build manifest, release verification и документация.
+Quick Preview показывает только один уровень; Full Folder/ID stack/history;
+верхний toolbar и атомарный mixed Move; safe folder Delete возвращает словари
+в корень. Старый dictionary delete остаётся отдельно с прежним подтверждением.
+Исправлен усечённый owner cache key и отключена автоматическая загрузка старого
+кэша в пустой облачный список. Карточки и Inbox не мигрируются.
+
+Проверки и ограничения подробно в CP004_FOLDERS.md. Backup существующей D1
+экспортирован в игнорируемую .wrangler/cp004/private, восстановлен локально;
+0003 применена к восстановленной копии. Хеши всех прежних таблиц до/после
+совпали. Старый Worker совместим: схема dictionaries не меняется, новые связи
+находятся в отдельных таблицах. Никаких пользовательских словарей/слов в
+production smoke не создаётся и не удаляется.
+
+Перед deploy guard требует CP-003 bundled SHA-256
+`a2bf736b246abd316f00b2deaff3ed5d884c4c75477ed5e7713dcecafb20ee6e`,
+точные account/Worker/DB, прежние settings/plain vars и имена secrets.
+Сверяются dry-run artifact и реально опубликованный модуль. GitHub и CF Pages
+читаются только для точных LEXICON repo/project, сравниваются все frontend
+assets по SHA-256. Эта подготовительная запись не утверждает факт публикации;
+commit/release/deployment и фактические результаты будут дописаны после неё.
+
+### Проверки CP-004 перед публикацией
+
+PASS: test:dictionary-folders (включая принудительный mid-batch rollback без
+receipt/частичного переноса), test:dictionary-folders-ui во всех трёх viewport,
+test:mcp, test:full-cards, test:oauth-browser, test:pwa, build/check:frontend,
+syntax всех JavaScript и git diff --check. Новая DDL также включена в CP-003
+full-cards regression; проверено сохранение deleted=1 при каскаде placement.
+В UI реально проверены создание/удаление synthetic словаря внутри папки и Enter
+с сохранением трёх панелей; AI ответы в этом прогоне — fixtures, без платных API.
+Browser проверки выполнялись в установленном Chrome. Реальная установка PWA
+через CDP недоступна; viewport/standalone simulation не является iPhone/Safari.
+Frontend release: `2b81b77de37967114475`, 15 public assets плюс sw.js.
+63 candidate files проверены: credential signatures отсутствуют, private backup
+и runtime receipts игнорируются, ACCESS_TOKENS/OpenAI/DeepL отсутствуют в vars.
+
+Production migration 0003 применена к существующей lexicon-db после backup:
+четыре новые таблицы подтверждены через Cloudflare API. История migrations
+предварительно проверена (0001/0002), никаких прежних строк migration не меняла.
+На момент этой записи новый Worker/frontend ещё не опубликованы.

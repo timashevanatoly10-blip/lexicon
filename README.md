@@ -10,8 +10,11 @@
 - ChatGPT MCP: девять инструментов в существующем Worker; [подключение OAuth](docs/MCP_CONNECT.md).
 - CP-003 MCP: полные карточки, задачи генерации и подтверждаемое удаление;
   [контракты, ограничения и стоимость](docs/CP003_MCP.md). Статус публикации — в журнале.
+- Папки словарей CP-004: Quick Preview, вход в папку, навигация, переносы и безопасное удаление;
+  [хранение, проверки и ограничения](docs/CP004_FOLDERS.md).
 
 Frontend: [GitHub Pages](https://timashevanatoly10-blip.github.io/lexicon/), публикация из корня `main`.
+Второй существующий сайт: [Cloudflare Pages](https://mylexicon.pages.dev/), тот же backend и D1.
 Перед публикацией: `npm run build:frontend`, `npm run check:frontend`, `npm run test:pwa`.
 Тесты используют установленный Chrome; канал задаётся `LEXICON_TEST_BROWSER`.
 

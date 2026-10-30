@@ -15,16 +15,17 @@ async function remove(db,owner,args,kind){
   const execution=random(),guard=`EXISTS(SELECT 1 FROM mcp_delete_confirmations WHERE token_hash=? AND execution=?)`,commands=[db.prepare(`UPDATE mcp_delete_confirmations SET consumed_at=?,execution=? WHERE token_hash=? AND owner_token_hash=? AND consumed_at IS NULL AND expires_at>? AND snapshot=(${snapshotSql})`).bind(now(),execution,tokenHash,owner,now(),wid,wid,id,owner)];
   commands.push(...deleteStatements(db,owner,kind,id,wid,guard,[tokenHash,execution]));
   const results=await db.batch(commands);if(!results[0].meta.changes)throw error('STALE_CONFIRMATION','Target changed or confirmation expired. Prepare and confirm again.',409);
-  return {ok:true,deleted:results[kind==='dictionary'?3:1].meta.changes,dictionary_id:id,...(wid?{word_id:wid}:{})};
+  // D1 meta.changes includes cascading placement rows; count the actual target only.
+  return {ok:true,deleted:kind==='dictionary'?results[3].results.length:results[1].meta.changes,dictionary_id:id,...(wid?{word_id:wid}:{})};
 }
 function deleteStatements(db,owner,kind,id,wid,guard='1',params=[]){
  const commands=[db.prepare(`DELETE FROM dictionary_words WHERE dictionary_id=? AND owner_token_hash=? AND (?='' OR id=?) AND ${guard}`).bind(id,owner,wid,wid,...params)];
  if(kind==='dictionary')commands.push(
   db.prepare(`UPDATE public_dictionary_links SET is_active=0,updated_at=? WHERE dictionary_id=? AND owner_token_hash=? AND ${guard}`).bind(new Date().toISOString(),id,owner,...params),
-  db.prepare(`DELETE FROM dictionaries WHERE id=? AND owner_token_hash=? AND ${guard}`).bind(id,owner,...params),
+  db.prepare(`DELETE FROM dictionaries WHERE id=? AND owner_token_hash=? AND ${guard} RETURNING id`).bind(id,owner,...params),
   db.prepare(`UPDATE mcp_word_tasks SET state='cancelled' WHERE dictionary_id=? AND owner_token_hash=? AND state<>'completed' AND ${guard}`).bind(id,owner,...params),
   db.prepare(`UPDATE mcp_word_panels SET state='cancelled' WHERE task_id IN(SELECT task_id FROM mcp_word_tasks WHERE dictionary_id=? AND owner_token_hash=? AND state='cancelled') AND ${guard}`).bind(id,owner,...params));
  else commands.push(db.prepare(`UPDATE dictionaries SET updated_at=? WHERE id=? AND owner_token_hash=? AND ${guard}`).bind(new Date().toISOString(),id,owner,...params));
  return commands;
 }
-export async function legacyRemove(db,owner,id,wid=''){const kind=wid?'word':'dictionary',result=await db.batch(deleteStatements(db,owner,kind,id,wid));return {deleted:result[kind==='word'?0:2].meta.changes};}
+export async function legacyRemove(db,owner,id,wid=''){const kind=wid?'word':'dictionary',result=await db.batch(deleteStatements(db,owner,kind,id,wid));return {deleted:kind==='dictionary'?result[2].results.length:result[0].meta.changes};}

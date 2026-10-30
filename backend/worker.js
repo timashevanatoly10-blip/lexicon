@@ -1,4 +1,5 @@
 import { legacyRemove } from './services/deletions.js';
+import { handleDictionaryTree } from './services/dictionary-tree.js';
 import { handleAi as handleAiShared, extractOpenAiText } from './services/ai.js';
 import { handleMcpRoutes } from './mcp/transport.js';
 import * as dictionaryServices from './services/dictionaries.js';
@@ -25,6 +26,13 @@ export default {
     }
 
     try {
+      if (url.pathname === "/api/dictionary-tree") {
+        const auth = await requireAuthContext(request, env, origin);
+        if (auth.response) return auth.response;
+        const response = await handleDictionaryTree(request, env, auth.ownerTokenHash);
+        for (const [name, value] of Object.entries(corsHeaders(origin))) response.headers.set(name, value);
+        return response;
+      }
       if (request.method === "GET" && url.pathname === "/api/dictionaries") {
         const auth = await requireAuthContext(request, env, origin);
         if (auth.response) return auth.response;
