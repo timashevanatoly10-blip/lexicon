@@ -477,3 +477,39 @@ HTML загружается из канонического корня, cache ke
 имеет явный --browser transport. Backend не меняется и повторно не deploy-ится.
 Существующий cp-004 **не перемещается**, CP-005 не создаётся. Фактический SHA
 этого correction и итоговые frontend receipts будут записаны после публикации.
+
+### CP-004 — итог подтверждён 2026-10-30 12:31 МСК
+
+- Checkpoint cp-004 неизменяем: `df6d1702360fae0f95cd50e654bb13b2cf409104`.
+  Frontend correction: `8b19e8ab79d74c3e7186f4afc1d13d9bcf2f011b`.
+  Оба commit отправлены в main разрешённого GitHub. cp-001/002/003 не менялись.
+- Worker остался на deployment `8f169044-f2dc-47c0-9d46-b2dc42b62d13`,
+  version `4db850ab-fa70-46b3-b5ee-276b546fb28f` (100%); backend correction
+  не требовался, повторного deploy Worker после frontend fix не было.
+- GitHub Pages https://timashevanatoly10-blip.github.io/lexicon/: **built**,
+  frontend commit `8b19e8ab79d74c3e7186f4afc1d13d9bcf2f011b`.
+- Cloudflare Pages https://mylexicon.pages.dev/: production deployment
+  `c25adb20-bdb1-4a1c-ac5e-b4bddfc812b3`, **success**, тот же frontend commit.
+- Итоговый frontend release `3f71534d9b2b6f591e9d`. Проверены SHA-256 всех
+  16 опубликованных файлов на **каждом** сайте через
+  `node scripts/frontend-release.cjs verify --browser`. HTML читается через
+  канонический root, остальные assets — по точным путям, редиректы запрещены.
+  Дополнительный реальный Chrome smoke с owner token подтвердил отображение
+  дерева и authenticated CORS на обоих сайтах без пользовательских записей.
+- Реальная production A→B проверка на GitHub Pages: A release
+  `2b81b77de37967114475` оставался активным после публикации B, затем появилась
+  кнопка Update; одно нажатие активировало `3f71534d9b2b6f591e9d`, черновик
+  сохранился, кнопка исчезла. На CF Pages новая версия реально установила
+  Service Worker и открыла app shell offline после reload. Это headless Chrome,
+  не физический iPhone и не доказательство установки iOS PWA.
+- Резервная копия остаётся локально в ignored private directory. Production
+  сверка всех прежних dictionary/card/public-link/Inbox полей с backup — PASS.
+  Никаких примерных папок/словарей или других тестовых пользовательских данных
+  в production не создавалось и не удалялось. Секреты не ротировались.
+
+Ограничения: операции организации online; old cache v1 не импортируется;
+folder+dictionary mixed Delete разделён по безопасным сценариям; Delete самих
+словарей необратим и требует прежнего отдельного подтверждения. Установленная
+PWA/реальный iPhone требуют ручной проверки из инструкции CP004_FOLDERS.md.
+Этот итог сохраняется отдельным документационным commit того же CP-004 без
+перемещения тега и без нового backend deploy. CP-005 не начат.

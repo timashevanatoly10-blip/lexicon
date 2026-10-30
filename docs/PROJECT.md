@@ -10,6 +10,28 @@
 публикации CP-004 и версии записываются в CHECKPOINTS.md после проверки.
 Ниже сохранён исторический снимок CP-001 и последующие записи этапов.
 
+## Актуальная версия CP-004 — 2026-10-30 12:31 МСК
+
+- Папки: `dictionary-tree-model.js`, `dictionary-tree.js`, `dictionary-tree.css`;
+  REST `/api/dictionary-tree` → `backend/services/dictionary-tree.js`.
+- D1: additive 0003 добавляет folders/locations/operations/confirmations;
+  прежние dictionaries, words/meta.fullCard, public links и Inbox совпали
+  с pre-migration backup по всем полям. Словари имеют прежние ID и неявный корень.
+- Функциональный commit/tag cp-004 `df6d1702360fae0f95cd50e654bb13b2cf409104`;
+  PWA Pages correction `8b19e8ab79d74c3e7186f4afc1d13d9bcf2f011b`, оба pushed.
+- Worker deployment `8f169044-f2dc-47c0-9d46-b2dc42b62d13`, version
+  `4db850ab-fa70-46b3-b5ee-276b546fb28f`, 100%; bundle SHA-256
+  `8371f8992694015c8b91a10c89921a6e7133c6482064986b1a6c6437429bc18d`.
+  Все прежние bindings/vars/secrets сохранены. REST/MCP/OAuth/tree smoke PASS.
+- Оба frontend built/success на `8b19e8a`, release `3f71534d9b2b6f591e9d`;
+  CF Pages deployment `c25adb20-bdb1-4a1c-ac5e-b4bddfc812b3`. Все 16 файлов
+  каждого сайта совпали по SHA-256. Production Chrome A→B/Update/draft PASS;
+  CF Pages SW install/offline PASS. Physical iPhone/iOS PWA не проверен.
+
+Полный audit и последующая документационная фиксация — CHECKPOINTS.md.
+
+## Исторический снимок импорта CP-001
+
 Составлено 2026-10-29. Локальные файлы и Git проверены при подготовке CP-001.
 Облачные сведения ниже получены через Wrangler whoami и GET Cloudflare API
 при проверке и импорте 2026-10-29; это снимок, а не гарантия текущего production.
