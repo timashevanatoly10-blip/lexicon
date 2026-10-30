@@ -445,3 +445,35 @@ Production migration 0003 применена к существующей lexicon
 четыре новые таблицы подтверждены через Cloudflare API. История migrations
 предварительно проверена (0001/0002), никаких прежних строк migration не меняла.
 На момент этой записи новый Worker/frontend ещё не опубликованы.
+
+### CP-004 — проверка первой публикации и Pages PWA correction
+
+Функциональный commit/tag cp-004:
+`df6d1702360fae0f95cd50e654bb13b2cf409104`, push main/tag успешен.
+Backend опубликован из этого чистого commit: bundled SHA-256
+`8371f8992694015c8b91a10c89921a6e7133c6482064986b1a6c6437429bc18d`;
+исходный backend/worker.js SHA-256
+`4103d6e103ea2aa221ade8cb2b7688f5433c668e302f05177f08d466db7a0dff`.
+Deployment `8f169044-f2dc-47c0-9d46-b2dc42b62d13`, version
+`4db850ab-fa70-46b3-b5ee-276b546fb28f`, 100%. Settings, plain vars (включая
+ACCESS_TOKENS), DB ID и все secret binding names/types сохранены. Опубликованный
+модуль скачан через API и совпал с dry-run artifact по хешу.
+
+Read-only production tree для всех настроенных владельцев, REST, standard MCP
+SDK и Chrome OAuth POST/CSRF/303/PKCE: PASS, временные grants отозваны.
+Сравнение production с backup после deploy: все поля dictionaries,
+dictionary_words (включая meta.fullCard), public_dictionary_links,
+inbox_folders/items/tree_order совпали. Пользовательские записи не создавались
+и не удалялись. Оба сайта открыли новое дерево через реальный CORS в Chrome.
+
+GitHub Pages built для df6d170, Cloudflare Pages production
+`b31d355b-3bdd-467c-b634-e51bfcba3623` success, тот же commit.
+Сверка файлов выявила ранее не проверенное поведение CF Pages: `/index.html`
+даёт 308 на `/`. Это мешало строгому PWA install (redirected запрещён), поэтому
+в рамках того же CP-004 подготовлен дополнительный frontend correction:
+HTML загружается из канонического корня, cache key и проверка байтов остаются.
+Новый release `3f71534d9b2b6f591e9d`. test:pwa прошёл, включая canonical redirect
+в A→B/standalone fixture. Проверяющий скрипт также использует root для HTML и
+имеет явный --browser transport. Backend не меняется и повторно не deploy-ится.
+Существующий cp-004 **не перемещается**, CP-005 не создаётся. Фактический SHA
+этого correction и итоговые frontend receipts будут записаны после публикации.

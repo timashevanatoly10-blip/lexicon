@@ -11,7 +11,9 @@ self.addEventListener('install', event => {
     // Stage atomically: a partial/old CDN response never becomes a ready update.
     const responses = await Promise.all(ASSETS.map(async asset => {
       const url = new URL(asset.path, root);
-      const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+      // Pages may redirect index.html to '/'. Fetch canonical HTML directly;
+      // retain the explicit index.html cache key and verify the same byte hash.
+      const response = await fetch(asset.path === 'index.html' ? root : url, { cache: 'no-store', credentials: 'omit' });
       if (!response.ok || response.redirected) throw new Error('App shell unavailable');
       const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await response.clone().arrayBuffer())))
         .map(byte => byte.toString(16).padStart(2, '0')).join('');

@@ -16,7 +16,21 @@ async function main(){
  const result={github_pages:{url:pages.html_url,status:build.status,commit:build.commit},cloudflare_pages:{url:'https://mylexicon.pages.dev/',canonical:deployment(p.canonical_deployment),latest:deployment(p.latest_deployment)}};
  if(process.argv[2]==='verify'){
    const assets=JSON.parse(fs.readFileSync('sw.js','utf8').match(/const ASSETS = ([\s\S]*?);\nconst PREFIX/)[1]);const files=[{path:'sw.js',sha256:sha(fs.readFileSync('sw.js'))},...assets];
-   for(const site of [pages.html_url,'https://mylexicon.pages.dev/']){const checks=await Promise.all(files.map(async f=>{const response=await fetch(new URL(f.path,site),{redirect:'error',headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(30000)});if(response.status!==200||sha(Buffer.from(await response.arrayBuffer()))!==f.sha256)throw Error('Published frontend artifact mismatch; wait for completed rollout');return true;}));result[site.includes('github.io')?'github_pages':'cloudflare_pages'].verified_assets=checks.length;}
+   let browser;
+   try{
+    // Explicit browser transport for environments where Node cannot fetch Pages assets.
+    if(process.argv.includes('--browser'))browser=await require('playwright').chromium.launch({channel:process.env.LEXICON_TEST_BROWSER||'chrome',headless:true});
+    for(const site of [pages.html_url,'https://mylexicon.pages.dev/']){
+     let count;
+     if(browser){const context=await browser.newContext({serviceWorkers:'block'});try{
+      await context.route('https://**/*',r=>new URL(r.request().url()).origin===new URL(site).origin?r.continue():r.abort());const page=await context.newPage();await page.goto(site);
+      const checks=await page.evaluate(async files=>Promise.all(files.map(async file=>{const response=await fetch(file.path==='index.html'?'./':file.path,{cache:'no-store',redirect:'error'}),digest=await crypto.subtle.digest('SHA-256',await response.arrayBuffer()),hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');return response.status===200&&hash===file.sha256;})),files);
+      if(checks.some(ok=>!ok))throw Error('Published frontend artifact mismatch; wait for completed rollout');count=checks.length;
+     }finally{await context.close();}}
+     else{const checks=await Promise.all(files.map(async f=>{const response=await fetch(new URL(f.path==='index.html'?'./':f.path,site),{redirect:'error',headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(30000)});if(response.status!==200||sha(Buffer.from(await response.arrayBuffer()))!==f.sha256)throw Error('Published frontend artifact mismatch; wait for completed rollout');return true;}));count=checks.length;}
+     result[site.includes('github.io')?'github_pages':'cloudflare_pages'].verified_assets=count;
+    }
+   }finally{await browser?.close();}
    fs.mkdirSync('.wrangler/cp004/private',{recursive:true});fs.writeFileSync('.wrangler/cp004/private/frontend-receipt.json',JSON.stringify(result,null,2));
  }
  console.log(JSON.stringify(result,null,2));

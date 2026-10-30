@@ -29,11 +29,13 @@ function fixture(label) {
 const versions = { A: fixture('A'), B: fixture('B'), C: fixture('C') };
 let published = 'A';
 let corrupt = false;
+let canonicalHtml = false;
 let browser;
 const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const file = url.pathname.replace(/^\/lexicon\//, '') || 'index.html';
+  if (canonicalHtml && url.pathname.endsWith('/index.html')) { res.writeHead(308, {Location:'/lexicon/'}); res.end(); return; }
   if (file.startsWith('api/')) { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"private":"test-private-response"}'); return; }
   const body = versions[published].get(file);
   if (!body) { res.writeHead(404); res.end(); return; }
@@ -172,6 +174,7 @@ async function main() {
   await ctx.close();
   // Mobile standalone lifecycle simulation, not proof of installation or physical iOS.
   published = 'A';
+  canonicalHtml = true; // Cloudflare Pages canonical HTML behavior, retained for A -> B.
   const mobile = await context({ viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true });
   await mobile.addInitScript(() => { const original = window.matchMedia.bind(window); window.matchMedia = q => q === '(display-mode: standalone)' ? { matches: true, media: q, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} } : original(q); });
   const pwa = await mobile.newPage();
@@ -186,6 +189,7 @@ async function main() {
   assert.equal(await pwa.locator('#wordResultOutput').textContent(), 'Несохранённый результат слова');
   console.log('PASS: mobile standalone simulation, foreground detection, draft restored (not physical iPhone / installed PWA verification)');
   await mobile.close();
+  console.log('PASS: Pages index.html -> root 308 redirect does not block PWA install/update; HTML remains hash-verified');
   console.log('ALL PWA TESTS PASSED');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => { await browser?.close(); server.close(); });
