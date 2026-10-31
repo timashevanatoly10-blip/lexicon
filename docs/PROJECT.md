@@ -1,5 +1,10 @@
 # Карта проекта LEXICON
 
+Connection Reliability CP-005: [диагностика, исправления, тесты и проверка на
+iPhone](CONNECTION_DIAGNOSTICS.md). Публикация явно разрешена 2026-10-31;
+фактический статус — в CHECKPOINTS.md. Новый api-connection.js обслуживает
+ограниченные GET-повторы и восстановление; backend и production D1 не меняются.
+
 Актуальное расширение CP-004: [папки словарей](CP004_FOLDERS.md).
 Структура хранится отдельно от dictionaries/карточек, новые REST операции
 в `backend/services/dictionary-tree.js`, UI — три файла dictionary-tree*.

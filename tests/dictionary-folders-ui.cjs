@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),{build}=require('esbuild'),{Miniflare,con
 const ORIGIN='https://lexicon-worker.timashevanatoly10.workers.dev',root=path.resolve(__dirname,'..');let browser,server;
 const tokens=['same-long-LEXICON-fixture-owner-prefix-for-cache-isolation-A','same-long-LEXICON-fixture-owner-prefix-for-cache-isolation-B'];
 const owner=i=>crypto.createHash('sha256').update(tokens[i]).digest('hex');
-const assets=new Set(['index.html','app.js','style.css','dictionary-tree.js','dictionary-tree-model.js','dictionary-tree.css','pwa-state.js','pwa-updates.js','pwa-updates.css','frontend-release.js','manifest.webmanifest','sw.js','icon.svg','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png']);
+const assets=new Set(['index.html','app.js','style.css','dictionary-tree.js','dictionary-tree-model.js','dictionary-tree.css','api-connection.js','pwa-state.js','pwa-updates.js','pwa-updates.css','frontend-release.js','manifest.webmanifest','sw.js','icon.svg','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png']);
 const mime={'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
 async function main(){
  const bundle=await build({entryPoints:['backend/worker.js'],bundle:true,write:false,format:'esm',platform:'browser'});

@@ -15,6 +15,7 @@ let vettingLastCardPayload = null;
 let currentDocumentId = "";
 let currentDocumentKey = "";
 let dictionaries = loadDictionaries();
+let dictionaryBootstrap = null;
 let expandedDictionaryId = null;
 let dictionaryEditModeId = null;
 let expandedDictionaryWordKey = null;
@@ -5005,18 +5006,10 @@ async function dictionaryApi(path, options = {}) {
     ...(options.headers || {})
   };
 
-  let res;
-
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers
-    });
-  } catch (err) {
-    throw new Error("Не удалось связаться с Worker/D1. Проверь деплой Worker, CORS и интернет.\n" + err.message);
-  }
-
-  return await readJsonOrThrow(res);
+  const accountToken = getAccessToken();
+  const res = await window.LexiconConnection.request(`${API_BASE}${path}`,{...options,headers},getAccessToken);
+  if (getAccessToken() !== accountToken) throw new Error('Пользователь изменился.');
+  return await readJsonOrThrow(res,accountToken);
 }
 
 function normalizeDictionaryFromApi(dict) {
@@ -5081,18 +5074,28 @@ function isWordFullCardLoading(wordItem) {
   return Boolean(fullCard && fullCard.status === "loading");
 }
 
-async function bootstrapDictionaries() {
+function bootstrapDictionaries() {
+  const token=getAccessToken();
+  if(publicDictionaryMode || !token) return Promise.resolve();
+  if(dictionaryBootstrap?.token===token) return dictionaryBootstrap.promise;
+  const pending=readDictionariesFromCloud().finally(()=>{if(dictionaryBootstrap?.promise===pending)dictionaryBootstrap=null;});
+  dictionaryBootstrap={token,promise:pending};return pending;
+}
+
+async function readDictionariesFromCloud() {
   if (publicDictionaryMode || !getAccessToken()) return;
   const accountToken = getAccessToken(), localDictionaries = loadDictionaries();
   try {
     const data = await dictionaryApi('/api/dictionaries', {method:'GET',headers:{Authorization:'Bearer '+accountToken}});
     if (publicDictionaryMode || getAccessToken() !== accountToken) return;
-    dictionaries = Array.isArray(data.dictionaries) ? data.dictionaries.map(normalizeDictionaryFromApi) : [];
+    if (!Array.isArray(data.dictionaries)) throw new Error('Некорректный ответ списка словарей.');
+    dictionaries = data.dictionaries.map(normalizeDictionaryFromApi);
     saveDictionaries();
     if (lexiconPage && lexiconPage.classList.contains('active')) renderLexiconPage();
   } catch (err) {
     if (publicDictionaryMode || getAccessToken() !== accountToken) return;
-    dictionaries = localDictionaries;
+    if (!dictionaries.length) dictionaries = localDictionaries;
+    window.LexiconConnection.notice(err,'/api/dictionaries');
     if (lexiconPage && lexiconPage.classList.contains('active')) renderLexiconPage();
   }
 }
@@ -9289,6 +9292,8 @@ async function switchAccessToken(nextToken) {
 }
 
 function resetAccountScopedState() {
+  dictionaryBootstrap = null;
+  window.LexiconConnection?.reset();
   window.LexiconDictionaryTree?.reset();
   dictionaries = [];
   expandedDictionaryId = null;
@@ -9334,18 +9339,10 @@ async function inboxApi(path, options = {}) {
     ...(options.headers || {})
   };
 
-  let res;
-
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers
-    });
-  } catch (err) {
-    throw new Error("Не удалось связаться с Worker/D1. Проверь деплой Worker, CORS и интернет.\n" + err.message);
-  }
-
-  return await readJsonOrThrow(res);
+  const accountToken = getAccessToken();
+  const res = await window.LexiconConnection.request(`${API_BASE}${path}`,{...options,headers},getAccessToken);
+  if (getAccessToken() !== accountToken) throw new Error('Пользователь изменился.');
+  return await readJsonOrThrow(res,accountToken);
 }
 
 function normalizeInboxItem(item) {
@@ -9364,7 +9361,10 @@ function normalizeInboxItem(item) {
 }
 
 async function loadInboxItemsFromCloud() {
+  const accountToken = getAccessToken();
   const data = await inboxApi("/api/inbox", { method: "GET" });
+  if (getAccessToken() !== accountToken) return inboxItems;
+  if (!Array.isArray(data.items) && !Array.isArray(data.inbox)) throw new Error("Некорректный ответ Inbox.");
   const rawItems = Array.isArray(data.items)
     ? data.items
     : Array.isArray(data.inbox)
@@ -9379,12 +9379,13 @@ function showInboxPage() {
   if (!inboxPage) ensureInboxShellMarkup();
   if (!inboxPage) return;
 
-  renderInboxPage(true);
+  renderInboxPage(!inboxItems.length && !inboxFolders.length);
   showExistingPage(inboxPage);
 
+  const inboxAccount=getAccessToken();
   loadInboxItemsFromCloud()
-    .then(() => renderInboxPage(false))
-    .catch((err) => renderInboxError(err));
+    .then(() => { if(getAccessToken()===inboxAccount) renderInboxPage(false); })
+    .catch((err) => { if(getAccessToken()===inboxAccount) renderInboxError(err); });
 }
 
 function renderInboxPage(isLoading = false) {
@@ -9436,13 +9437,11 @@ function renderInboxPage(isLoading = false) {
 }
 
 function renderInboxError(err) {
-  if (!inboxPage) return;
-
-  const list = document.getElementById("inboxList");
-
-  if (list) {
-    list.innerHTML = `<div class="inbox-empty">Не удалось загрузить Inbox.<br>${escapeHTML(err?.message || err)}</div>`;
-  }
+  // Preserve the last valid list instead of replacing it with an empty error view.
+  if (!inboxItems.length && !inboxFolders.length && !activeInboxItemId) renderInboxPage(false);
+  window.LexiconConnection.notice(err,'/api/inbox');
+  const subtitle=inboxPage?.querySelector('.inbox-subtitle');
+  if(subtitle) subtitle.textContent='Нет свежих данных — показана последняя загрузка';
 }
 
 function buildInboxLoadingHtml() {
@@ -12235,8 +12234,9 @@ function setBusy(v) {
   if (downloadBtn) downloadBtn.disabled = v;
 }
 
-async function readJsonOrThrow(res) {
+async function readJsonOrThrow(res, accountToken = getAccessToken()) {
   const text = await res.text();
+  if(getAccessToken()!==accountToken) throw new Error('Пользователь изменился.');
 
   if (!res.ok) {
     if (res.status === 401) {
@@ -12244,15 +12244,12 @@ async function readJsonOrThrow(res) {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
         lockApp();
       }
-      throw new Error("Unauthorized");
+      throw Object.assign(new Error("Unauthorized"), {code:'AUTH',status:401});
     }
 
-    try {
-      const data = JSON.parse(text);
-      throw new Error(data.error || text || `HTTP ${res.status}`);
-    } catch {
-      throw new Error(text || `HTTP ${res.status}`);
-    }
+    let data;
+    try { data = JSON.parse(text); } catch {}
+    throw Object.assign(new Error(data?.error || `HTTP ${res.status}`), {code:'HTTP',status:res.status});
   }
 
   try {
@@ -12306,7 +12303,10 @@ normalizeInboxItem = function normalizeInboxItemV125(item) {
 };
 
 loadInboxItemsFromCloud = async function loadInboxItemsFromCloudV125() {
+  const accountToken = getAccessToken();
   const data = await inboxApi("/api/inbox", { method: "GET" });
+  if (getAccessToken() !== accountToken) return inboxItems;
+  if (!Array.isArray(data.items) && !Array.isArray(data.inbox)) throw new Error("Некорректный ответ Inbox.");
   const rawItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inbox) ? data.inbox : []);
   const rawFolders = Array.isArray(data.folders) ? data.folders : (Array.isArray(data.inboxFolders) ? data.inboxFolders : []);
   inboxItems = rawItems.map(normalizeInboxItem).filter(Boolean);
@@ -14270,7 +14270,10 @@ function iconChevronDownMini() {
   }
 
   loadInboxItemsFromCloud = async function loadInboxItemsFromCloudV133() {
+    const accountToken = getAccessToken();
     const data = await inboxApi("/api/inbox", { method: "GET" });
+    if (getAccessToken() !== accountToken) return inboxItems;
+    if (!Array.isArray(data.items) && !Array.isArray(data.inbox)) throw new Error("Некорректный ответ Inbox.");
     const rawItems = Array.isArray(data.items) ? data.items : (Array.isArray(data.inbox) ? data.inbox : []);
     const rawFolders = Array.isArray(data.folders) ? data.folders : (Array.isArray(data.inboxFolders) ? data.inboxFolders : []);
     const rawOrder = Array.isArray(data.treeOrder)

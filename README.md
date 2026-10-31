@@ -12,6 +12,7 @@
   [контракты, ограничения и стоимость](docs/CP003_MCP.md). Статус публикации — в журнале.
 - Папки словарей CP-004: Quick Preview, вход в папку, навигация, переносы и безопасное удаление;
   [хранение, проверки и ограничения](docs/CP004_FOLDERS.md).
+- CP-005 Connection Reliability: [повторы чтения, восстановление сети и диагностика](docs/CONNECTION_DIAGNOSTICS.md).
 
 Frontend: [GitHub Pages](https://timashevanatoly10-blip.github.io/lexicon/), публикация из корня `main`.
 Второй существующий сайт: [Cloudflare Pages](https://mylexicon.pages.dev/), тот же backend и D1.

@@ -26,7 +26,8 @@
     const captured=token,start=epoch,result=await bridge.api('/api/dictionary-tree',{method:'POST',headers:{Authorization:'Bearer '+captured,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId,expected_version:data.version,...intent})});
     if(start!==epoch||!active())throw Error('Пользователь изменился.');return result;
   }
-  async function refresh(){const start=epoch;await bridge.reload();if(start!==epoch||!active())return;await load();}
+  let refreshing=null;
+  async function refresh(){if(refreshing)return refreshing;const start=epoch;refreshing=(async()=>{await bridge.reload();if(start!==epoch||!active())return;await load();})().finally(()=>{refreshing=null;});return refreshing;}
   function dialog(title){const d=h('dialog',{class:'dt-dialog','aria-label':title});const form=h('form',{method:'dialog'}),heading=h('h2',{},title),content=h('div',{class:'dt-dialog-content'}),error=h('p',{class:'dt-error',role:'alert'}),actions=h('div',{class:'dt-dialog-actions'});form.append(heading,content,error,actions);d.append(form);document.body.append(d);d.addEventListener('close',()=>d.remove());d.showModal();return {d,form,content,error,actions};}
   function edit(kind,parent=current,item=null){
     if(busy||!data||failed)return;const title=item?'Переименовать':kind==='folder'?'Новая папка':'Новый словарь',v=dialog(title);
@@ -88,8 +89,6 @@
   function render(container,b){host=container;bridge=b;const next=b.getToken();if(next!==token){epoch++;token=next;owner='';data=null;failed='';loading=null;busy=false;selected.clear();previews.clear();current=new URL(location.href).searchParams.get('df')||null;lastDicts=null;}
     const changed=lastDicts!==b.getDictionaries();lastDicts=b.getDictionaries();paint();if((!data||changed)&&!loading&&!failed)void load();}
   window.addEventListener('popstate',()=>{if(!bridge||bridge.isPublic()||!active())return;current=new URL(location.href).searchParams.get('df')||null;selected.clear();if(data){const m=model(),stored=history.state;if(!m.path(current)||stored?.dictionaryOwner&&stored.dictionaryOwner!==owner||stored?.dictionaryPath?.length&&stored.dictionaryPath.at(-1)===current&&JSON.stringify(stored.dictionaryPath)!==JSON.stringify(pathIds(m))){current=null;remember(true);}}bridge.show();paint();});
-  window.addEventListener('online',()=>{if(bridge&&active()&&!busy)void refresh();});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&bridge&&active()&&host?.isConnected&&!busy)void refresh();});
   window.addEventListener('DOMContentLoaded',()=>{if(new URL(location.href).searchParams.has('df')&&window.LexiconDictionaryTreeBridge&&!window.LexiconDictionaryTreeBridge.isPublic())window.LexiconDictionaryTreeBridge.open();});
-  window.LexiconDictionaryTree={render,reset,addDictionary:()=>edit('dictionary'),back(){if(!current)return false;navigate(model().folders.get(current)?.parent||null);return true;}};
+  window.LexiconDictionaryTree={render,reset,refresh:()=>bridge&&active()&&!busy?refresh():Promise.resolve(),addDictionary:()=>edit('dictionary'),back(){if(!current)return false;navigate(model().folders.get(current)?.parent||null);return true;}};
 })();

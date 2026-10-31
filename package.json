@@ -10,7 +10,9 @@
     "test:oauth-browser": "node tests/oauth-browser.cjs",
     "test:full-cards": "node tests/full-cards.cjs",
     "test:dictionary-folders": "node tests/dictionary-folders.cjs",
-    "test:dictionary-folders-ui": "node tests/dictionary-folders-ui.cjs"
+    "test:dictionary-folders-ui": "node tests/dictionary-folders-ui.cjs",
+    "test:connection": "node tests/connection.cjs",
+    "test:connection-browser": "node tests/connection-browser.cjs"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

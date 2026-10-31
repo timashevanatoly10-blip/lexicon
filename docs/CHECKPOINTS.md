@@ -513,3 +513,31 @@ folder+dictionary mixed Delete разделён по безопасным сце
 PWA/реальный iPhone требуют ручной проверки из инструкции CP004_FOLDERS.md.
 Этот итог сохраняется отдельным документационным commit того же CP-004 без
 перемещения тега и без нового backend deploy. CP-005 не начат.
+
+## CP-005 — Connection Reliability
+
+Публикация явно разрешена 2026-10-31. Исходный HEAD:
+`82539a2c6abadfb0374aa9237c579f6c841032d1`. История и remote refs проверены
+под timashevanatoly10-blip: cp-005 свободен, cp-001…cp-004 остаются прежними.
+Checkpoint готовится как `CP-005: Connection Reliability`, tag cp-005.
+
+Состав: api-connection.js, узкие adapters dictionaryApi/inboxApi и guards
+смены владельца/последнего корректного отображения; общий lifecycle recovery
+для дерева/Inbox; новые regression tests и MCP/GET concurrency test; frontend
+manifest/build и документация. Диагностика различает timeout/network/401/403/
+429/5xx, не доверяет исходному error.message. До трёх попыток только для трёх
+allowlisted GET endpoints. POST/PUT/DELETE не повторяются, включая HTTP429/503.
+Подробности и ограничения — CONNECTION_DIAGNOSTICS.md.
+
+Повторные тесты: connection, connection-browser, mcp, full-cards,
+dictionary-folders, dictionary-folders-ui, oauth-browser и pwa — PASS.
+Chrome portrait/landscape/desktop, offline/online, lifecycle, медленная сеть,
+параллельные reads, late old-owner401, черновики и privacy проверены.
+WebKit/physical iPhone и фактически установленная iOS PWA недоступны.
+Frontend release `7bed10ba4dba9d64a448`, 16 public assets плюс sw.js.
+
+Backend diff отсутствует: Worker не требует повторной публикации. Production
+schema/D1/vars/secrets не меняются, миграции/backup/платная генерация не запускаются.
+Новые ресурсы и CP-006 не входят в объём. Source/binding/version Worker
+проверяются read-only; production smoke не делает ни одного write-запроса.
+До фиксации фактических receipts этот раздел не утверждает успешную публикацию.
