@@ -541,3 +541,47 @@ schema/D1/vars/secrets не меняются, миграции/backup/платн
 Новые ресурсы и CP-006 не входят в объём. Source/binding/version Worker
 проверяются read-only; production smoke не делает ни одного write-запроса.
 До фиксации фактических receipts этот раздел не утверждает успешную публикацию.
+
+### CP-005 — production подтверждён 2026-10-31 12:31 МСК
+
+- Функциональный commit/tag cp-005:
+  `ccf32852bc0bcf712a2c80d5dd1d0d1ded652ee3`. Atomic push main/tag успешен,
+  предыдущие cp-001…cp-004 сохранены. Tag cp-005 не перемещается.
+- GitHub Pages https://timashevanatoly10-blip.github.io/lexicon/: **built** для
+  указанного commit. Cloudflare Pages https://mylexicon.pages.dev/: **success**,
+  production deployment `dc45f21f-ab44-401f-b6e1-ef0a91af29d2`, тот же commit.
+- Frontend release `7bed10ba4dba9d64a448`. `frontend-release.cjs verify --browser`
+  подтвердил SHA-256 всех **17 файлов на каждом сайте** (16 assets плюс sw.js).
+- Worker проверен read-only до и после публикации. Deployment остался
+  `8f169044-f2dc-47c0-9d46-b2dc42b62d13`, version
+  `4db850ab-fa70-46b3-b5ee-276b546fb28f`, 100%. Published bundle SHA-256
+  `8371f8992694015c8b91a10c89921a6e7133c6482064986b1a6c6437429bc18d` совпал
+  с CP-004. DB ID и наличие всех прежних credential bindings подтверждены.
+  Backend diff отсутствует: Worker повторно не deploy-ился, настройки/vars/
+  secrets/D1/schema не записывались. GET /mcp без OAuth вернул 401, discovery
+  вернул 200 и правильный issuer; production OAuth grants не создавались.
+- Production read-only Chrome smoke обоих сайтов: release/CORS/auth PASS,
+  искусственный network abort перехвачен только в browser context, последний
+  список остался видимым, online/focus восстановили GET и убрали диагностику.
+  Действующий token сохранился и в diagnostics не появился. Write requests: 0.
+  Первый smoke baseline снимался до окончания initial dictionary read; ожидание
+  обоих readers уточнено в test helper, затем проверка прошла на обоих сайтах.
+  Это изменение только ops-теста, опубликованный runtime не менялся.
+- Две реальные production A-сессии Chrome были открыты до push. После
+  публикации B обе остались на A до нажатия Update. Одно нажатие активировало
+  `7bed10ba4dba9d64a448`, сохранило синтетический word draft и скрыло кнопку.
+  В production не отправлено ни одного изменения словарей/Inbox/AI.
+- Все восемь regression suites PASS, отдельные проверки POST/PUT/DELETE
+  transport/429/503 подтвердили одну отправку, hostile diagnostic message
+  sentinel не попал в UI. Timeout/network/401/403/429/5xx классифицируются отдельно.
+
+Остаются границы: физический iPhone/Safari/WebKit и установленная iOS PWA
+не тестировались. Исходная транспортная причина отдельных Load failed пока
+не доказана; исторические detailed logs недоступны текущим credentials (403/10104).
+Точные HTTP5xx/limits конкретного iPhone потребуют времени/origin и прав Logs
+в том же аккаунте. Общие квоты Worker/D1 и реальные мобильные DNS/TLS-сбои
+frontend retry не устраняет. Инструкция телефона — CONNECTION_DIAGNOSTICS.md.
+
+Результат и уточнение ожидания test helper сохраняются отдельным docs/test
+коммитом того же CP-005 с skip-маркерами, без нового deploy runtime, без переноса
+тега, без CP-006. Rollback только согласованным revert и отдельной публикацией.

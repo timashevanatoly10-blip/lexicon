@@ -5,6 +5,15 @@ iPhone](CONNECTION_DIAGNOSTICS.md). Публикация явно разреше
 фактический статус — в CHECKPOINTS.md. Новый api-connection.js обслуживает
 ограниченные GET-повторы и восстановление; backend и production D1 не меняются.
 
+CP-005 подтверждён 2026-10-31 12:31 МСК: commit/tag
+`ccf32852bc0bcf712a2c80d5dd1d0d1ded652ee3` pushed; оба сайта built/success,
+frontend release `7bed10ba4dba9d64a448`, все 17 файлов каждого сайта hash-verified.
+CF Pages deployment `dc45f21f-ab44-401f-b6e1-ef0a91af29d2`. Реальные Chrome
+production A→B/Update/draft и network-abort/recovery прошли на обоих сайтах.
+Worker остался на deployment `8f169044-f2dc-47c0-9d46-b2dc42b62d13`, version
+`4db850ab-fa70-46b3-b5ee-276b546fb28f` (100%), без повторного backend deploy.
+Никаких production D1 mutations, schema/secret изменений; physical iPhone не проверен.
+
 Актуальное расширение CP-004: [папки словарей](CP004_FOLDERS.md).
 Структура хранится отдельно от dictionaries/карточек, новые REST операции
 в `backend/services/dictionary-tree.js`, UI — три файла dictionary-tree*.

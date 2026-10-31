@@ -44,6 +44,9 @@ async function main(){process.chdir(root);const mode=process.argv[2]||'check',li
  }
  assert.equal(mode,'check');const results=[];
  for(const site of sites){const s=await context(site,live.token);try{const {page}=s;assert.equal(await page.evaluate(()=>window.LEXICON_RELEASE),release);await page.locator('#brandBtn').click();await page.waitForFunction(()=>Array.from(document.querySelectorAll('.dt-create button')).some(b=>b.textContent==='+ Папка'&&!b.disabled));
+  // Initial tree metadata can arrive before full dictionary cards. Settle both
+  // readers before recording the baseline for the last-good-view assertion.
+  await page.evaluate(()=>bootstrapDictionaries());await page.evaluate(()=>window.LexiconConnection.recover(true));
   const before=await page.locator('[data-tree-dictionary]').count();s.setBlocked(true);await page.evaluate(()=>window.LexiconConnection.recover(true));await page.locator('#lexiconConnectionStatus:visible').waitFor();assert.equal(await page.locator('[data-tree-dictionary]').count(),before);assert.equal(await page.locator('#lexiconConnectionStatus').getAttribute('data-kind'),'NETWORK');assert(!(await page.locator('#lexiconConnectionStatus').textContent()).includes(live.token));
   s.setBlocked(false);await page.evaluate(()=>{window.dispatchEvent(new Event('online'));window.dispatchEvent(new Event('focus'));});await page.locator('#lexiconConnectionStatus').waitFor({state:'hidden'});assert.equal(await page.evaluate(()=>getAccessToken()),live.token);assert.equal(s.writes(),0);
   const result={site,release,authenticated_cors:true,network_fault_recovered:true,last_good_view_preserved:true,no_token_in_diagnostics:true,production_writes:0};results.push(result);console.log(JSON.stringify(result));
